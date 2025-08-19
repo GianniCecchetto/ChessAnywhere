@@ -1,0 +1,4 @@
+on:
+  push:
+    paths:
+      - "stm32-app/**"
