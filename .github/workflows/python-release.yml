@@ -15,6 +15,9 @@ on:
 jobs:
   docker-build-push:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-app
     permissions:
       contents: read
       packages: write
