@@ -4,3 +4,11 @@ on:
       - "stm32-app/**"
 
 jobs:
+  stm32-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: STM32 placeholder
+        run: echo "STM32 workflow triggered — build/test steps go here."
