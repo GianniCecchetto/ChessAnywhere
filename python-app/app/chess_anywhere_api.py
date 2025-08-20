@@ -8,6 +8,5 @@ def fetch_data(server_url: str, resource: str) -> dict:
 def send_data(server_url: str, resource: str, payload: dict) -> dict:
     response = requests.post(f"{server_url}/{resource}", json=payload, timeout=5)
     response.raise_for_status()
-    return response.json()
-    
+    return 0 #response.json()
     
