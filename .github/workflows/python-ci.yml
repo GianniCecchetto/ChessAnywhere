@@ -26,10 +26,4 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: PYTHONPATH=python-app pytest --junitxml=pytest-report.xml python-app/test
-
-      - name: Publish Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-report
-          path: pytest-report.xml
+        run: PYTHONPATH=python-app pytest python-app/test
