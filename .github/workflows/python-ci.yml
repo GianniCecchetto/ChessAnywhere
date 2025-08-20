@@ -29,4 +29,4 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: pytest test
+        run: PYTHONPATH=. pytest test
