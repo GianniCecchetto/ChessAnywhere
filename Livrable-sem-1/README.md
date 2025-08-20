@@ -7,11 +7,11 @@
 - Description du processus de travail
 ---
 Mise en place: 
-	- des outils de développement
-	- d'un environnement de déploiement
-	- d'un pipeline de livraison et de déploiement (CI/CD)	
+- des outils de développement
+- d'un environnement de déploiement
+- d'un pipeline de livraison et de déploiement (CI/CD)	
 
 le tout pour:
-	- le serveur (MQTT)
-        - l'application desktop python
-        - le microcontrolleur
+- le serveur (MQTT)
+- l'application desktop python
+- le microcontrolleur
