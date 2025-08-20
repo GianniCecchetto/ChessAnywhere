@@ -29,4 +29,10 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: PYTHONPATH=. pytest test
+        run: PYTHONPATH=. pytest --junitxml=pytest-report.xml test
+
+      - name: Publish Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: pytest-report.xml
