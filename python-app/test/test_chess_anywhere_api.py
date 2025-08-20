@@ -19,3 +19,21 @@ def test_fetch_data_error():
 
         with pytest.raises(requests.exceptions.ConnectionError):
             fetch_data("http://fake-server.com", "status")
+
+def test_send_data_success():
+    mock_response = {"status": "ok"}
+
+    with patch("app.chess_anywhere_api.requests.post") as mock_post:
+        mock_post.return_value.json.return_value = mock_response
+        mock_post.return_value.status_code = 200
+
+        result = send_data("http://fake-server.com", "upload", {"move": "e2e4"})
+
+    assert result == {"status": "ok"}
+
+def test_send_data_error():
+    with patch("app.chess_anywhere_api.requests.post") as mock_post:
+        mock_post.side_effect = requests.exceptions.Timeout
+
+        with pytest.raises(requests.exceptions.Timeout):
+            send_data("http://fake-server.com", "upload", {"move": "e2e4"})
