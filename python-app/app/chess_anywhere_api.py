@@ -10,4 +10,3 @@ def send_data(server_url: str, resource: str, payload: dict) -> dict:
     response.raise_for_status()
     return response.json()
     
-    
