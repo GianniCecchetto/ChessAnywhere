@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - "v*.*.*"   # ex: v1.0.0
+    paths:
+      - "python-app/**"
+  pull_request:
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
+    paths:
+      - "python-app/**"
 
 jobs:
   docker-build-push:

@@ -2,9 +2,13 @@ name: CI - Java Server
 
 on:
   push:
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
     paths:
       - "ChessAnywhereServer/**"
   pull_request:
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
     paths:
       - "ChessAnywhereServer/**"
 

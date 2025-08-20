@@ -2,9 +2,11 @@ name: CI - Tests python
 
 on:
   push:
-    branches: [ "main" ]
+    paths:
+      - "python-app/**"
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - "python-app/**"
 
 jobs:
   test:
@@ -24,4 +26,4 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: pytest
+        run: pytest python-app/test
