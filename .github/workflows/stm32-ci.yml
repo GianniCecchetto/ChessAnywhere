@@ -28,7 +28,7 @@ jobs:
           -v "${GITHUB_WORKSPACE}:/workspace" \
           -w /workspace/stm32-app/Debug \
           ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
-          ls -l
+          make all
 
       # Step 2: Flash the STM32 (if hardware attached)
       # NOTE: This works only if the runner can access the hardware via USB
@@ -36,4 +36,4 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
-                  -c "program firmware.elf verify reset exit"
+                  -c "program test2.elf verify reset exit"
