@@ -1,4 +1,4 @@
 import pytest
 
-def Test_uart():
+def test_uart():
     assert True
