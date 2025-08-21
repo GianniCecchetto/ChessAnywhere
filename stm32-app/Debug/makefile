@@ -60,10 +60,11 @@ all: main-build
 main-build: Firmware_anywherechess.elf secondary-outputs
 
 # Tool invocations
-Firmware_anywherechess.elf Firmware_anywherechess.map: $(OBJS) $(USER_OBJS) C:\Users\natha\OneDrive\Bureau\HES_ETE_2025\Firmware\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Firmware_anywherechess.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\natha\OneDrive\Bureau\HES_ETE_2025\Firmware\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Firmware_anywherechess.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-	@echo 'Finished building target: $@'
-	@echo ' '
+Firmware_anywherechess.elf: $(OBJS) $(USER_OBJS) STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(USER_OBJS)
+
+Firmware_anywherechess.map: Firmware_anywherechess.elf
+$(OBJDUMP) -h -S $< > $@
 
 default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-size  $(EXECUTABLES)
