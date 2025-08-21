@@ -26,7 +26,12 @@ jobs:
 
       # Step 1: Build firmware
       - name: Build Firmware
-        run: make
+        run: |
+          docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace/Debug \
+          ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
+          make flash
 
       # Step 2: Flash the STM32 (if hardware attached)
       # NOTE: This works only if the runner can access the hardware via USB
