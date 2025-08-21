@@ -41,6 +41,10 @@ jobs:
           cd stm32-app/Debug
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
                   -c "program test2.elf verify reset exit"
+	
+      # Step 3 : Test the UART connection with the STM32
+      - name: Python test STM32
+        run: PYTHONPATH=stm32-app pytest stm32-app/test
 
       #- name: Log in to GHCR
         #run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
