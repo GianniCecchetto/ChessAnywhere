@@ -13,6 +13,6 @@ L'application sert d'interface entre l'échiquier et les 2 serveurs. Elle permet
 Un serveur "communautaire" ChessAnywhere utilisant le protocole MQTT gère la création de "Rooms" et conserve les informations nécessaire a la connection des joueurs au serveur Lichess 
 
 ### 4) Serveur Lichess.org
-Lichess.org met a dispositon une API. cela nous permettra la communication des coups ,la détection de coup illégaux et la gestion global de la partie. La communication se fera directement entre l'application et Lichess.org. (Le serveur MQTT ne sert donc que de sysème de mise en relation)  
+Lichess.org met a dispositon une API. cela permettra la communication des coups ,la détection de coup illégaux et la gestion global de la partie. La communication se fera directement entre l'application et Lichess.org. (Le serveur MQTT ne sert donc que de sysème de mise en relation)  
 
 ![architecture global](img/arch_projet.png)
