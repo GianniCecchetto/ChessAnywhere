@@ -90,7 +90,7 @@ N’importe quel client respectant ces conventions pourra interagir avec le serv
 Le serveur sera développé en **Java** et déployé sur une **machine virtuelle Azure**. Ce choix est motivé par :
 
 * la disponibilité de bibliothèques MQTT,
-* la connaissance préalble de java,
+* la connaissance préalable de java,
 * l’intégration facilitée avec l’environnement **cloud Azure** que nous avons également déjà utilisé.
 
 Cette approche permet de garder une architecture avec la quelle nous avons déjà interagit, tout en s’appuyant sur un protocole largement reconnu.
