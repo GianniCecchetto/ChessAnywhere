@@ -14,6 +14,9 @@ jobs:
 
     container:
       image: ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+      credentials:
+        username: GianniCecchetto
+        password: ${{ secrets.GHCR_PAT }}
       options: --platform linux/arm64  # ARM image for Pi or ARM runners
 
     steps:
