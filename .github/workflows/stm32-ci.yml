@@ -12,14 +12,16 @@ jobs:
   build-flash:
     runs-on: self-hosted
 
-    container:
-      image: ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
-      credentials:
-        username: GianniCecchetto
-        password: ${{ secrets.GHCR_PAT }}
-      options: --platform linux/arm64  # ARM image for Pi or ARM runners
-
     steps:
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
+
+      - name: Pull container
+        run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+
+      - name: Use container
+        run: docker run --rm -it ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+
       - uses: actions/checkout@v3
 
       # Step 1: Build firmware
