@@ -9,5 +9,5 @@ La page principale de l'application comprendra
 - La liste des parties (rooms) hébéreger par notre server MQTT
 - Un boutton permettant de lancer une partie local (versus physique)
 ---
-![main window](img/mockup_app_main_window.png)
+![main window](img/mockup_app_v2.png)
 ---
