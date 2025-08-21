@@ -17,7 +17,7 @@ jobs:
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
 
       - name: Pull container
-        run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+        run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64
 
       - uses: actions/checkout@v3
 
@@ -27,7 +27,7 @@ jobs:
           docker run --rm \
           -v "${{ github.workspace }}:/workspace" \
           -w /workspace/stm32-app/Debug \
-          ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest \
+          ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
           make all
 
       # Step 2: Flash the STM32 (if hardware attached)

@@ -22,3 +22,4 @@ WORKDIR /workspace
 COPY . .
 
 ENTRYPOINT [""]
+
