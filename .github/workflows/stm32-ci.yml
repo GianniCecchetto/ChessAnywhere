@@ -26,7 +26,7 @@ jobs:
         run: |
           docker run --rm \
           -v "${GITHUB_WORKSPACE}:/workspace" \
-          -w /workspace \
+          -w /workspace/stm32-app/Debug \
           ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
           ls -l
 
