@@ -30,6 +30,7 @@ jobs:
       - name: Build STM32 project
         run: |
           cd stm32-app/Debug
+          find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
           make all
 
       #- name: Log in to GHCR

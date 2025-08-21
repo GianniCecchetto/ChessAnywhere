@@ -23,4 +23,3 @@ COPY . .
 ENV PATH="/opt/arm-gnu-toolchain-13.3.rel11-aarch64-arm-none-eabi/bin:${PATH}"
 
 ENTRYPOINT [""]
-
