@@ -52,12 +52,6 @@ Ali ...
 
 ## Choix Application
 
-Parfait 👍 voici une proposition de rédaction claire et structurée pour la partie **Choix Application** en reprenant exactement tes points :
-
----
-
-## Choix Application
-
 L’application desktop sera développée en **Python 3.10.13**, en utilisant **Tkinter** pour l’interface graphique. Ce choix permet de bénéficier d’un langage largement documenté, multiplateforme et simple à maintenir, tout en offrant une interface utilisateur suffisante pour nos besoins. Cela nous évitera d'avoir a prendre en main un framework plus complexe comme Qt ou javaFx.
 
 L’application communiquera à la fois avec :
