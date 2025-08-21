@@ -19,9 +19,6 @@ jobs:
       - name: Pull container
         run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
 
-      - name: Use container
-        run: docker run --rm ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
-
       - uses: actions/checkout@v3
 
       # Step 1: Build firmware
@@ -31,8 +28,7 @@ jobs:
           -v "${{ github.workspace }}:/workspace" \
           -w /workspace/stm32-app/Debug \
           ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
-          ls -l
-        #make all
+          make all
 
       # Step 2: Flash the STM32 (if hardware attached)
       # NOTE: This works only if the runner can access the hardware via USB
