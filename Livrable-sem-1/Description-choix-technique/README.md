@@ -52,11 +52,29 @@ Ali ...
 
 ## Choix Application
 
-Gianni ...
-- Language
-- Fonctionnalité
-- API
-- Librairies 
+Parfait 👍 voici une proposition de rédaction claire et structurée pour la partie **Choix Application** en reprenant exactement tes points :
+
+---
+
+## Choix Application
+
+L’application desktop sera développée en **Python 3.10.13**, en utilisant **Tkinter** pour l’interface graphique. Ce choix permet de bénéficier d’un langage largement documenté, multiplateforme et simple à maintenir, tout en offrant une interface utilisateur suffisante pour nos besoins. Cela nous évitera d'avoir a prendre en main un framework plus complexe comme Qt ou javaFx.
+
+L’application communiquera à la fois avec :
+
+* **l’API officielle de Lichess**, afin de gérer les parties en ligne, valider les coups et synchroniser l’état de la partie,
+* **une API custom ChessAnywhere (via le serveur MQTT)**, qui permettra la mise en relation entre utilisateurs et la gestion des rooms.
+
+Les principales fonctionnalités prévues sont :
+
+* **Visualisation des rooms ChessAnywhere** créées par les utilisateurs,
+* **Connexion à un utilisateur Lichess en ligne** à partir d’un lien,
+* **Lancement d’une partie locale (versus en personne)** sans passer par Lichess,
+* **Saisie du token API Lichess** pour l’authentification et l’accès aux fonctionnalités avancées,
+* **Suivi en temps réel du statut de connexion au plateau (board)**,
+* **Affichage de l’état courant du plateau** (position des pièces, coups possibles, etc.).
+
+Cette approche garantit une application capable de servir de point central entre le matériel physique et les serveurs distants, tout en offrant à l’utilisateur une interface claire.
 
 ## Choix Serveur
 
