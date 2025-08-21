@@ -20,7 +20,7 @@ jobs:
         run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
 
       - name: Use container
-        run: docker run --rm -it ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+        run: docker run --rm ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
 
       - uses: actions/checkout@v3
 
