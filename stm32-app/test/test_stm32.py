@@ -7,4 +7,4 @@ from app.chess_anywhere_api import send_data
 def test_fetch_data_success():
     result = True
 
-    assert result == True
+assert result == True
