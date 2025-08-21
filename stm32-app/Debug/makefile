@@ -59,10 +59,10 @@ all: main-build
 # Main-build Target
 main-build: test2.elf secondary-outputs
 
-test2.elf: $(OBJS) $(USER_OBJS) workspace/STM32L010RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+test2.elf: $(OBJS) $(USER_OBJS) STM32L010RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-gcc -o "test2.elf" @"objects.list" $(USER_OBJS) $(LIBS) \
 	-mcpu=cortex-m0plus \
-	-T"workspace/STM32L010RBTX_FLASH.ld" \
+	-T"STM32L010RBTX_FLASH.ld" \
 	--specs=nosys.specs -Wl,-Map="test2.map" -Wl,--gc-sections \
 	-static --specs=nano.specs -mfloat-abi=soft -mthumb \
 	-Wl,--start-group -lc -lm -Wl,--end-group

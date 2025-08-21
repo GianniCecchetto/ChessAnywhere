@@ -32,6 +32,14 @@ jobs:
           cd stm32-app/Debug
           find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
           make all
+          
+      # Step 2: Flash the STM32 (if hardware attached)
+      # NOTE: This works only if the runner can access the hardware via USB
+      - name: Flash STM32
+        if: runner.os == 'Linux'
+        run: |
+          openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
+                  -c "program test2.elf verify reset exit"
 
       #- name: Log in to GHCR
         #run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
@@ -51,10 +59,3 @@ jobs:
       #ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
       #make all
 
-      # Step 2: Flash the STM32 (if hardware attached)
-      # NOTE: This works only if the runner can access the hardware via USB
-      #- name: Flash STM32
-        #if: runner.os == 'Linux'
-        #run: |
-          #openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
-                  #-c "program test2.elf verify reset exit"
