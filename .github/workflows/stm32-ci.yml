@@ -38,6 +38,7 @@ jobs:
       - name: Flash STM32
         if: runner.os == 'Linux'
         run: |
+          cd stm32-app/Debug
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
                   -c "program test2.elf verify reset exit"
 
