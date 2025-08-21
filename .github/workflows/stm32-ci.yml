@@ -1,14 +1,32 @@
+name: Build STM32 Firmware
+
 on:
   push:
     paths:
       - "stm32-app/**"
+  pull_request:
+    paths:
+      - "stm32-app/**"
 
 jobs:
-  stm32-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  build-flash:
+    runs-on: self-hosted
 
-      - name: STM32 placeholder
-        run: echo "STM32 workflow triggered — build/test steps go here."
+    container:
+      image: ghcr.io/giannicecchetto/chessanywhere/stm32-runner:latest
+      options: --platform linux/arm64  # ARM image for Pi or ARM runners
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Step 1: Build firmware
+      - name: Build Firmware
+        run: make
+
+      # Step 2: Flash the STM32 (if hardware attached)
+      # NOTE: This works only if the runner can access the hardware via USB
+      - name: Flash STM32
+        if: runner.os == 'Linux'
+        run: |
+          openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
+                  -c "program firmware.elf verify reset exit"
