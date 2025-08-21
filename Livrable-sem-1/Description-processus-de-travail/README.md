@@ -1,46 +1,67 @@
-# Description du processus de travail
+# Description du processus de travail (Approche Agile)
 
-Le projet suit une organisation collaborative basée sur **GitHub** et **Discord**, afin de garantir une bonne coordination et une intégration continue.
+Le projet adopte une organisation agile et collaborative, reposant sur **GitHub** et **Discord**, afin de garantir une bonne coordination, une intégration continue et une visibilité claire de l’avancement.
 
-### Gestion du code source et des branches
+---
+
+## Gestion du code source et des branches
 
 * Le dépôt principal est hébergé sur **GitHub**.
-* Nous suivons une approche proche de **Git Flow** :
+* Nous suivons une organisation inspirée de **Git Flow** :
 
-  * la branche **`main`** contient les versions stables,
-  * chaque fonctionnalité est développée dans une **feature branch** dédiée, puis intégrée via *pull request*.
-* Les *pull requests* sont relues et validées avant d’être fusionnées, afin d’assurer la qualité du code.
+  * La branche **`main`** contient uniquement les versions stables.
+  * Chaque fonctionnalité est développée dans une **feature branch** dédiée.
+  * L’intégration se fait via des **pull requests**, soumises à relecture et validation avant fusion.
 
-### Organisation du projet
+Cette approche garantit la stabilité du code et favorise la qualité grâce aux revues croisées.
 
-* Nous utilisons l’onglet **Projects** de GitHub (Kanban / roadmap) pour planifier et suivre l’avancement :
+---
+
+## Organisation du projet
+
+* Nous utilisons l’onglet **Projects** de GitHub (Kanban / roadmap) pour planifier et suivre les tâches :
 
   * **To Do** : tâches à réaliser,
   * **In Progress** : tâches en cours,
-  * **Need Review** : tâches en attente de revue,
-  * **Done** : tâches terminées.
-* Cela permet une visibilité claire sur l’état du projet et la répartition du travail.
-* De plus cela permet de maintenir un historique des tâches via les backlogs
+  * **Need Review** : en attente de relecture,
+  * **Done** : tâches finalisées.
 
-### Intégration continue
+Cet outil permet :
 
-* L’onglet **Actions** de GitHub est utilisé pour configurer des workflows en **YAML**.
-* Ces workflows permettent :
+* une visibilité claire sur l’état du projet,
+* une répartition équitable du travail,
+* la conservation d’un historique grâce aux backlogs.
 
-  * le lancement automatique de tests d’intégration,
-  * la vérification du code lors de chaque push ou pull request,
-  * éventuellement des étapes supplémentaires (build, déploiement futur).
+---
 
-### Communication et coordination
+## Intégration continue (CI)
 
-* La communication d’équipe est centralisée sur un **serveur Discord**.
-* Plusieurs salons sont mis en place pour une gestion efficace :
+* L’onglet **Actions** de GitHub est configuré avec des **workflows en YAML** permettant :
 
-  * **salons textuels** (organisation, suivi des tâches, entraide technique),
-  * **salons vocaux** (réunions rapides, sessions de travail collaboratives).
+  * l’exécution automatique des tests d’intégration,
+  * la vérification du code à chaque *push* ou *pull request*,
+  * la mise en place progressive d’étapes supplémentaires (build, déploiement futur).
 
-Ce processus de travail nous permet d’assurer :
+Ainsi, chaque contribution est testée et validée avant son intégration.
 
-* une meilleure qualité du code grâce aux tests et aux revues,
-* un bon suivis de l'avancement du développement via GitHub Projects,
-* une communication simple et structuré grâce à Discord.
+---
+
+## Communication et coordination
+
+* La communication de l’équipe est centralisée sur **Discord**.
+* Plusieurs salons sont organisés pour une efficacité optimale :
+
+  * **Salons textuels** : organisation, suivi des tâches, entraide technique.
+  * **Salons vocaux** : réunions rapides, sessions collaboratives.
+
+Cela assure une communication fluide, réactive et structurée.
+
+---
+
+## Bénéfices de notre organisation
+
+* Qualité renforcée grâce aux tests automatisés et aux revues de code.
+* Suivi clair de l’avancement via GitHub Projects.
+* Collaboration efficace grâce à Discord.
+
+---
