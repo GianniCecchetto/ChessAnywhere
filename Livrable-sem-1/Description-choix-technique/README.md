@@ -52,12 +52,6 @@ Ali ...
 
 ## Choix Application
 
-Parfait 👍 voici une proposition de rédaction claire et structurée pour la partie **Choix Application** en reprenant exactement tes points :
-
----
-
-## Choix Application
-
 L’application desktop sera développée en **Python 3.10.13**, en utilisant **Tkinter** pour l’interface graphique. Ce choix permet de bénéficier d’un langage largement documenté, multiplateforme et simple à maintenir, tout en offrant une interface utilisateur suffisante pour nos besoins. Cela nous évitera d'avoir a prendre en main un framework plus complexe comme Qt ou javaFx.
 
 L’application communiquera à la fois avec :
@@ -78,10 +72,25 @@ Cette approche garantit une application capable de servir de point central entre
 
 ## Choix Serveur
 
-Gianni ...
-Le serveur fera une partie simple
+Le serveur communautaire **ChessAnywhere** repose sur le protocole **MQTT (Message Queuing Telemetry Transport)**. MQTT est un **protocole de messagerie standardisé** (ISO/IEC 20922) basé sur un modèle **publish/subscribe** :
 
-- Language
-- Fonctionnalité
-- API
-- Librairies
+* le serveur agit comme **broker** (intermediaire),
+* les clients (l’application desktop) peuvent **publier** des messages sur des *topics* (rooms),
+* d’autres clients peuvent s’**abonner** à ces topics pour recevoir les messages correspondants.
+
+Ce protocole nous a été conseiller et choisi pour sa **légèreté**, sa **simplicité d’intégration** et nous permet de ne pas avoir a mettre en place notre propre systéme de room.
+
+Plutôt que de créer une API spécifique, ChessAnywhere définit simplement un **ensemble de conventions d’utilisation de MQTT** :
+
+* des **topics structurés** (ex. `/rooms/create`, `/rooms/join/{roomId}`, `/rooms/status/{roomId}`),
+* des **formats de messages normalisés** (ex. JSON décrivant les joueurs, l’état d’une room, ou les informations de connexion à Lichess).
+
+N’importe quel client respectant ces conventions pourra interagir avec le serveur ChessAnywhere, sans nécessiter d’API supplémentaire.
+
+Le serveur sera développé en **Java** et déployé sur une **machine virtuelle Azure**. Ce choix est motivé par :
+
+* la disponibilité de bibliothèques MQTT,
+* la connaissance préalble de java,
+* l’intégration facilitée avec l’environnement **cloud Azure** que nous avons également déjà utilisé.
+
+Cette approche permet de garder une architecture avec la quelle nous avons déjà interagit, tout en s’appuyant sur un protocole largement reconnu.
