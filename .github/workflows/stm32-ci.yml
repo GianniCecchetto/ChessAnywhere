@@ -27,7 +27,7 @@ jobs:
           docker run --rm \
           -v "${{ github.workspace }}:/workspace" \
           -w /workspace/stm32-app/Debug \
-          ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
+          ghcr.io/giannicecchetto/chessanywhere/stm32-runner::latest \
           make all
 
       # Step 2: Flash the STM32 (if hardware attached)
