@@ -39,4 +39,8 @@ jobs:
 
       # Step 5 : Test the UART connection with the STM32
       - name: Python test STM32
-        run: PYTHONPATH=stm32-app pytest stm32-app/test
+        run: python3 -m pytest stm32-app/test
+        env:
+          PYTHONPATH: stm32-app        
+
+
