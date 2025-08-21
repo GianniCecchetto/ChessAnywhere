@@ -64,7 +64,7 @@ Firmware_anywherechess.elf: $(OBJS) $(USER_OBJS) STM32L432KCUX_FLASH.ld makefile
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(USER_OBJS)
 
 Firmware_anywherechess.map: Firmware_anywherechess.elf
-$(OBJDUMP) -h -S $< > $@
+	$(OBJDUMP) -h -S $< > $@
 
 default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-size  $(EXECUTABLES)
