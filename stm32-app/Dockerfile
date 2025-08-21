@@ -20,6 +20,6 @@ WORKDIR /workspace
 
 COPY . .
 
-ENV PATH="/opt/arm-gnu-toolchain-13.3.rel11-x86_64-arm-none-eabi/bin:${PATH}"
+ENV PATH="/opt/arm-gnu-toolchain-13.3.rel11-aarch64-arm-none-eabi/bin:${PATH}"
 
 ENTRYPOINT [""]
