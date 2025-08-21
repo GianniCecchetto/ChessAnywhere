@@ -17,6 +17,7 @@ Le projet suit une organisation collaborative basée sur **GitHub** et **Discord
 
   * **To Do** : tâches à réaliser,
   * **In Progress** : tâches en cours,
+  * **Need Review** : tâches en attente de revue,
   * **Done** : tâches terminées.
 * Cela permet une visibilité claire sur l’état du projet et la répartition du travail.
 * De plus cela permet de maintenir un historique des tâches via les backlogs
