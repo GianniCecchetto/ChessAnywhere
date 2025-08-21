@@ -24,7 +24,7 @@ jobs:
       # Step 1: Build firmware
       - name: Build Firmware
         run: |
-          docker run --rm \
+          docker run --rm --platform linux/arm64 \
           -v "${{ github.workspace }}:/workspace" \
           -w /workspace/stm32-app/Debug \
           ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
