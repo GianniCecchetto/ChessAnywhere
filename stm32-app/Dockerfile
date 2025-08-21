@@ -21,5 +21,5 @@ WORKDIR /workspace
 
 COPY . .
 
-ENTRYPOINT ["make"]
+ENTRYPOINT [""]
 
