@@ -13,27 +13,54 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
+      # Step 1: Checkout the repository and pull the branch
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history so Makefiles or submodules work
+          ref: ${{ github.ref }} # Ensures the workflow uses the branch that triggered the workflow
 
-      - name: Pull container
-        run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64
-
-      - uses: actions/checkout@v3
-
-      # Step 1: Build firmware
-      - name: Build Firmware
+      # Step 2: Set up ARM toolchain (if not globally installed)
+      - name: Setup ARM toolchain
         run: |
-          docker run --rm --platform linux/arm64 \
-          -v "${{ github.workspace }}:/workspace" \
-          -w /workspace/stm32-app/Debug \
-          ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
-          make all
+          export PATH=/opt/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin:$PATH
+          echo "PATH=$PATH"
 
+      # Step 3: Build STM32 project
+      - name: Build STM32 project
+        run: |
+          cd stm32-app/Debug
+          find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
+          make all
+          
       # Step 2: Flash the STM32 (if hardware attached)
       # NOTE: This works only if the runner can access the hardware via USB
       - name: Flash STM32
         if: runner.os == 'Linux'
         run: |
+          cd stm32-app/Debug
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
-                  -c "program firmware.elf verify reset exit"
+                  -c "program test2.elf verify reset exit"
+	
+      # Step 3 : Test the UART connection with the STM32
+      - name: Python test STM32
+        run: PYTHONPATH=stm32-app pytest stm32-app/test
+
+      #- name: Log in to GHCR
+        #run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u GianniCecchetto --password-stdin
+
+      #- name: Pull container
+        #run: docker pull ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64
+
+      #- uses: actions/checkout@v3
+
+      # Step 1: Build firmware
+      #- name: Build Firmware
+        #run: |
+          
+      #docker run --rm \
+      #-v "${GITHUB_WORKSPACE}:/workspace" \
+      #-w /workspace/stm32-app/Debug \
+      #ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
+      #make all
+
