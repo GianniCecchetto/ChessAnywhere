@@ -22,4 +22,3 @@ WORKDIR /workspace
 COPY . .
 
 ENTRYPOINT ["make"]
-
