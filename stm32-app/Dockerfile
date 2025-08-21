@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     openocd \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install ARM GNU Toolchain 13.3 (x86_64 host)
+# Télécharger et installer ARM GNU Toolchain pour ARM64
 RUN curl -LO https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi.tar.xz \
     && tar -xf arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi.tar.xz \
     && mv arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi /opt/arm-toolchain \
@@ -20,5 +20,7 @@ RUN curl -LO https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/bin
 WORKDIR /workspace
 
 COPY . .
+
+ENV PATH="/opt/arm-toolchain/bin:${PATH}"
 
 ENTRYPOINT [""]
