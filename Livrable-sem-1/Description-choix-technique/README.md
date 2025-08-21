@@ -1,13 +1,15 @@
 # Description des choix techniques
 
 ## Choix d'architecture
+ 
+L’architecture retenue est découper en quatre éléments (plateau connecté, application desktop, serveur MQTT et Lichess). Cela nous permet de séparer clairement les responsabilités :
 
-Nathan ...
-Pour la partie architecture, nous avons décidé  
+* le **plateau** reste focalisé sur la détection physique des pièces et l’assistance au joueur via les LED, sans complexité logicielle (algorithmique) inutile,
+* l’**application desktop** joue un rôle central en tant que passerelle : elle assure la cohérence de l’état du jeu, facilite la communication avec les serveurs et propose une interface utilisateur,
+* le **serveur MQTT** introduit une couche communautaire pour la mise en relation entre joueurs, ce qui évite de surcharger l’application,
+* enfin, l’intégration avec **Lichess** exploite une API existante et fiable, ce qui permet de bénéficier immédiatement d’une gestion robuste des règles d’échecs et d’une redistribution des coups joué au joueur.
 
-- Pourquoi on a une application
-- Pourquoi on a un serveur
-- Pourquoi on a utilisé un micrcontrôleur
+Ce découpage rend le système plus maintenable (chaque bloc pouvant évoluer indépendamment), plus flexible (possibilité de remplacer ou d’améliorer un élément sans impacter l’ensemble), et plus robuste (en cas de problème sur un serveur, les autres fonctionnalités peuvent continuer à fonctionner).
 
 ## Choix Plateau / Board
 
