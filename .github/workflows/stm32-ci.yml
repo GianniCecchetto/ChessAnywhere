@@ -31,7 +31,8 @@ jobs:
           -v ${{ github.workspace }}:/workspace \
           -w /workspace/stm32-app/Debug \
           ghcr.io/giannicecchetto/chessanywhere/stm32-runner:arm64 \
-          make all
+          ls -l
+        #make all
 
       # Step 2: Flash the STM32 (if hardware attached)
       # NOTE: This works only if the runner can access the hardware via USB
