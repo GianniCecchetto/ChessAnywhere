@@ -2,11 +2,11 @@
 
 ## Choix d'architecture
  
-L’architecture retenue est découper en quatre éléments (plateau connecté, application desktop, serveur MQTT et Lichess). Cela nous permet de séparer clairement les responsabilités :
+L’architecture retenue est découper en quatre éléments (plateau connecté, application desktop, serveur ChessAnywhere et Lichess). Cela nous permet de séparer clairement les responsabilités :
 
 * le **plateau** reste focalisé sur la détection physique des pièces et l’assistance au joueur via les LED, sans complexité logicielle (algorithmique) inutile,
 * l’**application desktop** joue un rôle central en tant que passerelle : elle assure la cohérence de l’état du jeu, facilite la communication avec les serveurs et propose une interface utilisateur,
-* le **serveur MQTT** introduit une couche communautaire pour la mise en relation entre joueurs, ce qui évite de surcharger l’application,
+* le **serveur ChessAnywhere** introduit une couche communautaire pour la mise en relation entre joueurs, ce qui évite de surcharger l’application,
 * enfin, l’intégration avec **Lichess** exploite une API existante et fiable, ce qui permet de bénéficier immédiatement d’une gestion robuste des règles d’échecs et d’une redistribution des coups joué au joueur.
 
 Ce découpage rend le système plus maintenable (chaque bloc pouvant évoluer indépendamment), plus flexible (possibilité de remplacer ou d’améliorer un élément sans impacter l’ensemble), et plus robuste (en cas de problème sur un serveur, les autres fonctionnalités peuvent continuer à fonctionner).
@@ -152,7 +152,7 @@ L’application desktop sera développée en **Python 3.10.13**, en utilisant **
 L’application communiquera à la fois avec :
 
 * **l’API officielle de Lichess**, afin de gérer les parties en ligne, valider les coups et synchroniser l’état de la partie,
-* **une API custom ChessAnywhere (via le serveur MQTT)**, qui permettra la mise en relation entre utilisateurs et la gestion des rooms.
+* **une API ChessAnywhere**, qui permettra la mise en relation entre utilisateurs et la gestion des rooms.
 
 Les principales fonctionnalités prévues sont :
 
@@ -167,25 +167,15 @@ Cette approche garantit une application capable de servir de point central entre
 
 ## Choix Serveur
 
-Le serveur communautaire **ChessAnywhere** repose sur le protocole **MQTT (Message Queuing Telemetry Transport)**. MQTT est un **protocole de messagerie standardisé** (ISO/IEC 20922) basé sur un modèle **publish/subscribe** :
+Le serveur communautaire **ChessAnywhere**:
 
 * le serveur agit comme **broker** (intermediaire),
-* les clients (l’application desktop) peuvent **publier** des messages sur des *topics* (rooms),
-* d’autres clients peuvent s’**abonner** à ces topics pour recevoir les messages correspondants.
-
-Ce protocole nous a été conseiller et choisi pour sa **légèreté**, sa **simplicité d’intégration** et nous permet de ne pas avoir a mettre en place notre propre systéme de room.
-
-Plutôt que de créer une API spécifique, ChessAnywhere définit simplement un **ensemble de conventions d’utilisation de MQTT** :
-
-* des **topics structurés** (ex. `/rooms/create`, `/rooms/join/{roomId}`, `/rooms/status/{roomId}`),
-* des **formats de messages normalisés** (ex. JSON décrivant les joueurs, l’état d’une room, ou les informations de connexion à Lichess).
-
-N’importe quel client respectant ces conventions pourra interagir avec le serveur ChessAnywhere, sans nécessiter d’API supplémentaire.
+* les clients (l’application desktop) peuvent créer des rooms,
+* d’autres clients peuvent se connecter a la room pour recevoir le lien correspondants a la partie.
 
 Le serveur sera développé en **Java** et déployé sur une **machine virtuelle Azure**. Ce choix est motivé par :
 
-* la disponibilité de bibliothèques MQTT,
 * la connaissance préalable de java,
-* l’intégration facilitée avec l’environnement **cloud Azure** que nous avons également déjà utilisé.
+* l’intégration facilitée avec l’environnement **Azure** que nous avons également déjà utilisé.
 
-Cette approche permet de garder une architecture avec la quelle nous avons déjà interagit, tout en s’appuyant sur un protocole largement reconnu.
+Cette approche permet de garder une architecture avec la quelle nous avons déjà interagit, tout en développant notre propre API.
