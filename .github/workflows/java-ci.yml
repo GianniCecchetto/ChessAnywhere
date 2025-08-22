@@ -22,10 +22,10 @@ jobs:
           java-version: '21'
 
       - name: Build & test
-        run: ./ChessAnywhereServer/mvnw clean verify
+        run: mvnw clean verify
 
       - name: Build Docker
-        run: ./ChessAnywhereServer/mvnw clean package
+        run: mvnw clean package
           docker build …
           docker run …
           curl http://localhost:8080/health
