@@ -14,28 +14,43 @@ Voici la liste du matériel nécessaire pour pouvoir effectuer ce tutoriel de A 
 
 ## Mise en place de l'OS du Raspberry Pi
 
-Cette étape est importante, car il est nécessaire d'utiliser un OS 64 bits pour établir cette mise en place.
+Cette étape est importante, car il est nécessaire d'utiliser un OS 64 bits pour établir cette mise en place. Pour flasher la SD, il existe un logiciel simple d'utilisation [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
-img mise en place ... (à faire)
+1. Pour pouvoir flasher la SD, il faut d'abord choisir le modèle, puis le système d'exploitation et le stockage (la SD). Nous allons parcourir ces étapes en détail ci-dessous
 
-1. Choisir l'OS
-   img
-3. Sélectionner le board
-   img
-5. Sélectionner la SD, le stockage
-   img
-7. Modifier les paramètres pour que le SSH soit actif
-img
+![Raspb](img/raspberry_imager.png)
+
+2. Commencez par choisir le modèle de Raspberry Pi
+3. Ensuite sélectionner le système d'exploitation, comme ci-dessous
+
+![Raspb](img/choix_ospng.png)
+
+4. Sélectionnez la SD
+5. Maintenant, on continue en appuyant sur `Suivant`
+6. Une petite fenêtre s'ouvre de réglage, appuyez sur `Modifier` :
+
+![Raspb](img/reglages_os.png)
+
+7. Il faut désormais setup le wifi pour pouvoir utiliser SSH
+
+![Raspb](img/wifi_os.png)
+
+8. Ensuite, il faut se diriger sous l'onglet `Services` et cocher `Activer SSH`
+
+![Raspb](img/wifi_os.png)
+
+9. Ensuite appuyez sur `Enregistrez`, puis sur `Oui`
+10. Continuez jusqu'à flasher votre SD.
 
 ## Connexion en SSH
 
-Lorsque le Raspberry Pi est setup et alimenté, on peut y accéder en SSH.
+Insérez la SD dans votre Raspberry Pi et alimentez le. Lorsque tout cela est fait, on peut y accéder en SSH (il se peut que cela prenne un peu de temps après avoir alimenté le Raspberry Pi).
 Pour se faire, on peut utiliser par exemple PUTTY qui est un outil simple à prendre en main :
 
 ![putty](img/ssh_on_putty.png)
 
 Etapes :
-1. Spécifiez l'adresse IP du Raspberry Pi. Si vous avez du mal à trouver l'IP de ton Raspberry, vous pouvez utiliser un outil tel que Angry Ip Scanner qui vous permet de scanner tout votre réseau.
+1. Spécifiez l'adresse IP du Raspberry Pi. Si vous avez du mal à trouver l'IP de votre Raspberry, vous pouvez utiliser un outil tel que Angry Ip Scanner qui vous permet de scanner tout votre réseau.
 2. Sélectionne SSH comme connection type.
 3. Appuie sur `Open`.
 
@@ -43,7 +58,7 @@ Une fenêtre similaire doit s'afficher qui vous demande votre nom d'utilisateur 
 
 ![connection](img/rasp_connection.png) 
 
-Vous êtes désormais connecté au Raspberry Pi.
+Vous êtes désormais connecté sur votre Raspberry Pi.
 
 ## Installation
 
@@ -85,13 +100,201 @@ Vous pouvez vérifier que la procédure a bien fonctionné en faisant la command
 Le résultat suivant devrait apparaître :
 
 ```bash
-arm-none-eabi-gcc (15:8-2019-q3-1+b1) 8.3.1 20190703 (release) [gcc-8-branch revision 273027]
-Copyright (C) 2018 Free Software Foundation, Inc.
+arm-none-eabi-gcc (Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24)) 13.3.1 20240614
+Copyright (C) 2023 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
 
-Avant de continuer, il faut trouver quel est votre fichier config nécessaire pour le STM que vous utilisez, par exemple :
+### Compilation et Makefile
+
+Maintenant que notre toolchain est à jour, on va pouvoir compiler notre projet STM32. Voici l'arborescence de notre projet créer depuis STM32 Cube IDE :
+
+```txt
+Firmware_anywherechess/         # Racine du projet
+├── .settings/                  # Config Eclipse (propre à CubeIDE)
+│
+├── Core/                       # Code applicatif
+│   ├── Inc/                    # Headers (main.h, stm32xx_hal_conf.h, ...)
+│   └── Src/                    # Sources (main.c, stm32xx_it.c, system_stm32xx.c, ...)
+│
+├── Debug/
+│   ├── Core/                       # Copie compilée de ton code Core (objets intermédiaires)
+│   ├── Drivers/STM32L4xx_HAL_Driver/Src/   # Objets compilés du HAL
+│   ├── Firmware_anywherechess.elf  # Binaire final (exécutable ELF pour STM32)
+│   ├── Firmware_anywherechess.list # Listing assembleur + C
+│   ├── Firmware_anywherechess.map  # Carte mémoire générée par l’éditeur de liens
+│   ├── makefile                    # Script de build généré par CubeIDE
+│   ├── objects.list                # Liste des objets compilés
+│   ├── objects.mk                  # Dépendances pour make
+│   └── sources.mk                  # Liste des sources du projet
+│
+├── Drivers/                    # HAL + CMSIS
+│   ├── CMSIS/
+│   └── STM32L4xx_HAL_Driver/
+│
+├── doc/                        # Dossier optionnel (documentation)
+│
+├── .cproject                   # Config projet Eclipse (CubeIDE)
+├── .mxproject                  # Config CubeMX
+├── .project                    # Config projet Eclipse
+│
+├── Firmware_anywherechess Debug.launch  # Config de lancement/debug
+├── Firmware_anywherechess.ioc           # Fichier CubeMX (config pinout, clocks, périphériques)
+│
+└── STM32L432KCUX_FLASH.ld      # Script de linkage (mémoire Flash/RAM du MCU)
+```
+
+Dans cette arborescence, nous allons toucher à quelques fichiers, notamment au makefile. Pour se faire, il suffit de reprendre le makefile généré par l'IDE (et oui il faut ignorer la ligne 2 du makefile) :
+
+On commence par se déplacer dans le bon répertoire :
+
+```bash
+cd my_stm32_project/Debug
+nano makefile
+```
+
+Le makefile ci-dessous a été modifié et ne correspond pas à celui généré par l'IDE :
+
+```makefile
+################################################################################
+# Automatically-generated file. Do not edit!
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
+################################################################################
+
+-include ../makefile.init
+
+RM := rm -rf
+
+# All of the sources participating in the build are defined here
+-include sources.mk
+-include Drivers/STM32L0xx_HAL_Driver/Src/subdir.mk
+-include Core/Startup/subdir.mk
+-include Core/Src/subdir.mk
+-include objects.mk
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(S_DEPS)),)
+-include $(S_DEPS)
+endif
+ifneq ($(strip $(S_UPPER_DEPS)),)
+-include $(S_UPPER_DEPS)
+endif
+ifneq ($(strip $(C_DEPS)),)
+-include $(C_DEPS)
+endif
+endif
+
+-include ../makefile.defs
+
+OPTIONAL_TOOL_DEPS := \
+$(wildcard ../makefile.defs) \
+$(wildcard ../makefile.init) \
+$(wildcard ../makefile.targets) \
+
+
+BUILD_ARTIFACT_NAME := firmware
+BUILD_ARTIFACT_EXTENSION := elf
+BUILD_ARTIFACT_PREFIX :=
+BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
+
+# Add inputs and outputs from these tool invocations to the build variables 
+EXECUTABLES += \
+firmware.elf \
+
+MAP_FILES += \
+firmware.map \
+
+SIZE_OUTPUT += \
+default.size.stdout \
+
+OBJDUMP_LIST += \
+firmware.list \
+
+
+# All Target
+all: main-build
+
+# Main-build Target
+main-build: firmware.elf secondary-outputs
+
+firmware.elf: $(OBJS) $(USER_OBJS) ../STM32L010RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) \
+	-mcpu=cortex-m0plus \
+	-T"../STM32L010RBTX_FLASH.ld" \
+	--specs=nosys.specs -Wl,-Map="firmware.map" -Wl,--gc-sections \
+	-static --specs=nano.specs -mfloat-abi=soft -mthumb \
+	-Wl,--start-group -lc -lm -Wl,--end-group
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+# le .map est produit en même temps que l’elf
+firmware.map: firmware.elf
+	@echo 'Generated map file: $@'
+
+default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-size  $(EXECUTABLES)
+	@echo 'Finished building: $@'
+	@echo ' '
+
+firmware.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "firmware.list"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+# Other Targets
+clean:
+	-$(RM) default.size.stdout firmware.elf firmware.list firmware.map
+	-@echo ' '
+
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+
+fail-specified-linker-script-missing:
+	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
+	@exit 2
+
+warn-no-linker-script-specified:
+	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
+
+.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
+
+-include ../makefile.targets
+```
+
+On peut désormais faire la commande pour compiler le projet et nous donner notre `.elf` :
+
+```bash
+make all
+```
+
+Cependant, j'ai eu une erreur lors de la compilation qui m'a obligé à retirer un argument de compilation, soit l'argument `fcyclomatic-complexity`.
+
+L'erreur :
+
+```bash
+arm-none-eabi-gcc: error: unrecognized command line option '-fcyclomatic-complexity'
+make: *** [Drivers/STM32L0xx_HAL_Driver/Src/subdir.mk:64: Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.o] Error 1
+```
+
+Pour cela il faut retirer cette argument dans tous les fichiers `.mk` :
+
+```bash
+find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
+make all
+```
+
+Si tout s'est bien passé, on a un message semblable à celui-ci à la fin :
+
+ ```bash
+(beaucoup beaucoup de prompt ...)
+
+arm-none-eabi-objdump -h -S firmware.elf  > "firmware.list"
+Finished building: firmware.list
+```
+
+### Flasher
+
+On a désormais notre fichier `.elf` à disposition, mais avant de continuer, il faut trouver quel est votre fichier config nécessaire pour le STM que vous utilisez, par exemple :
 
 ```bash
 STM32F1 → stm32f1x.cfg
@@ -110,15 +313,62 @@ $ sudo openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
   -c "program firmware.elf verify reset exit"
 ```
 
-firmware.elf correspond au fichier binaire généré lors de la compilation de votre projet.
+Le résultat suivant doit s'afficher (fin du prompt) :
 
 ```bash
-
+Info : Device: STM32L0xx (Cat.5)
+Info : STM32L flash has dual banks. Bank (0) size is 64kb, base address is 0x8000000
+** Programming Finished **
+** Verify Started **
+** Verified OK **
+** Resetting Target **
+Info : Unable to match requested speed 300 kHz, using 240 kHz
+Info : Unable to match requested speed 300 kHz, using 240 kHz
+shutdown command invoked
 ```
+
+firmware.elf correspond au fichier binaire généré lors de la compilation de votre projet.
 
 ## Créer un Runner sur GitHub
 
+Pour créer un Runner, vous avez toute la documentation nécessaire se trouvant sous l'onglet `Actions`, puis appuyez sur `New Runner`
+
+1. Création d'un folder
+```bash
+mkdir actions-runner && cd actions-runner
+```
+2. Download de la dernière version du package runner (Pour avoir la dernière version du package dirigez vous sous l'onglet `Actions`)
+```bash
+curl -o actions-runner-linux-arm64-2.328.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.328.0/actions-runner-linux-arm64-2.328.0.tar.gz
+```
+3. Validation du hash (Optionnel)
+```bash
+echo "b801b9809c4d9301932bccadf57ca13533073b2aa9fa9b8e625a8db905b5d8eb  actions-runner-linux-arm64-2.328.0.tar.gz" | shasum -a 256 -c
+```
+4. Extraction de l'installer 
+```bash
+tar xzf ./actions-runner-linux-arm64-2.328.0.tar.gz
+```
+5. Création du runner et démarage de la configuration
+```bash
+./config.sh --url <url_repo> --token <token_id>
+```
+Exemple :
+```bash
+./config.sh --url https://github.com/GianniCecchetto/ChessAnywhere --token AAAADDDDDCCCCCCCEEEEEE1111111
+```
+6. Lancement du Runner
+```bash
+./run.sh
+```
+
+Votre Raspberry fonctionne désormais comme Runner sur GitHub, lorsque vous effecturez des modifications sur le répertoire, l'auto-déploiement sera lancé.
+
 ## Automatisation de la compilation et du flash avec le Runner
+
+Maintenant que notre Runner est en place, il faut lui indiquer qu'est-ce qu'il doit faire lorsque des modifications ont lieu sur le repository.
+
+TO DO
 
 ## Auto-démarage du runner (Optionnel)
 
@@ -144,6 +394,7 @@ After=network.target
 Type=simple
 User=raspberrypi
 WorkingDirectory=/home/raspberrypi/actions-runner
+Environment=PATH=/opt/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/raspberrypi/actions-runner/run.sh
 Restart=always
 
