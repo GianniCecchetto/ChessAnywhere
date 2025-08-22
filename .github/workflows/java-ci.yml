@@ -22,7 +22,8 @@ jobs:
           java-version: '21'
 
       - name: Build & test
-        run: ls -l
+        run: |
+          ls -l
           mvnw clean verify
 
       - name: Build Docker
