@@ -54,11 +54,15 @@ jobs:
         working-directory: ChessAnywhereServer
         run: ./mvnw clean install
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-app
-          path: '${{ github.workspace }}/ChessAnywhereServer/target/*.jar'
+      - name: Build Docker image
+        working-directory: ChessAnywhereServer
+        run: docker build -t chess-anywhere-server:latest .
+
+      #- name: Upload artifact for deployment job
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: java-app
+      #    path: '${{ github.workspace }}/ChessAnywhereServer/target/*.jar'
 
   deploy:
     permissions:
@@ -70,10 +74,10 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: java-app
+      #- name: Download artifact from build job
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: java-app
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -81,4 +85,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: '*.jar'
+          images: chess-anywhere-server:latest
