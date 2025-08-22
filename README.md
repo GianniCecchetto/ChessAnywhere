@@ -1,5 +1,3 @@
-# ChessAnywhere
-
 ![Logo](Documentation/img/Logo_small.png)
 
 # Spécification projet – Échiquier connecté
@@ -15,3 +13,18 @@ L’application permet :
 - de créer/rejoindre des parties communautaires via un serveur central listant les parties en attente.
 
 Le système valide les mouvements (localement et/ou via Lichess), affiche l’état du jeu et gère la communication entre le plateau, l'application, l'API Lichess et le serveur.
+
+## Kick project presentation
+
+- [Landing Page](Documentation/LandingPage)
+- [Mockups](Documentation/Mockups)
+
+## Structure de fichier
+
+- [.github/workflows](.github/workflows) : Test d'intégration continu
+- [ChessAnywhereServer](ChessAnywhereServer) : Code et API du serveur
+- [Documentation](Documentation) : Toute la documentation du projet
+- [Livrable-sem-1](Livrable-sem-1) : Contient tous les fichiers à livrer pour la semaine 1
+- [hard](hard) : Schéma et PCB
+- [python-app](python-app) : Application graphique en python
+- [stm32-app](stm32-app) : Firmware STM32 pour le board
