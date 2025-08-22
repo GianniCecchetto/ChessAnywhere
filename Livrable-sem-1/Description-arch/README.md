@@ -9,7 +9,7 @@ le tout est controlé par un microcontrolleur de type STM32G030F6P6. Ces éléme
 ### 2) Application desktop
 L'application sert d'interface entre l'échiquier et les 2 serveurs. Elle permet de visualiser les parties d'autre utilisateur de ChessAnywhere et de si connecter, de se connecter a un utilisateur Lichess en ligne et de gérer des parties locales en personnes. L'application se charge également de tracker l'état actuel de l'échiquier et de calculer les coup possible lorsque les pièces sont soulevée.
 
-### 3) Serveur MQTT (ChessAnywhere)
+### 3) Serveur ChessAnywhere
 Un serveur "communautaire" ChessAnywhere utilisant l'API ChessAnywhere gère la création de "Rooms" et conserve les informations nécessaire a la connection des joueurs au serveur Lichess 
 
 ### 4) Serveur Lichess.org
