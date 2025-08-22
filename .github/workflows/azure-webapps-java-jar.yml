@@ -26,7 +26,11 @@ env:
 
 on:
   push:
-    branches: [ "main" ]
+    paths:
+      - "ChessAnywhereServer/**"
+  pull_request:
+    paths:
+      - "ChessAnywhereServer/**"
   workflow_dispatch:
 
 permissions:
