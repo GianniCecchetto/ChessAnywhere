@@ -1,6 +1,6 @@
 # ChessAnywhere
 
-
+![Logo](Documentation/img/Logo_ChessAnywhere.png.png)
 
 # Spécification projet – Échiquier connecté
 
