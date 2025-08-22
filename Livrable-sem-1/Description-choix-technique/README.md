@@ -157,7 +157,7 @@ L’application communiquera à la fois avec :
 Les principales fonctionnalités prévues sont :
 
 * **Visualisation des rooms ChessAnywhere** créées par les utilisateurs,
-* **Connexion à un utilisateur Lichess en ligne** à partir d’un lien,
+* **Lancer un challenge à un utilisateur Lichess en ligne** à l'aide d’un lien,
 * **Lancement d’une partie locale (versus en personne)** sans passer par Lichess,
 * **Saisie du token API Lichess** pour l’authentification et l’accès aux fonctionnalités avancées,
 * **Suivi en temps réel du statut de connexion au plateau (board)**,
@@ -173,9 +173,9 @@ Le serveur communautaire **ChessAnywhere**:
 * les clients (l’application desktop) peuvent créer des rooms,
 * d’autres clients peuvent se connecter a la room pour recevoir le lien correspondants a la partie.
 
-Le serveur sera développé en **Java** et déployé sur une **machine virtuelle Azure**. Ce choix est motivé par :
+Le serveur sera développé en **Java** et déployé sur une **Web App Azure**. Ce choix est motivé par :
 
 * la connaissance préalable de java,
-* l’intégration facilitée avec l’environnement **Azure** que nous avons également déjà utilisé.
+* l’intégration facilitée avec l’environnement **Azure** que nous avons également déjà utilisé, sauf que nous avions utilisé une VM.
 
 Cette approche permet de garder une architecture avec la quelle nous avons déjà interagit, tout en développant notre propre API.
