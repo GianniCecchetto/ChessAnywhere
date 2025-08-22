@@ -23,11 +23,11 @@ jobs:
 
       - name: Build & test
         working-directory: ChessAnywhereServer
-        run: mvnw clean verify
+        run: ./mvnw clean verify
 
       - name: Build Docker
         working-directory: ChessAnywhereServer
-        run: mvnw clean package
+        run: ./mvnw clean package
           docker build …
           docker run …
           curl http://localhost:8080/health
