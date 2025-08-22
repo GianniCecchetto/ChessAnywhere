@@ -1,4 +1,4 @@
-name: Release - Build & Push Docker Image
+name: Release - Build & Push Python App Docker Image
 
 on:
   push:

@@ -19,8 +19,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Build & test
-        working-directory: server
-        run: ./mvnw clean verify
+        run: ./ChessAnywhereServer/mvn clean verify
+
+      - name: Build Docker
+        run: ./ChessAnywhereServer/mvn clean package   # build .jar
+          docker build …      # create image
+          docker run …        # start container in CI
+          curl http://localhost:8080/health   # check endpoint works
