@@ -105,13 +105,20 @@
       box-shadow: 0 0 12px rgba(96,165,250,0.2);
     }
     .member .photo {
-      width: 80px;
-      height: 80px;
-      background: #1e3a8a;
-      border-radius: 50%;
-      margin: 0 auto 1rem;
-      box-shadow: 0 0 15px rgba(96,165,250,0.5);
-    }
+	  width: 80px;
+	  height: 80px;
+	  border-radius: 50%;
+	  overflow: hidden; /* coupe l’image en cercle */
+	  margin: 0 auto 1rem;
+	  box-shadow: 0 0 15px rgba(96,165,250,0.5);
+	}
+
+	.member .photo img {
+	  width: 100%;
+	  height: 100%;
+	  object-fit: cover; /* centre et remplit sans déformer */
+	  display: block;
+	}
     footer {
       background: #0f172a;
       color: #93c5fd;
@@ -152,6 +159,45 @@
 	.chess-pieces.right {
 	  right: -250px;
 	}
+	section.app {
+      background: #111827;
+     padding: 3rem 2rem;
+	}
+
+  .app h2 {
+	  text-align: center;
+	  font-size: 2rem;
+	  margin-bottom: 2rem;
+	  color: #60a5fa;
+	  text-shadow: 0 0 10px rgba(96,165,250,0.7);
+  }
+
+  .app-container {
+	  display: grid;
+	  grid-template-columns: 1fr 1fr;
+	  gap: 2rem;
+	  max-width: 1000px;
+	  margin: 0 auto;
+	  align-items: center;
+  }
+
+  .app-container img {
+	  max-width: 100%;
+	  border-radius: 1rem;
+	  box-shadow: 0 0 25px rgba(96,165,250,0.5);
+  }
+
+  .app-text h3 {
+	  color: #93c5fd;
+	  margin-bottom: 0.5rem;
+  }
+
+  .app-text p {
+	  color: #d1d5db;
+	  margin-bottom: 1.5rem;
+	  font-size: 1rem;
+  }
+
   </style>
 </head>
 <body>
@@ -190,30 +236,62 @@
     </div>
   </section>
 
+  <section class="app">
+  <h2>L'application compagnon</h2>
+  <div class="app-container">
+	<img src="application.png" alt="PC connecté à l'échiquier">
+	<div class="app-text">
+	  <h3>Une expérience simple et intuitive</h3>
+	  <p>
+		L’application compagnon vous permet de jouer en toute simplicité. 
+		Son interface claire et fluide vous aide à vous concentrer sur le jeu.
+	  </p>
+	  <h3>Trouvez vos amis facilement</h3>
+	  <p>
+		Connectez-vous et retrouvez vos amis pour jouer ensemble, où qu’ils soient. 
+		L’application vous met en relation et vous synchronise en un clic.
+	  </p>
+	  <h3>Compatible et connectée</h3>
+	  <p>
+		Grâce à une connexion USB directe avec votre échiquier, vos parties 
+		s’affichent en temps réel sur votre ordinateur.
+	  </p>
+	</div>
+  </div>
+  </section>
+
   <section class="team">
-    <h2>Notre équipe</h2>
-    <div class="team-members">
-      <div class="member">
-        <div class="photo"></div>
-        <h3>Thomas Stäheli</h3>
-        <p>Manager</p>
+  <h2>Notre équipe</h2>
+  <div class="team-members">
+    <div class="member">
+      <div class="photo">
+        <img src="thomas.jpg" alt="Photo de Thomas Stäheli">
       </div>
-      <div class="member">
-        <div class="photo"></div>
-        <h3>Ali Zoubir</h3>
-        <p>Développeur Hardware</p>
-      </div>
-      <div class="member">
-        <div class="photo"></div>
-        <h3>Nathan Tschantz</h3>
-        <p>Micro Programmer</p>
-      </div>
-      <div class="member">
-        <div class="photo"></div>
-        <h3>Gianni Cecchetto</h3>
-        <p>Designer Produit</p>
-      </div>
+      <h3>Thomas Stäheli</h3>
+      <p>Manager</p>
     </div>
+    <div class="member">
+      <div class="photo">
+        <img src="ali.jpg" alt="Photo de Ali Zoubir">
+      </div>
+      <h3>Ali Zoubir</h3>
+      <p>Développeur Hardware</p>
+    </div>
+    <div class="member">
+      <div class="photo">
+        <img src="nathan.jpg" alt="Photo de Nathan Tschantz">
+      </div>
+      <h3>Nathan Tschantz</h3>
+      <p>Micro Programmer</p>
+    </div>
+    <div class="member">
+      <div class="photo">
+        <img src="gianni.jpg" alt="Photo de Gianni Cecchetto">
+      </div>
+      <h3>Gianni Cecchetto</h3>
+      <p>Designer Produit</p>
+    </div>
+  </div>
   </section>
 
   <footer>
