@@ -15,5 +15,9 @@ La page principale de l'application comprendra
 
 Quelques options de personnalisation sont misent a disposition dans l'onglet "settings".
 
-![aettings window](img/mockup_app_settings_v3.png)
+![settings window](img/mockup_app_settings_v3.png)
 ---
+
+## Mockups du plateau
+![schema plateau](img/schema_plateau.png)
+![cas](img/cas_utilisation.png)
