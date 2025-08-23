@@ -1,16 +1,9 @@
-name: Release - Build & Push Python App Docker Image
+name: Release - Build & Push Java Server Docker Image
 
 on:
   push:
     tags:
       - "v*.*.*"   # ex: v1.0.0
-    paths:
-      - "ChessAnywhereServer/**"
-  pull_request:
-    tags:
-      - "v*.*.*"   # ex: v1.0.0
-    paths:
-      - "ChessAnywhereServer/**"
 
 jobs:
   docker-build-push:

@@ -5,8 +5,8 @@ on:
     paths:
       - "python-app/**"
   pull_request:
-    paths:
-      - "python-app/**"
+    branches:
+      - main     # run on PRs to main
 
 jobs:
   test:

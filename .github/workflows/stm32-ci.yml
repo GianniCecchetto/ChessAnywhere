@@ -1,10 +1,12 @@
-name: Build STM32 Firmware
+name: Build, Flash and Tests STM32 Firmware
 
 on:
   push:
-    paths: ["stm32-app/**"]
+    paths: 
+      - "stm32-app/**"
   pull_request:
-    paths: ["stm32-app/**"]
+    branches:
+      - main     # run on PRs to main
 
 jobs:
   build-flash:

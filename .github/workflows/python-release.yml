@@ -1,46 +1,60 @@
-name: Release - Build & Push Python App Docker Image
+name: Release - Build Python Executable
 
 on:
   push:
     tags:
       - "v*.*.*"   # ex: v1.0.0
-    paths:
-      - "python-app/**"
-  pull_request:
-    tags:
-      - "v*.*.*"   # ex: v1.0.0
-    paths:
-      - "python-app/**"
 
 jobs:
-  docker-build-push:
-    runs-on: ubuntu-latest
+  build-python-exe:
+    runs-on: windows-latest   # required for building .exe
     defaults:
       run:
         working-directory: python-app
-    permissions:
-      contents: read
-      packages: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          python-version: "3.12"
 
-      - name: Build Docker image
+      - name: Install dependencies
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/python-app
-          VERSION=${GITHUB_REF##*/}   # récupère le tag ex: v1.0.0
-          docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$VERSION .
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-      - name: Push Docker image
+      - name: Build executable with PyInstaller
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/python-app
-          VERSION=${GITHUB_REF##*/}
-          docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:$VERSION
+          pyinstaller --onefile main.py
+
+      - name: Archive executable
+        run: |
+          mkdir dist-release
+          copy dist\main.exe dist-release\python-app-${{ github.ref_name }}.exe
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-exe
+          path: python-app/dist-release/*.exe
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build-python-exe
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.exe"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

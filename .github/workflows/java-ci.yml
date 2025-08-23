@@ -1,12 +1,12 @@
-name: CI - Java Server
+name: CI - Tests Java Server
 
 on:
   push:
     paths:
       - "ChessAnywhereServer/**"
   pull_request:
-    paths:
-      - "ChessAnywhereServer/**"
+    branches:
+      - main     # run on PRs to main
 
 jobs:
   build-test:
