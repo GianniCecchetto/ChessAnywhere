@@ -1,0 +1,60 @@
+name: Release - Build Python Executable
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
+
+jobs:
+  build-python-exe:
+    runs-on: windows-latest   # required for building .exe
+    defaults:
+      run:
+        working-directory: python-app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller --onefile main.py
+
+      - name: Archive executable
+        run: |
+          mkdir dist-release
+          copy dist\main.exe dist-release\python-app-${{ github.ref_name }}.exe
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-exe
+          path: python-app/dist-release/*.exe
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build-python-exe
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.exe"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

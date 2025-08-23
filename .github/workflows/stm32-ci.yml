@@ -1,0 +1,50 @@
+name: Build, Flash and Tests STM32 Firmware
+
+on:
+  push:
+    paths: 
+      - "stm32-app/**"
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
+  pull_request:
+    branches:
+      - main     # run on PRs to main
+
+jobs:
+  build-flash:
+    runs-on: self-hosted
+
+    steps:
+      # Step 1: Checkout the repository and pull the branch
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      # Step 2: Set up ARM toolchain (persist PATH for next steps)
+      - name: Setup ARM toolchain
+        run: echo "/opt/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin" >> $GITHUB_PATH
+
+      # Step 3: Build STM32 project
+      - name: Build STM32 project
+        working-directory: stm32-app/Debug
+        run: |
+          find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
+          make all
+
+      # Step 4: Flash the STM32 (if hardware attached)
+      - name: Flash STM32
+        if: ${{ runner.os == 'Linux' }}
+        working-directory: stm32-app/Debug
+        run: |
+          openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
+                  -c "program test2.elf verify reset exit"
+
+      # Step 5 : Test the UART connection with the STM32
+      - name: Python test STM32
+        run: python3 -m pytest stm32-app/test -v
+        env:
+          PYTHONPATH: stm32-app        
+
+

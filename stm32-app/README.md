@@ -109,5 +109,3 @@ Vérifier la sortie PWM (ex : `PA8`) :
 | 32 MHz                   | 0   | 39  |
 | 48 MHz                   | 0   | 59  |
 | 72 MHz                   | 0   | 89  |
-
-

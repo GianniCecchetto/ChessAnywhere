@@ -1,0 +1,34 @@
+name: CI - Tests Java Server
+
+on:
+  push:
+    paths:
+      - "ChessAnywhereServer/**"
+  pull_request:
+    branches:
+      - main     # run on PRs to main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build & test
+        working-directory: ChessAnywhereServer
+        run: ./mvnw clean verify
+
+      - name: Build Docker
+        working-directory: ChessAnywhereServer
+        run: |
+          ./mvnw clean package
+          docker build -t chess-anywhere-server:latest .
+          docker run -d -p 8080:8080 --name chess-anywhere-server chess-anywhere-server:latest
+          curl http://localhost:8080/health
