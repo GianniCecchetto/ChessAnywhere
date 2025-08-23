@@ -12,6 +12,17 @@ Voici la liste du matériel nécessaire pour pouvoir effectuer ce tutoriel de A 
 - 1x Carte Nucleo ou un STM32
 - 1x Programmeur STK-LINK
 
+## Version
+
+- La création du projet STM32 a été faite sur une machine `Windows 11` à l'aide de l'application `STM32CubeIDE` version `1.19.0`.
+- Le déploiement automatique s'est effectué sur un Raspberry Pi 3B+ avec une architecture `64 bits`.
+- Une carte `Nucleo-L010RB` a été utilisée pour les tests de ce tutoriel.
+
+## Câblage
+
+1. Câbler le Raspberry Pi afin de l'alimenter en USB.
+2. Câbler votre carte Nucleo ou STM32 à l'aide d'un port USB disponible sur votre Raspberry Pi.
+
 ## Mise en place de l'OS du Raspberry Pi
 
 Cette étape est importante, car il est nécessaire d'utiliser un OS 64 bits pour établir cette mise en place. Pour flasher la SD, il existe un logiciel simple d'utilisation [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
@@ -108,7 +119,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ### Compilation et Makefile
 
-Maintenant que notre toolchain est à jour, on va pouvoir compiler notre projet STM32. Voici l'arborescence de notre projet créer depuis STM32 Cube IDE :
+Maintenant que notre toolchain est à jour, on va pouvoir compiler notre projet STM32. Voici l'arborescence de notre projet créer depuis STM32 Cube IDE (version 1.19.0):
 
 ```txt
 Firmware_anywherechess/         # Racine du projet
@@ -154,7 +165,7 @@ cd my_stm32_project/Debug
 nano makefile
 ```
 
-Le makefile ci-dessous a été modifié et ne correspond pas à celui généré par l'IDE :
+Le makefile ci-dessous est basé sur le makefile généré par l'IDE (sur Windows), cependant il a été modifié pour qu'il fonctionne sur l'architecture cible :
 
 ```makefile
 ################################################################################
@@ -283,7 +294,7 @@ find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
 make all
 ```
 
-Si tout s'est bien passé, on a un message semblable à celui-ci à la fin :
+Si tout s'est bien passé, on a un message semblable à celui-ci à la fin du build:
 
  ```bash
 (beaucoup beaucoup de prompt ...)
@@ -316,6 +327,7 @@ $ sudo openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
 Le résultat suivant doit s'afficher (fin du prompt) :
 
 ```bash
+(...)
 Info : Device: STM32L0xx (Cat.5)
 Info : STM32L flash has dual banks. Bank (0) size is 64kb, base address is 0x8000000
 ** Programming Finished **
@@ -368,15 +380,72 @@ Votre Raspberry fonctionne désormais comme Runner sur GitHub, lorsque vous effe
 
 Maintenant que notre Runner est en place, il faut lui indiquer qu'est-ce qu'il doit faire lorsque des modifications ont lieu sur le repository.
 
-TO DO
+Pour se faire, il faut avoir un répertoire `.github/workflows` dans notre répertoire git. Dans `.github/workflows`, on y insère notre fichier `.yml` qu'on peut nommer par exemple `stm32-ci.yml`. Il faut désormais insérer toute la procédure de compilation, ainsi que de flash pour que ces commandes s'exécutent après une modification dans notre dossier `stm32-app/` ait lieu. Les tests automatiques ne seront donc pas lancés, si vous effectuez des modifications dans un autre dossier que celui spécifié dans le fichier `.yml`.
 
-## Auto-démarage du runner (Optionnel)
+Voici un exemple d'un fichier `.yml` a inséré dans le répertoire `.github/workflows` :
+
+```yml
+name: Build STM32 Firmware
+
+on:
+  push:
+	# Si un push a lieu dans le fichier stm32-app
+    paths: ["stm32-app/**"]
+  pull_request:
+    # Si un push a lieu dans le fichier stm32-app
+    paths: ["stm32-app/**"]
+
+jobs:
+  build-flash:
+    runs-on: self-hosted
+
+    steps:
+      # Step 1: Checkout le repo et pull de la branche
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      # Step 2: Set up de la ARM toolchain
+      - name: Setup ARM toolchain
+        run: echo "/opt/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin" >> $GITHUB_PATH
+
+      # Step 3: Build STM32 project
+      - name: Build STM32 project
+        working-directory: stm32-app/Debug
+        run: |
+          find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
+          make all
+
+      # Step 4: Flash le STM32 (si l'hardware est existant)
+      - name: Flash STM32
+        if: ${{ runner.os == 'Linux' }}
+        working-directory: stm32-app/Debug
+        run: |
+          openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
+                  -c "program firware.elf verify reset exit"
+
+      # Step 5 : Exécute les tests automatisés se trouvant dans stm32-app/test à l'aide de pytest (à vous de définir vos tests)
+      # Partie pas obligatoire, mais elle permet d'effectuer des "tests unitaires" sur le programme de votre microcontrôleur
+      # Si vous désirez seulement compiler et flasher, alors enlever cette section
+      - name: Python test STM32
+        run: python3 -m pytest stm32-app/test -v
+        env:
+          PYTHONPATH: stm32-app        
+```
+
+Sauvegarder votre fichier `.yml` et pusher le dans votre répertoire.
+
+## Auto-démarage du runner (Optimisation donc Optionnel)
 
 Actuellement, si l'on souhaite que notre Raspberry Pi tourne en tant que Runner, il est nécessaire de s'y connecter en SSH ou en USB et de lancer la commande :
 
 ```bash
 $ ~/actions-runners $ ./run.sh
 ```
+
+ce qui nécessite qu'une machine soit toujours connecté avec une session SSH active.
 
 Cependant, il est possible de programmer cette commande au démrage du Raspberry Pi, afin de ne pas avoir une machine connectée en continu au Raspb. Pour se faire, il suffit :
 
@@ -423,4 +492,51 @@ Pour vérifier que tout fonctionne correctement, il suffit de reboot notre Raspb
 $ sudo reboot
 ```
 
+## Test de fonctionnement
+
+Avant de commencer le test, assurez-vous que votre Raspberry est bien entrain de jouer son rôle de Runner. Si ce n'est pas le cas, lancer le Runner avec la commande :
+
+```bash
+~/actions-runners $ ./run.sh
+```
+
+Ensuite, modifier un fichier de votre répertoire que vous avez spécifié dans le worflow `.yml`, par exemple on peut modifier le `main.c` dans `Core/Src`. Pour tester on peut simplement ajouter un caractère espace dans le code.
+
+Puis, on enregistre nos modifications et on push sur le git.
+
+```bash
+$ git add Core/Src/main.c
+$ git commit -m "Test intégration"
+$ git push
+```
+
 Et maintenant lorsque des modifications sont push, le test automatique doit apparaître dans la section `Actions` du répertoire.
+
+Exemple :
+
+![Raspb](img/actions.png)
+
+## Intégration des tests unitaires
+
+Une méthode possible, pour tester votre programme du microcontrôleur, est d'utilisé l'UART ou la connexion USB pour dialoguer entre votre Raspberry Pi et votre STM32.
+
+On peut écrire des tests unitaires avec la librairie `pytest`. Ainsi on peut simplement renvoyé des assert True ou False pour indiquer si le test a passé ou non.
+
+Exemple d'un dialogue :
+
+Trame UART envoyée par le Raspberry Pi :
+
+```bash
+UNIT_TEST
+```
+
+Le STM32 reçoit et effectue des tests en internes puis fini par renvoyer une donnée à valider :
+
+```bash
+DOOR_OPEN
+```
+
+Le Raspberry Pi reçoit la trame et vérifie que l'information est correct.
+
+
+
