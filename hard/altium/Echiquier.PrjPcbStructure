@@ -1,0 +1,6 @@
+Record=TopLevelDocument|FileName=chess_top.SchDoc
+Record=SheetSymbol|SourceDocument=chess_top.SchDoc|Designator=U_connector|SchDesignator=U_connector|FileName=connector.SchDoc|SymbolType=Normal|RawFileName=connector.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=chess_top.SchDoc|Designator=U_leds|SchDesignator=U_leds|FileName=leds.SchDoc|SymbolType=Normal|RawFileName=leds.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=chess_top.SchDoc|Designator=U_matrix|SchDesignator=U_matrix|FileName=matrix.SchDoc|SymbolType=Normal|RawFileName=matrix.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=chess_top.SchDoc|Designator=U_supply|SchDesignator=U_supply|FileName=supply.SchDoc|SymbolType=Normal|RawFileName=supply.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=chess_top.SchDoc|Designator=U_uc|SchDesignator=U_uc|FileName=uc.SchDoc|SymbolType=Normal|RawFileName=uc.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
