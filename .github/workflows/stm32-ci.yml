@@ -4,6 +4,8 @@ on:
   push:
     paths: 
       - "stm32-app/**"
+    tags:
+      - "v*.*.*"   # ex: v1.0.0
   pull_request:
     branches:
       - main     # run on PRs to main
