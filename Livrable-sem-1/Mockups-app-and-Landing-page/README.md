@@ -8,14 +8,15 @@ La page principale de l'application comprendra
   d'un joueur un ligne
 - La liste des parties (rooms) hébéreger par notre server MQTT
 - Un boutton permettant de lancer une partie local (versus physique)
+- Un boutton permettant de lancer une partie en ligne (opposant Lichess ou AnywhereChess)
 ---
 
-![main window](img/mockup_app_main_v3.png)
+![main window](img/mockup_app_main_v4.png)
 ---
 
 Quelques options de personnalisation sont misent a disposition dans l'onglet "settings".
 
-![settings window](img/mockup_app_settings_v3.png)
+![settings window](img/mockup_app_settings_v4.png)
 ---
 
 ## Mockups du plateau
