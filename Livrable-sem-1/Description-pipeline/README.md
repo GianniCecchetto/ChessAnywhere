@@ -18,6 +18,6 @@ Les actions pour le serveur Java sont presque identiques à l'application Python
 
 ## Firmware STM32
 
-Pour le STM32, nous avons qu'une seule action qui s'exécute sur un **Self Hosted Runner** qui va compiler le code, flasher le code sur le STM32, et qui va ensuite lancer un script python pour tester certaines fonctionnalitées du Firmware.
+Pour le STM32, nous avons qu'une seule action qui s'exécute sur un **Self Hosted Runner** (Raspberry Pi 3B+) qui va compiler le code, flasher le code sur le STM32, et qui va ensuite lancer un script python pour tester certaines fonctionnalitées du Firmware.
 
 ---
