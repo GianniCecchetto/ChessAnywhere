@@ -80,7 +80,9 @@ $ sudo apt install -y \
     ca-certificates \
     curl \
     gnupg \
-    lsb-release
+    lsb-release \
+	pytest \
+	python3-serial
 ```
 
 Ensuite on continue avec la toolchain et `openocd` qui va nous permettre de flasher notre micro en ligne de commande :
