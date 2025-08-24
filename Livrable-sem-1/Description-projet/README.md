@@ -2,6 +2,10 @@
 
 # Spécification projet – Échiquier connecté
 
+## Problématique
+
+Comment permettre à un joueur d’utiliser un véritable échiquier physique pour disputer des parties d’échecs en ligne (via Lichess ou un serveur communautaire), en assurant une détection fiable et en temps réel des mouvements, une synchronisation fluide avec l’application PC et les services distants, tout en garantissant robustesse, faible latence et bonne expérience utilisateur ?
+
 ## Objectif du projet
 
 Permettre à un joueur d’utiliser un vrai plateau d’échecs et de vraies pièces pour jouer des parties connectées.
