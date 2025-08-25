@@ -92,8 +92,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   // char msg[] = "Hello World !\r\n";
-  char msg[] = "WORLD\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  char msg[] = " ";
+  // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,7 +109,7 @@ int main(void)
     HAL_Delay(200);
 
     // Répétition de l’envoi toutes les secondes
-    HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
