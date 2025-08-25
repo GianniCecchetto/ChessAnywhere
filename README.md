@@ -16,8 +16,8 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 
 ## Kick project presentation
 
-- [Landing Page](docs/landing_page)
-- [mockups](docs/mockups)
+- [Landing Page](docs/mockups_app_and_landing_page)
+- [mockups](docs/mockups_app_and_landing_page)
 
 ## Structure de fichier
 
