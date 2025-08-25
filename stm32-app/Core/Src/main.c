@@ -1,5 +1,5 @@
 /* USER CODE BEGIN Header */
-/** 
+/**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
@@ -91,7 +91,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  char msg[] = "Hello World !\r\n";
+  // char msg[] = "Hello World !\r\n";
+  char msg[] = "WORLD\r\n";
   HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
