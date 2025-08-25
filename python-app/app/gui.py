@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-from app.logic import add_numbers
 
 class MainWindow(ttk.Frame):
     def __init__(self, parent):
@@ -24,7 +23,7 @@ class MainWindow(ttk.Frame):
         try:
             a = float(self.entry1.get())
             b = float(self.entry2.get())
-            result = add_numbers(a, b)
+            result = a + b
             self.result_label.config(text=f"Result: {result}")
         except ValueError:
             self.result_label.config(text="Invalid input")
