@@ -78,7 +78,7 @@ jobs:
           name: linux-app
           path: app/dist-release/linux-app-*
 
-release:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
