@@ -42,7 +42,7 @@ jobs:
         working-directory: stm32-app/Debug
         run: |
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
-                  -c "program test2.elf verify reset exit"
+                  -c "program test2.elf verify reset run exit"
 
       # Step 5 : Test the UART connection with the STM32
       - name: Python test STM32
