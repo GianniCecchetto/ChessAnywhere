@@ -3,7 +3,7 @@ name: CI - Tests Java Server
 on:
   push:
     paths:
-      - "ChessAnywhereServer/**"
+      - "server/**"
   pull_request:
     branches:
       - main     # run on PRs to main
@@ -22,11 +22,11 @@ jobs:
           java-version: '21'
 
       - name: Build & test
-        working-directory: ChessAnywhereServer
+        working-directory: server
         run: ./mvnw clean verify
 
       - name: Build Docker
-        working-directory: ChessAnywhereServer
+        working-directory: server
         run: |
           ./mvnw clean package
           docker build -t chess-anywhere-server:latest .

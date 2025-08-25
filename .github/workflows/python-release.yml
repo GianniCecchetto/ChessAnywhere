@@ -6,11 +6,11 @@ on:
       - "v*.*.*"   # ex: v1.0.0
 
 jobs:
-  build-python-exe:
+  build-windows-app:
     runs-on: windows-latest   # required for building .exe
     defaults:
       run:
-        working-directory: python-app
+        working-directory: app
 
     steps:
       - name: Checkout code
@@ -34,30 +34,73 @@ jobs:
       - name: Archive executable
         run: |
           mkdir dist-release
-          copy dist\main.exe dist-release\python-app-${{ github.ref_name }}.exe
+          copy dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-exe
-          path: python-app/dist-release/*.exe
+          name: windows-app
+          path: app/dist-release/*.exe
 
-  release:
+  build-linux-app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Linux executable with PyInstaller
+        run: |
+          pyinstaller --onefile app/main.py
+
+      - name: Archive executable
+        run: |
+          mkdir dist-release
+          cp dist/main dist-release/linux-app-${{ github.ref_name }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: app/dist-release/linux-app-*
+
+release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-    needs: build-python-exe
+    needs: [build-windows-app, build-linux-app]
 
     steps:
-      - name: Download build artifact
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: python-exe
+          name: windows-app
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-app
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: "*.exe"
+          files: |
+            *.exe
+            linux-app-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
