@@ -16,6 +16,9 @@ def test_uart():
         ser = serial.Serial(PORT, BAUDRATE, timeout=1)
         print(f"[OK] Port {PORT} ouvert à {BAUDRATE} bauds")
 
+        #ser.reset_input_buffer()
+        #ser.reset_output_buffer()
+
         while True:
             line = ser.readline().decode(errors='ignore').strip()
             if line:
