@@ -1,4 +1,4 @@
-![Logo](Documentation/img/Logo_small.png)
+![Logo](docs/img/Logo_small.png)
 
 # Spécification projet – Échiquier connecté
 
@@ -16,8 +16,8 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 
 ## Kick project presentation
 
-- [Landing Page](Documentation/LandingPage)
-- [Mockups](Documentation/Mockups)
+- [Landing Page](docs/landing_page)
+- [mockups](docs/mockups)
 
 ## Structure de fichier
 
