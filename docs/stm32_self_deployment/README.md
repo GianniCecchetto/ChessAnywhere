@@ -382,7 +382,7 @@ Votre Raspberry fonctionne désormais comme Runner sur GitHub, lorsque vous effe
 
 Maintenant que notre Runner est en place, il faut lui indiquer qu'est-ce qu'il doit faire lorsque des modifications ont lieu sur le repository.
 
-Pour se faire, il faut avoir un répertoire `.github/workflows` dans notre répertoire git. Dans `.github/workflows`, on y insère notre fichier `.yml` qu'on peut nommer par exemple `stm32-ci.yml`. Il faut désormais insérer toute la procédure de compilation, ainsi que de flash pour que ces commandes s'exécutent après une modification dans notre dossier `stm32-app/` ait lieu. Les tests automatiques ne seront donc pas lancés, si vous effectuez des modifications dans un autre dossier que celui spécifié dans le fichier `.yml`.
+Pour se faire, il faut avoir un répertoire `.github/workflows` dans notre répertoire git. Dans `.github/workflows`, on y insère notre fichier `.yml` qu'on peut nommer par exemple `stm32-ci.yml`. Il faut désormais insérer toute la procédure de compilation, ainsi que de flash pour que ces commandes s'exécutent après une modification dans notre dossier `firmware/` ait lieu. Les tests automatiques ne seront donc pas lancés, si vous effectuez des modifications dans un autre dossier que celui spécifié dans le fichier `.yml`.
 
 Voici un exemple d'un fichier `.yml` a inséré dans le répertoire `.github/workflows` :
 
@@ -391,11 +391,11 @@ name: Build STM32 Firmware
 
 on:
   push:
-	# Si un push a lieu dans le fichier stm32-app
-    paths: ["stm32-app/**"]
+	# Si un push a lieu dans le fichier firmware
+    paths: ["firmware/**"]
   pull_request:
-    # Si un push a lieu dans le fichier stm32-app
-    paths: ["stm32-app/**"]
+    # Si un push a lieu dans le fichier firmware
+    paths: ["firmware/**"]
 
 jobs:
   build-flash:
@@ -415,7 +415,7 @@ jobs:
 
       # Step 3: Build STM32 project
       - name: Build STM32 project
-        working-directory: stm32-app/Debug
+        working-directory: firmware/Debug
         run: |
           find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
           make all
@@ -423,18 +423,18 @@ jobs:
       # Step 4: Flash le STM32 (si l'hardware est existant)
       - name: Flash STM32
         if: ${{ runner.os == 'Linux' }}
-        working-directory: stm32-app/Debug
+        working-directory: firmware/Debug
         run: |
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
                   -c "program firware.elf verify reset exit"
 
-      # Step 5 : Exécute les tests automatisés se trouvant dans stm32-app/test à l'aide de pytest (à vous de définir vos tests)
+      # Step 5 : Exécute les tests automatisés se trouvant dans firmware/test à l'aide de pytest (à vous de définir vos tests)
       # Partie pas obligatoire, mais elle permet d'effectuer des "tests unitaires" sur le programme de votre microcontrôleur
       # Si vous désirez seulement compiler et flasher, alors enlever cette section
       - name: Python test STM32
-        run: python3 -m pytest stm32-app/test -v
+        run: python3 -m pytest firmware/test -v
         env:
-          PYTHONPATH: stm32-app        
+          PYTHONPATH: firmware        
 ```
 
 Sauvegarder votre fichier `.yml` et pusher le dans votre répertoire.

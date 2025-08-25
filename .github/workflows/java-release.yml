@@ -48,11 +48,11 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
-        working-directory: ChessAnywhereServer
+        working-directory: server
         run: ./mvnw clean install
 
       - name: Build Docker image
-        working-directory: ChessAnywhereServer
+        working-directory: server
         run: docker build -t chess-anywhere-server:latest .
 
   deploy:

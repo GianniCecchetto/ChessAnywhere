@@ -3,7 +3,7 @@ name: CI - Tests python
 on:
   push:
     paths:
-      - "python-app/**"
+      - "app/**"
   pull_request:
     branches:
       - main     # run on PRs to main
@@ -22,8 +22,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r python-app/requirements.txt
+          pip install -r app/requirements.txt
           pip install pytest
 
       - name: Run tests
-        run: PYTHONPATH=python-app pytest python-app/test
+        run: PYTHONPATH=app pytest app/test
