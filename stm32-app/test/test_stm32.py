@@ -52,4 +52,4 @@ def test_uart():
     if timeout >= 0.1 * 100:
         assert False
     else:
-        a
+        assert True
