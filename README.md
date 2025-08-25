@@ -27,4 +27,4 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 - [Livrable-sem-1](Livrable-sem-1) : Contient tous les fichiers à livrer pour la semaine 1
 - [hard](hard) : Schéma et PCB
 - [python-app](python-app) : Application graphique en python
-- [stm32-app](stm32-app) : Firmware STM32 pour le board
+- [firmware](firmware) : Firmware STM32 pour le board
