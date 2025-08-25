@@ -1,0 +1,1 @@
+#generation des déplacement possible pour un board donné et un case selectionner
