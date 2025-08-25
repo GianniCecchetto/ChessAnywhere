@@ -21,7 +21,7 @@ def test_uart():
 
 	# Clear RX buffer manuellement
 	while ser.in_waiting > 0:   # tant qu'il y a des octets dans le buffer
-    		_ = ser.read(ser.in_waiting)  # lire et ignorer tout
+    	    _ = ser.read(ser.in_waiting)  # lire et ignorer tout
 
         while True:
             line = ser.readline().decode(errors='ignore').strip()
