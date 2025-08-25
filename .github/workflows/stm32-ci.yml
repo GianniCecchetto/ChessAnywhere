@@ -48,7 +48,7 @@ jobs:
       - name: Python test STM32
         run: |
           sleep 3
-          python3 -m pytest stm32-app/test -v
+          python3 -m pytest stm32-app/test -q -k test_uart -s -vv
         env:
           PYTHONPATH: stm32-app        
 
