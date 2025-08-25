@@ -3,7 +3,9 @@ import tkinter as tk
 from . import app_color as c    
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
-from .join_game import join_game
+from .join_game import join_online_game
+from .join_game import create_local_game
+
 
 def create_widgets(app):
         """
@@ -26,7 +28,6 @@ def create_widgets(app):
 
         # ==== CONTENU PRINCIPAL ====
         # Frame principale pour le contenu (gauche et droite)
-        # Augmentation du padding pour plus d'espace autour du contenu principal
         main_content_frame = ctk.CTkFrame(app, fg_color=c.BG_COLOR)
         main_content_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=20, pady=20)
         
@@ -83,26 +84,8 @@ def create_widgets(app):
 
         games_list_frame = ctk.CTkScrollableFrame(left_panel, fg_color="transparent", corner_radius=15)
         games_list_frame.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 10))
-
-        games = ["Ali's game", "Nathan's game", "Gianni's game", "Thomas's game"]
-        for i, game in enumerate(games):
-            btn = ctk.CTkButton(games_list_frame, 
-                                text=f"▶️ {game} 📶", 
-                                corner_radius=15, 
-                                height=40, 
-                                fg_color=c.GAME_LIST_BTN, 
-                                text_color="white", 
-                                hover_color=c.DARK_BTN_HOVER,
-                                anchor="w",
-                                command=lambda g=game: join_game(g))
-            btn.pack(fill="x", pady=5)
             
         # ==== ZONE DU BOUTON ET DU TOKEN EN BAS ====
-        # Bouton Local Game
-        local_btn = ctk.CTkButton(main_content_frame, text="👥 Local Game", corner_radius=15,
-                                  fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER)
-        # Ajout de padding supérieur pour créer un espace avec le panneau du dessus
-        local_btn.grid(row=1, column=0, sticky="ew", padx=(10, 20), pady=(10, 5))
 
         # Section Token
         token_frame = ctk.CTkFrame(main_content_frame, fg_color="transparent")
@@ -146,4 +129,24 @@ def create_widgets(app):
         board_container.grid_rowconfigure(0, weight=1)
         board_container.grid_columnconfigure(0, weight=1)
         
+        # ==== Liste des parties en ligne ====
+        games = ["Ali's game", "Nathan's game", "Gianni's game", "Thomas's game"]
+        for i, game in enumerate(games):
+            btn = ctk.CTkButton(games_list_frame, 
+                                text=f"▶️ {game} 📶", 
+                                corner_radius=15, 
+                                height=40, 
+                                fg_color=c.GAME_LIST_BTN, 
+                                text_color="white", 
+                                hover_color=c.DARK_BTN_HOVER,
+                                anchor="w",
+                                command=lambda g=game: join_online_game(g,board_container))
+            btn.pack(fill="x", pady=5)
+
+        # Bouton Local Game
+        local_btn = ctk.CTkButton(main_content_frame, text="👥 Local Game", corner_radius=15,
+                                  fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,command=lambda :create_local_game(board_container))
+
+        local_btn.grid(row=1, column=0, sticky="ew", padx=(10, 20), pady=(10, 5))
+
         draw_chessboard(board_container)
