@@ -33,6 +33,7 @@ jobs:
         working-directory: stm32-app/Debug
         run: |
           find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
+          make clean
           make all
 
       # Step 4: Flash the STM32 (if hardware attached)
@@ -45,8 +46,8 @@ jobs:
 
       # Step 5 : Test the UART connection with the STM32
       - name: Python test STM32
-        run: python3 -m pytest stm32-app/test -v
+        run: |
+          python3 -m pytest stm32-app/test -v
         env:
-          PYTHONPATH: stm32-app        
-
+          PYTHONPATH: stm32-app
 
