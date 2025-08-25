@@ -22,9 +22,9 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 ## Structure de fichier
 
 - [.github/workflows](.github/workflows) : Test d'intégration continu
-- [ChessAnywhereServer](ChessAnywhereServer) : Code et API du serveur
-- [Documentation](Documentation) : Toute la documentation du projet
-- [Livrable-sem-1](Livrable-sem-1) : Contient tous les fichiers à livrer pour la semaine 1
-- [hard](hard) : Schéma et PCB
-- [python-app](python-app) : Application graphique en python
+- [server](server) : Code et API du serveur
+- [docs](docs) : Toute la documentation du projet
+- [livrable_sem_1](livrable_sem_1) : Contient tous les fichiers à livrer pour la semaine 1
+- [hardware](hardware) : Schéma et PCB
+- [app](app) : Application graphique en python
 - [firmware](firmware) : Firmware STM32 pour le board
