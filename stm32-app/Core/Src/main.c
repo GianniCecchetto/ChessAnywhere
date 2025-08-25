@@ -90,9 +90,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  UART_Flush(&huart2);
   /* USER CODE BEGIN 2 */
   // char msg[] = "Hello World !\r\n";
-  char msg[] = "C\r\n";
+  char msg[] = "D\r\n";
   HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
@@ -193,7 +194,8 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-
+  __HAL_UART_FLUSH_DRREGISTER(&huart2);
+  __HAL_UART_CLEAR_OREFLAG(&huart2);
   /* USER CODE END USART2_Init 2 */
 
 }
@@ -237,7 +239,21 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void UART_Flush(UART_HandleTypeDef *huart)
+{
+    // Vider le registre RX tant qu’il reste des données
+    __HAL_UART_FLUSH_DRREGISTER(huart);
 
+    // Effacer les flags d’erreur éventuels (Overrun, Framing, Noise, Parity)
+    __HAL_UART_CLEAR_OREFLAG(huart);
+    __HAL_UART_CLEAR_FEFLAG(huart);
+    __HAL_UART_CLEAR_NEFLAG(huart);
+    __HAL_UART_CLEAR_PEFLAG(huart);
+
+    // Attendre que la transmission en cours (TX) soit terminée
+    while(__HAL_UART_GET_FLAG(huart, UART_FLAG_TC) == RESET);
+
+}
 /* USER CODE END 4 */
 
 /**
