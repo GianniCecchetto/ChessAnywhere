@@ -1,5 +1,5 @@
 /* USER CODE BEGIN Header */
-/** 
+/**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
@@ -93,7 +93,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   char msg[] = "Hello World !\r\n";
   // char msg[] = " ";
-  // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,7 +109,7 @@ int main(void)
     HAL_Delay(200);
 
     // Répétition de l’envoi toutes les secondes
-    // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
