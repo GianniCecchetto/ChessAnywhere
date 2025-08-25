@@ -16,12 +16,13 @@ def test_uart():
         ser = serial.Serial(PORT, BAUDRATE, timeout=1)
         print(f"[OK] Port {PORT} ouvert à {BAUDRATE} bauds")
 
+        # Flush hardware buffers
         ser.reset_input_buffer()
         ser.reset_output_buffer()
 
-	# Clear RX buffer manuellement
-	while ser.in_waiting > 0:   # tant qu'il y a des octets dans le buffer
-    	    _ = ser.read(ser.in_waiting)  # lire et ignorer tout
+        # Clear RX buffer manuellement
+        while ser.in_waiting > 0:   # tant qu'il y a des octets dans le buffer
+            _ = ser.read(ser.in_waiting)  # lire et ignorer tout
 
         while True:
             line = ser.readline().decode(errors='ignore').strip()
