@@ -18,26 +18,45 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdint.h>
+#include <string.h>
+#include "bitmap.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+// ENUM qui permet de sélectionner le PORT correct correspondant à la ligne ou colonne
+typedef enum {
+	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
+};
 
+// Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
+typedef struct {
+    GPIO_TypeDef *port;   // pointeur vers le bloc GPIO (GPIOA, GPIOB…)
+    uint16_t pin;         // Numéro pin
+} GPIO_pin;
+
+typedef struct {
+	uint8_t column;
+	uint8_t line;
+} Square;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+// DEFINE
+#define BOARD_WIDTH				8
+#define BOARD_HEIGHT			8
+#define PIN_NUMBER_FOR_COLUMN 	3
+#define PIN_NUMBER_FOR_LINE	 	3
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+// MACRO
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -49,7 +68,17 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+// PRIVATE VARIABLE
+static const GPIO_pin gpio_pins[] = {
+		{GPIOA, GPIO_PIN_4},  // ROW0
+		{GPIOA, GPIO_PIN_5},  // ROW1
+		{GPIOA, GPIO_PIN_6},  // ROW2
+		{GPIOA, GPIO_PIN_11}, // COL0
+		{GPIOA, GPIO_PIN_12}, // COL1
+		{GPIOC, GPIO_PIN_15}, // COL2
+		{GPIOB, GPIO_PIN_0},  // READ
+		{GPIOB, GPIO_PIN_7}   // BUTTON
+}; // ROW0
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,6 +90,10 @@ static void MX_TIM1_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void UART_Flush(UART_HandleTypeDef *huart);
+void set_gpio_column(uint8_t column);
+void set_gpio_line(uint8_t line);
+uint8_t read_reed_value(Square square);
+void read_full_board(uint64_t board_bitmap);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -76,7 +109,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  uint64_t board_bitmap = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -405,6 +438,80 @@ void UART_Flush(UART_HandleTypeDef *huart)
     while(__HAL_UART_GET_FLAG(huart, UART_FLAG_TC) == RESET);
 
 }
+
+/*
+ * Return : void
+ */
+void set_gpio_column(uint8_t column) {
+
+	uint8_t mask = 1;
+
+	for(uint8_t i = COL0; i < PIN_NUMBER_FOR_COLUMN; ++i) {
+		if(column & mask) {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_SET);
+		} else {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_RESET);
+		}
+		mask *= 2;
+	}
+}
+
+/*
+ * Return void
+ *
+ */
+void set_gpio_line(uint8_t line) {
+
+	uint8_t mask = 1;
+
+	for(uint8_t i = ROW0; i < PIN_NUMBER_FOR_LINE; ++i) {
+		if(line & mask) {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_SET);
+		} else {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_RESET);
+		}
+		mask *= 2;
+	}
+}
+
+/*
+ * Return the : ON or OFF
+ */
+uint8_t read_reed_value(Square square) {
+
+	// Set the value with the decodeur
+	set_gpio_column(square.column);
+	set_gpio_line(square.line);
+
+	// Add delay ?? for commutation time ?
+	// HAL_delay(1); // 1 ms de temporisation
+
+	// Get the value on the READ pin (see schematics)
+	return HAL_GPIO_ReadPin(gpio_pins[READ].port, gpio_pins[READ].pin);
+}
+
+/*
+ * Return : void
+ */
+void read_full_board(uint64_t board_bitmap) {
+
+	Square square = {0, 0};
+
+	for(uint8_t line = 0; line < BOARD_WIDTH; ++line) {
+		for(uint8_t column = 0; column < BOARD_HEIGHT; ++column) {
+			square.column = column;
+			square.line = line;
+
+			if(read_reed_value(square)) {
+				bitmap_set_bit(board_bitmap, line * BOARD_WIDTH + column);
+			} else {
+				bitmap_clear_bit(board_bitmap, line * BOARD_WIDTH + column);
+			}
+
+		}
+	}
+}
+
 /* USER CODE END 4 */
 
 /**
