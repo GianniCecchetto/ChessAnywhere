@@ -39,7 +39,7 @@ public class Api {
         app.get("/api/challenges", challengeController::getAll);
         app.post("/api/challenge/{userId}", challengeController::createRandom);
         app.post("/api/challenge/{color}/{userId}", challengeController::create);
-        app.delete("/api/challenge/{id}/{userId}", challengeController::delete);
+        app.delete("/api/challenge/{userId}", challengeController::delete);
 
         app.start(port);
     }

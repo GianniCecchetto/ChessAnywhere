@@ -12,8 +12,7 @@ public class ChallengeController {
 
     public void getAll(Context ctx) {
         try {
-            List<Challenge> challenges = new ArrayList<>(activeChallenges.values());
-            ctx.status(200).json(challenges);
+            ctx.status(200).json(new ArrayList<>(activeChallenges.values()));
         } catch (Exception e) {
             ctx.status(500).result("Error retrieving challenges");
         }
