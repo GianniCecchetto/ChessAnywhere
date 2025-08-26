@@ -17,7 +17,7 @@ public class Api {
 
     private final ChallengeController challengeController;
 
-    public Api(Sqlite database) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+    public Api(/*Sqlite database*/) {
         this.app = Javalin.create(config -> config.validation.register(LocalDateTime.class, LocalDateTime::parse));
 
         this.challengeController = new ChallengeController();
@@ -37,10 +37,14 @@ public class Api {
 
         // Challenges
         app.get("/api/challenges", challengeController::getAll);
-        app.post("/api/challenge", challengeController::createRandom);
-        app.post("/api/challenge/{color}", challengeController::create);
-        app.get("/api/challenge/{id}", challengeController::delete);
+        app.post("/api/challenge/{userId}", challengeController::createRandom);
+        app.post("/api/challenge/{color}/{userId}", challengeController::create);
+        app.delete("/api/challenge/{id}/{userId}", challengeController::delete);
 
         app.start(port);
+    }
+
+    public void stop() {
+        app.stop();
     }
 }

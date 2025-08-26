@@ -31,4 +31,4 @@ jobs:
           ./mvnw clean package
           docker build -t chess-anywhere-server:latest .
           docker run -d -p 8080:8080 --name chess-anywhere-server chess-anywhere-server:latest
-        # curl http://localhost:8080/health
+          curl http://localhost:8080/health

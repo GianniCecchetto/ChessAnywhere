@@ -6,16 +6,16 @@ public class Challenge {
     private String id;
     private String url;
     private String status;
-    private User challenger;
-    private User destUser;
+    private String challengerId;
+    private String destUserId;
     private String variant;
     private boolean rated;
     private String speed;
     private String urlWhite;
     private String urlBlack;
 
-    public Challenge() {
-
+    public Challenge(String challengerId) {
+        this.challengerId = challengerId;
     }
 
     public String Url() {
@@ -24,5 +24,9 @@ public class Challenge {
 
     public void Url(String url) {
         this.url = url;
+    }
+
+    public String challengerId() {
+        return challengerId;
     }
 }

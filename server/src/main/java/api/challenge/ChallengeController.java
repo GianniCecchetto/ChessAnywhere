@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ChallengeController {
     Map<String, Challenge> activeChallenges = new ConcurrentHashMap<>();
-    private Integer key;
 
     public void getAll(Context ctx) {
         try
@@ -23,18 +22,40 @@ public class ChallengeController {
     }
 
     public void create(Context ctx) {
-        Challenge newChallenge = new Challenge();
-        activeChallenges.put(key.toString(), newChallenge);
-        key = key.intValue() + 1;
+        String userId = ctx.pathParamAsClass("userId", String.class).get();
+
+        if (activeChallenges.containsKey(userId)) {
+            ctx.status(409);
+            return;
+        }
+
+        String color = ctx.pathParamAsClass("color", String.class).get();
+
+        Challenge newChallenge = new Challenge(userId);
+        activeChallenges.put(userId, newChallenge);
 
         ctx.json(newChallenge.Url());
     }
 
     public void createRandom(Context ctx) {
+        String userId = ctx.pathParamAsClass("userId", String.class).get();
 
+        if (activeChallenges.containsKey(userId)) {
+            ctx.status(409);
+            return;
+        }
+
+        Challenge newChallenge = new Challenge(userId);
+        activeChallenges.put(userId, newChallenge);
+
+        ctx.json(newChallenge.Url());
     }
 
     public void delete(Context ctx) {
+        String userId = ctx.pathParamAsClass("userId", String.class).get();
 
+        activeChallenges.remove(userId);
+
+        ctx.status(204);
     }
 }
