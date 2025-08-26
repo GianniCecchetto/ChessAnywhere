@@ -1,13 +1,13 @@
 // =============================================
 // test_board_com
-// Compile with:  gcc example.c "../board_com.c" -o test_board_com
-// (MinGW)      :  gcc example.c ../board_com.c -o test_board_com.exe
+// Compile with:  gcc example.c "../src/board_com.c" -o test_board_com
+// (MinGW)      :  gcc example.c ../src/board_com.c -o test_board_com.exe
 // =============================================
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "../board_com.h"
+#include "../src/board_com.h"
 
 // ---- Pretty print helpers ----
 static void print_sq(uint8_t idx){

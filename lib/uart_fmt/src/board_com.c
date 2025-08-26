@@ -248,37 +248,52 @@ size_t cb_fmt_cfg_set_orient(char* out, size_t cap, int orient_deg){ return W(":
 size_t cb_fmt_cfg_set_baud(char* out, size_t cap, uint32_t baud){ return W(":CFG SET BAUD=%u", (unsigned)baud); }
 
 
-// =============================================
-// FILE: example.c (minimal usage)
-// =============================================
-#ifdef CB_EXAMPLE
-#include <stdio.h>
-#include <string.h>
+// -------- Event formatters (Board->App) --------
+// NOTE: Les events n'ont PAS de ':' en tête, cf. parser cb_parse_line.
 
-static void on_line_cb(const char* line, void* user){
-    (void)user;
-    cb_msg_t m; if(cb_parse_line(line, &m)){
-        switch(m.type){
-            case CB_EVT_LIFT:{ char sq[3]; cb_sq_to_str(m.u.sq.idx, sq); printf("[EVT] LIFT %s t=%u\n", sq, m.u.sq.t_ms); }break;
-            case CB_EVT_PLACE:{ char sq[3]; cb_sq_to_str(m.u.sq.idx, sq); printf("[EVT] PLACE %s t=%u\n", sq, m.u.sq.t_ms); }break;
-            case CB_EVT_MOVE:{ char a[3],b[3]; cb_sq_to_str(m.u.move.from_idx,a); cb_sq_to_str(m.u.move.to_idx,b); printf("[EVT] MOVE %s %s t=%u\n", a,b,m.u.move.t_ms); }break;
-            case CB_RSP_OK: printf("[OK] %s\n", m.u.ok.text); break;
-            case CB_RSP_ERR: printf("[ERR] %s %s\n", m.u.err.code, m.u.err.details); break;
-            default: printf("[MSG] type=%d\n", m.type); break;
-        }
-    }else{
-        printf("[UNPARSED] %s\n", line);
+size_t cb_fmt_evt_boot(char* out, size_t cap, const char* fw, const char* hw, uint32_t t_ms){
+    size_t pos = s_write(out, cap, "EVT BOOT");
+    if(fw && *fw)  pos += s_write(out+pos, cap-pos, " FW=%s", fw);
+    if(hw && *hw)  pos += s_write(out+pos, cap-pos, " HW=%s", hw);
+    pos += s_write(out+pos, cap-pos, " t=%u\r\n", (unsigned)t_ms);
+    return pos>cap?cap:pos;
+}
+
+size_t cb_fmt_evt_lift(char* out, size_t cap, uint8_t idx, uint32_t t_ms){
+    char sq[3]; cb_sq_to_str(idx, sq);
+    return s_write(out, cap, "EVT LIFT %s t=%u\r\n", sq, (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_place(char* out, size_t cap, uint8_t idx, uint32_t t_ms){
+    char sq[3]; cb_sq_to_str(idx, sq);
+    return s_write(out, cap, "EVT PLACE %s t=%u\r\n", sq, (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_move(char* out, size_t cap, uint8_t from_idx, uint8_t to_idx, uint32_t t_ms){
+    char a[3], b[3]; cb_sq_to_str(from_idx, a); cb_sq_to_str(to_idx, b);
+    return s_write(out, cap, "EVT MOVE %s %s t=%u\r\n", a, b, (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_lift_cancel(char* out, size_t cap, uint8_t idx, uint32_t t_ms){
+    char sq[3]; cb_sq_to_str(idx, sq);
+    return s_write(out, cap, "EVT LIFT_CANCEL %s t=%u\r\n", sq, (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_btn(char* out, size_t cap, uint32_t t_ms){
+    return s_write(out, cap, "EVT BTN t=%u\r\n", (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_timeout(char* out, size_t cap, const char* state, uint32_t t_ms){
+    if(!state || !*state) state = "TIMEOUT";
+    return s_write(out, cap, "EVT TIMEOUT %s t=%u\r\n", state, (unsigned)t_ms);
+}
+
+size_t cb_fmt_evt_error(char* out, size_t cap, const char* code, const char* details, uint32_t t_ms){
+    if(!code || !*code) code = "E";
+    size_t pos = s_write(out, cap, "EVT ERROR %s", code);
+    if(details && *details){
+        pos += s_write(out+pos, cap-pos, " %s", details);
     }
+    pos += s_write(out+pos, cap-pos, " t=%u\r\n", (unsigned)t_ms);
+    return pos>cap?cap:pos;
 }
-
-int main(void){
-    char cmd[CB_MAX_LINE];
-    size_t n = cb_fmt_led_set(cmd, sizeof(cmd), cb_coords_to_idx(4,1), 255,255,0); // E2=from
-    fwrite(cmd,1,n,stdout); // send over UART instead
-
-    cb_linebuf_t lb; cb_linebuf_init(&lb);
-    const char* sim = "EVT LIFT E2 t=102345\r\nOK VER FW=1.2.0 HW=CHESS-01\r\n";
-    cb_linebuf_feed(&lb, (const uint8_t*)sim, strlen(sim), on_line_cb, NULL);
-    return 0;
-}
-#endif

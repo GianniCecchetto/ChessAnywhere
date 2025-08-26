@@ -242,6 +242,36 @@ size_t cb_fmt_cfg_set_orient(char* out, size_t cap, int orient_deg);
 /** @brief Formate :CFG SET BAUD=<bps> (effet après :RST). */
 size_t cb_fmt_cfg_set_baud(char* out, size_t cap, uint32_t baud);
 
+// -------- Event formatters (Board->App) --------
+// Produisent des lignes "EVT ..." compatibles cb_parse_line (terminées CRLF).
+
+/** EVT BOOT FW=... HW=... t=...  (FW/HW optionnels) */
+size_t cb_fmt_evt_boot(char* out, size_t cap, const char* fw/*nullable*/, const char* hw/*nullable*/, uint32_t t_ms);
+
+/** EVT LIFT <SQ> t=... */
+size_t cb_fmt_evt_lift(char* out, size_t cap, uint8_t idx, uint32_t t_ms);
+
+/** EVT PLACE <SQ> t=... */
+size_t cb_fmt_evt_place(char* out, size_t cap, uint8_t idx, uint32_t t_ms);
+
+/** EVT MOVE <FROM> <TO> t=... */
+size_t cb_fmt_evt_move(char* out, size_t cap, uint8_t from_idx, uint8_t to_idx, uint32_t t_ms);
+
+/** EVT LIFT_CANCEL <SQ> t=... */
+size_t cb_fmt_evt_lift_cancel(char* out, size_t cap, uint8_t idx, uint32_t t_ms);
+
+/** EVT BTN t=... */
+size_t cb_fmt_evt_btn(char* out, size_t cap, uint32_t t_ms);
+
+/** EVT TIMEOUT <STATE> t=...
+ *  NOTE: <STATE> doit être un token sans espace (ex: "WAIT_MOVE"). */
+size_t cb_fmt_evt_timeout(char* out, size_t cap, const char* state, uint32_t t_ms);
+
+/** EVT ERROR <CODE> <DETAILS...> t=...
+ *  Si details==NULL, n'écrit pas la partie détails. */
+size_t cb_fmt_evt_error(char* out, size_t cap, const char* code, const char* details/*nullable*/, uint32_t t_ms);
+
+
 #ifdef __cplusplus
 }
 #endif
