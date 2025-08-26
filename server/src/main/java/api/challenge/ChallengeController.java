@@ -2,6 +2,8 @@ package api.challenge;
 
 import io.javalin.http.Context;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,11 +11,11 @@ public class ChallengeController {
     Map<String, Challenge> activeChallenges = new ConcurrentHashMap<>();
 
     public void getAll(Context ctx) {
-        try
-        {
-            ctx.status(200).json(activeChallenges);
-        } catch(Exception e) {
-            ctx.status(500);
+        try {
+            List<Challenge> challenges = new ArrayList<>(activeChallenges.values());
+            ctx.status(200).json(challenges);
+        } catch (Exception e) {
+            ctx.status(500).result("Error retrieving challenges");
         }
     }
 

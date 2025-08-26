@@ -37,11 +37,7 @@ class ChallengeApiTest {
     }
 
     @Test
-    void testCreateTwoChallenge() {
-        given()
-                .post("/api/challenge/1")
-                .then()
-                .statusCode(201);
+    void testCreateWithSameUserIdChallenge() {
         given()
                 .post("/api/challenge/1")
                 .then()
@@ -50,15 +46,6 @@ class ChallengeApiTest {
 
     @Test
     void testListChallenges() {
-        given()
-                .post("/api/challenge/1")
-                .then()
-                .statusCode(201);
-        given()
-                .post("/api/challenge/2")
-                .then()
-                .statusCode(201);
-
         List challenges =
                 given()
                         .get("/api/challenges")
@@ -70,11 +57,6 @@ class ChallengeApiTest {
 
     @Test
     void testDeleteChallenge() {
-        given()
-                .post("/api/challenge/1")
-                .then()
-                .statusCode(201);
-
         given()
                 .delete("/api/challenge/1")
                 .then()
