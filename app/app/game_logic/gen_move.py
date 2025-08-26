@@ -8,6 +8,14 @@ def get_legal_moves_for_piece(board: chess.Board, square: chess.Square):
     return moves
 
 
+def get_legal_squares_for_piece(board: chess.Board, square: chess.Square):
+    squares = [square]
+    for move in board.legal_moves:
+        if move.from_square == square:
+            squares.append(move.to_square)
+    return squares
+
+
 def get_matrix_of_legal_move(board: chess.Board, square: chess.Square):
     matrix = [["." for _ in range(8)] for _ in range(8)]
 
@@ -15,7 +23,7 @@ def get_matrix_of_legal_move(board: chess.Board, square: chess.Square):
     matrix[7 - row][col] = "O"
 
     legal_moves = get_legal_moves_for_piece(board, square)
-    print(legal_moves)
+    #print(legal_moves)
     for move in legal_moves:
         row, col = divmod(move.to_square, 8)
         if board.piece_at(move.to_square):

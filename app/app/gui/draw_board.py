@@ -28,7 +28,7 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
     
     # Dictionnaire pour stocker les références aux images
     piece_images = {}
-    print("========\n", player_color)
+
     for row in range(size):
         for col in range(size):
             if player_color:

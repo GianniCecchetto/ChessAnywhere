@@ -31,9 +31,9 @@ def create_online_game(board_container,game_name):
 
 def create_local_game(board_container):
     player_color = chess.WHITE
-    messagebox.showinfo(
-        "Création de la partie local"
-    )
+   ## messagebox.showinfo(
+   ##     "Création de la partie local"
+   ## )
     board = chess.Board()
     local_game_loop(board_container,board,player_color)
 
