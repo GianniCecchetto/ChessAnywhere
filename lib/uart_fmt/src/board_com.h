@@ -68,6 +68,94 @@ static inline void cb_sq_to_str(uint8_t idx, char out[3]){
     out[0] = (char)('A'+f); out[1]=(char)('1'+r); out[2]='\0';
 }
 
+// -------- Parser côté PCB (App -> PCB) --------
+
+typedef enum {
+    CB_CMD_NONE = 0,
+    CB_CMD_PING,
+    CB_CMD_VER_Q,
+    CB_CMD_TIME_Q,
+    CB_CMD_RST,
+    CB_CMD_SAVE,
+    CB_CMD_STREAM,           // on: bool
+    CB_CMD_READ_ALL,
+    CB_CMD_READ_SQ,          // idx
+    CB_CMD_READ_MASK_SET,    // mask64
+    CB_CMD_READ_MASK_Q,
+
+    CB_CMD_LED_SET,          // idx, r,g,b
+    CB_CMD_LED_OFF_SQ,       // idx
+    CB_CMD_LED_OFF_ALL,
+    CB_CMD_LED_FILL,         // r,g,b
+    CB_CMD_LED_RECT,         // from_idx, to_idx, r,g,b
+    CB_CMD_LED_BITBOARD,     // bits64
+    CB_CMD_LED_BRIGHT,       // bright 0..255
+    CB_CMD_LED_GAMMA,        // float gamma
+    CB_CMD_LED_MAP_HEX,      // hex192[385] (192 bytes hex, +NUL)
+
+    CB_CMD_COLOR_SET,        // name, r,g,b
+    CB_CMD_COLOR_GET,        // name
+    CB_CMD_COLOR_LIST_Q,     // (COLOR?)
+
+    CB_CMD_LED_MOVES,        // from_idx, n_to, to_list[0..n-1]  (n<=64)
+    CB_CMD_LED_OK,           // from_idx, to_idx
+    CB_CMD_LED_FAIL,         // from_idx, to_idx
+
+    CB_CMD_MOVE_ACK,         // from_idx, to_idx, promo(0/Q/R/B/N), castle(0/K/Q), enpassant_idx(-1..63)
+    CB_CMD_MOVE_NACK,        // from_idx, to_idx, reason (string)
+
+    CB_CMD_CFG_Q,
+    CB_CMD_CFG_GET,          // key
+    CB_CMD_CFG_SET_KV,       // list of "KEY=VALUE" pairs (count, array)
+
+    CB_CMD_UNKNOWN
+} cb_cmd_type_t;
+
+typedef struct {
+    cb_cmd_type_t type;
+    union {
+        struct { bool on; } stream;
+
+        struct { uint8_t idx; } read_sq;
+        struct { uint64_t mask; } read_mask_set;
+
+        struct { uint8_t idx, r,g,b; } led_set;
+        struct { uint8_t idx; } led_off_sq;
+        struct { uint8_t r,g,b; } led_fill;
+        struct { uint8_t from_idx, to_idx, r,g,b; } led_rect;
+        struct { uint64_t bits; } led_bitboard;
+        struct { uint8_t bright; } led_bright;
+        struct { float gamma; } led_gamma;
+        struct { char hex192[2*192 + 1]; } led_map_hex;
+
+        struct { char name[CB_MAX_STR]; uint8_t r,g,b; } color_set;
+        struct { char name[CB_MAX_STR]; } color_get;
+
+        struct { uint8_t from_idx; uint8_t n_to; uint8_t to_list[64]; } led_moves;
+        struct { uint8_t from_idx, to_idx; } led_ok;
+        struct { uint8_t from_idx, to_idx; } led_fail;
+
+        struct { uint8_t from_idx, to_idx; char promo; char castle; int enpassant_idx; } move_ack;
+        struct { uint8_t from_idx, to_idx; char reason[CB_MAX_STR]; } move_nack;
+
+        struct { char key[CB_MAX_STR]; } cfg_get;
+        struct { int n_pairs; const char* pairs[CB_MAX_TOKENS]; } cfg_set_kv; // pointers into internal buffer
+
+    } u;
+
+    // Espace interne pour stocker une copie modifiable de la ligne (tokenisation)
+    // et les paires k=v de CFG SET (référencées par u.cfg_set_kv.pairs).
+    char _scratch[CB_MAX_LINE + 2];
+} cb_cmd_t;
+
+/** @brief Parse une ligne de commande (App->PCB) commençant par ':'.
+ *  Ex: ":LED SET E2 255 0 0"
+ *  Remplit @p out->type et l'union associée.
+ *  @return true si reconnu, false sinon (type=CB_CMD_UNKNOWN).
+ */
+bool cb_parse_cmd(const char* line, cb_cmd_t* out);
+
+
 // -------- Message types --------
 typedef enum {
     CB_MSG_NONE = 0,
