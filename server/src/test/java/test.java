@@ -31,9 +31,7 @@ class ChallengeApiTest {
     @Test
     void testCreateChallenge() {
         given()
-                .queryParam("userId", "1")
-                .when()
-                .post("/api/challenge")
+                .post("/api/challenge/1")
                 .then()
                 .statusCode(201);
     }
@@ -41,15 +39,11 @@ class ChallengeApiTest {
     @Test
     void testCreateTwoChallenge() {
         given()
-                .queryParam("userId", "1")
-                .when()
-                .post("/api/challenge")
+                .post("/api/challenge/1")
                 .then()
                 .statusCode(201);
         given()
-                .queryParam("userId", "1")
-                .when()
-                .post("/api/challenge")
+                .post("/api/challenge/1")
                 .then()
                 .statusCode(409);
     }
@@ -57,23 +51,17 @@ class ChallengeApiTest {
     @Test
     void testListChallenges() {
         given()
-                .queryParam("userId", "1")
-                .when()
-                .post("/api/challenge")
+                .post("/api/challenge/1")
                 .then()
                 .statusCode(201);
         given()
-                .queryParam("userId", "2")
-                .when()
-                .post("/api/challenge")
+                .post("/api/challenge/2")
                 .then()
                 .statusCode(201);
 
         List challenges =
                 given()
-                        .queryParam("userId", "123")
-                        .when()
-                        .post("/api/challenges")
+                        .get("/api/challenges")
                         .then()
                         .extract().body().as(List.class);
 
@@ -83,9 +71,12 @@ class ChallengeApiTest {
     @Test
     void testDeleteChallenge() {
         given()
-            .queryParam("userId", "123")
-                .when()
-                .delete("/api/challenge/")
+                .post("/api/challenge/1")
+                .then()
+                .statusCode(201);
+
+        given()
+                .delete("/api/challenge/1")
                 .then()
                 .statusCode(204);
     }
