@@ -26,7 +26,7 @@ def local_game_loop(board_container, board, player_color):
                 # 8  9  10 11 12 13 14 15 
                 # 0  1  2  3  4  5  6  7  
                 #valeur recu
-                start_square_input = input("Pièce à déplacer: ")
+                start_square_input = input("Pièce à déplacer: ")# UART
                 start_square = int(start_square_input)
                 
                 piece = board.piece_at(start_square)
@@ -36,12 +36,12 @@ def local_game_loop(board_container, board, player_color):
                     continue
                 
                 playable_square = get_matrix_of_legal_move(board, start_square)
+                print(playable_square)
                 draw_chessboard(board_container, board=board, playable_square=playable_square, player_color=player_color)
                 legal_squares = get_legal_squares_for_piece(board,start_square)
-                print(legal_squares)
-                #for row in range(8):
-                    #print(" ".join(playable_square[row]))
-                dest_square_input = input("case de destination : ")
+                for row in range(8):
+                    print(" ".join(playable_square[row]))
+                dest_square_input = input("case de destination : ") # UART
                 dest_square = int(dest_square_input)
                 
                 if dest_square == start_square :
@@ -68,11 +68,14 @@ def local_game_loop(board_container, board, player_color):
                         
                         temp_board.push(move)
                         temp_board.turn = turn
+                        row, col = divmod(dest_square, 8)
+                        
+                        playable_square[7-row][col] = "W"
                         draw_chessboard(board_container, board=temp_board,playable_square=playable_square,player_color=player_color)
-
+                        playable_square[7-row][col] = "."
                         #ingnorer le soulever de piece, il est nécessaire de rejouer la derniere piece deplacer
 
-                        new_dest_square_input = input("nouvelle destination : ")
+                        new_dest_square_input = input("nouvelle destination : ")# UART
                         new_dest_square = int(new_dest_square_input)
                
 
@@ -98,8 +101,6 @@ def local_game_loop(board_container, board, player_color):
                 print("Entrée invalide. Veuillez entrer un nombre (0-63).")
             except Exception as e:
                 print(f"Une erreur s'est produite : {e}")
-
-        # La boucle valide_move_found se termine, on passe au tour suivant
         
     if board.is_checkmate():
         print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")

@@ -48,6 +48,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                     fill_color = "#0026FF"
                 elif playable_square[row_index][col_index] == "P":
                     fill_color = "#00FBFF"
+                elif playable_square[row_index][col_index] == "W":
+                    fill_color = "#FFAE00"
 
             x1 = col * square_size
             y1 = row * square_size
@@ -59,6 +61,7 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
             if playable_square and playable_square[row_index][col_index] != ".":
                 canvas.create_rectangle(x1 + 6, y1 + 6, x2 - 6, y2 - 6, 
                                         fill=fill_color, width=OUTLINE_WIDTH, outline="gray")
+                # uart la bonne couleur fmt_led_set
 
     # ----- dessiner les pièces -----
     if board:
