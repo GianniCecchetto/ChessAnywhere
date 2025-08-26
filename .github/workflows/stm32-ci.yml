@@ -5,7 +5,7 @@ on:
     branches:
       - "**"
     paths:
-      - "firmware/**"
+      - "firmware/projet_integration_ci_cd/**"
     tags:
       - "v*.*.*"
   pull_request:
@@ -30,7 +30,7 @@ jobs:
 
       # Step 3: Build STM32 project
       - name: Build STM32 project
-        working-directory: firmware/Debug
+        working-directory: firmware/projet_integration_ci_cd/Debug
         run: |
           find . -name "*.mk" -exec sed -i 's/-fcyclomatic-complexity//g' {} +
           make clean
@@ -39,7 +39,7 @@ jobs:
       # Step 4: Flash the STM32 (if hardware attached)
       - name: Flash STM32
         if: ${{ runner.os == 'Linux' }}
-        working-directory: firmware/Debug
+        working-directory: firmware/projet_integration_ci_cd/Debug
         run: |
           openocd -f interface/stlink.cfg -f target/stm32l0.cfg \
                   -c "program test2.elf verify reset exit"
@@ -47,7 +47,7 @@ jobs:
       # Step 5 : Test the UART connection with the STM32
       - name: Python test STM32
         run: |
-          python3 -m pytest firmware/test -v
+          python3 -m pytest firmware/projet_integration_ci_cd/test -v
         env:
           PYTHONPATH: firmware
 
