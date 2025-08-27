@@ -7,5 +7,6 @@ public class Main {
 
         Api api = new Api();
         api.start(portNumber);
+        System.out.println("Server starting on port: " + portNumber);
     }
 }
