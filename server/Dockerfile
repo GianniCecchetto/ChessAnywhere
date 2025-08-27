@@ -3,7 +3,7 @@ FROM maven:3.9.8-eclipse-temurin-21 AS builder
 
 # Copier le code source dans l’image
 WORKDIR /app
-COPY . .
+COPY /target/server-1.0-SNAPSHOT.jar /app/server.jar
 
 # Compiler le projet et créer le JAR (skip tests si besoin)
 RUN ./mvnw clean package -DskipTests
@@ -21,4 +21,4 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Commande de lancement
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "server.jar"]
