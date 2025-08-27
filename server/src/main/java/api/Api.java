@@ -41,7 +41,7 @@ public class Api {
         app.post("/api/challenge/{color}/{userId}", challengeController::create);
         app.delete("/api/challenge/{userId}", challengeController::delete);
 
-        app.start(port);
+        app.start("0.0.0.0", port);
     }
 
     public void stop() {
