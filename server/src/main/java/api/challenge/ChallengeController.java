@@ -12,9 +12,10 @@ public class ChallengeController {
 
     public void getAll(Context ctx) {
         try {
-            ctx.status(200).json(new ArrayList<>(activeChallenges.values()));
+            ctx.status(200).json(activeChallenges.values());
         } catch (Exception e) {
-            ctx.status(500).result("Error retrieving challenges");
+            e.printStackTrace();
+            ctx.status(500).result("Internal error: " + e.getMessage());
         }
     }
 
@@ -35,7 +36,7 @@ public class ChallengeController {
         Challenge newChallenge = new Challenge(userId);
         activeChallenges.put(userId, newChallenge);
 
-        ctx.json(newChallenge.Url());
+        ctx.status(201).json(newChallenge);
     }
 
     public void createRandom(Context ctx) {
@@ -49,14 +50,18 @@ public class ChallengeController {
         Challenge newChallenge = new Challenge(userId);
         activeChallenges.put(userId, newChallenge);
 
-        ctx.json(newChallenge.Url());
+        ctx.status(201).json(newChallenge);
     }
 
     public void delete(Context ctx) {
         String userId = ctx.pathParamAsClass("userId", String.class).get();
 
-        activeChallenges.remove(userId);
+        Challenge removed = activeChallenges.remove(userId);
 
-        ctx.status(204);
+        if (removed != null) {
+            ctx.status(204);
+        } else {
+            ctx.status(404).result("Challenge not found"); // ✅ more accurate
+        }
     }
 }

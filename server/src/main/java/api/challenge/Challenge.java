@@ -18,15 +18,26 @@ public class Challenge {
         this.challengerId = challengerId;
     }
 
-    public String Url() {
-        return url;
-    }
+    // Getters
+    public String getId() { return id; }
+    public String getUrl() { return url; }
+    public String getStatus() { return status; }
+    public String getChallengerId() { return challengerId; }
+    public String getDestUserId() { return destUserId; }
+    public String getVariant() { return variant; }
+    public boolean isRated() { return rated; }
+    public String getSpeed() { return speed; }
+    public String getUrlWhite() { return urlWhite; }
+    public String getUrlBlack() { return urlBlack; }
 
-    public void Url(String url) {
-        this.url = url;
-    }
-
-    public String challengerId() {
-        return challengerId;
-    }
+    // Setters
+    public void setId(String id) { this.id = id; }
+    public void setUrl(String url) { this.url = url; }
+    public void setStatus(String status) { this.status = status; }
+    public void setDestUserId(String destUserId) { this.destUserId = destUserId; }
+    public void setVariant(String variant) { this.variant = variant; }
+    public void setRated(boolean rated) { this.rated = rated; }
+    public void setSpeed(String speed) { this.speed = speed; }
+    public void setUrlWhite(String urlWhite) { this.urlWhite = urlWhite; }
+    public void setUrlBlack(String urlBlack) { this.urlBlack = urlBlack; }
 }

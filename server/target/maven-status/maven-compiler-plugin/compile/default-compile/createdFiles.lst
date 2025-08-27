@@ -1,0 +1,5 @@
+api/challenge/ChallengeController.class
+database/Sqlite.class
+api/Api.class
+api/challenge/Challenge.class
+api/user/User.class

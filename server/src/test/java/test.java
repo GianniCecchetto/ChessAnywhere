@@ -45,6 +45,14 @@ class ChallengeApiTest {
     }
 
     @Test
+    void testCreateChallengeWithAnotherUserId() {
+        given()
+                .post("/api/challenge/2")
+                .then()
+                .statusCode(201);
+    }
+
+    @Test
     void testListChallenges() {
         List challenges =
                 given()
