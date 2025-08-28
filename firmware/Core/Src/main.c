@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include <string.h>
+#include <stdint.h>
 #include "bitmap.h"
 /* USER CODE END Includes */
 
@@ -73,9 +74,9 @@ static const GPIO_pin gpio_pins[] = {
 		{GPIOA, GPIO_PIN_4},  // ROW0
 		{GPIOA, GPIO_PIN_5},  // ROW1
 		{GPIOA, GPIO_PIN_6},  // ROW2
-		{GPIOA, GPIO_PIN_11}, // COL0
-		{GPIOA, GPIO_PIN_12}, // COL1
-		{GPIOC, GPIO_PIN_15}, // COL2
+		{GPIOC, GPIO_PIN_15}, // COL0
+		{GPIOA, GPIO_PIN_11}, // COL1
+		{GPIOA, GPIO_PIN_12}, // COL2
 		{GPIOB, GPIO_PIN_0},  // READ
 		{GPIOB, GPIO_PIN_7}   // BUTTON
 }; // ROW0
@@ -93,16 +94,17 @@ void UART_Flush(UART_HandleTypeDef *huart);
 void set_gpio_column(uint8_t column);
 void set_gpio_line(uint8_t line);
 uint8_t read_reed_value(Square square);
-void read_full_board(uint64_t board_bitmap);
+void read_full_board(uint64_t *board_bitmap);
+uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define LED_NUMBER      64
-#define LED_TEST         1
-#define RESET_SLOTS      50
-#define LED_BUFFER_SIZE  (24*LED_NUMBER + RESET_SLOTS)
+#define LED_NUMBER      	64
+#define LED_TEST         	1
+#define RESET_SLOTS      	50
+#define LED_BUFFER_SIZE  	(24*LED_NUMBER + RESET_SLOTS)
 
 // Avec ARR = 39 (32 MHz -> 800 kHz)
 #define HIGH_DUTY  26   // ≈ 0.8 µs (logique "1")
@@ -207,34 +209,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  for(int j = 0; j < 3;++j){
+	read_full_board(&board_bitmap);
 
-		  do{
-			  for(int i = 0; i < LED_NUMBER; ++i){
-				  colors[i][0] = red;   colors[i][1] = green; colors[i][2] = blue;
-			  }
-			  switch(j){
-				  case 0:
-					  red++;
-					  break;
-				  case 1:
-					  green++;
-					  break;
-				  case 2:
-					  blue++;
-					  break;
-			  }
-
-			  updateBuffer();
-			  WS2812_Send();
-			  HAL_Delay(10);
-	  }while(red != 255 && green != 255 && blue != 255);
-		  red = 0;
-		  green = 0;
-		  blue = 0;
+	for(uint8_t i = 0; i < LED_NUMBER; ++i) {
+		uint8_t led_index = convert_reed_index_to_led_index(i);
+		if(bitmap_get_bit(board_bitmap, i)) {
+			colors[led_index][0] = 0;   colors[led_index][1] = 200; colors[led_index][2] = 0;
+		} else {
+			colors[led_index][0] = 200;   colors[led_index][1] = 0; colors[led_index][2] = 0;
+		}
 	}
 
-
+	updateBuffer();
+	WS2812_Send();
 
     /* USER CODE END WHILE */
 
@@ -475,8 +462,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_11
                           |GPIO_PIN_12, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB7 PB0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_0;
+  /*Configure GPIO pin : PB7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -496,6 +483,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -526,7 +519,7 @@ void set_gpio_column(uint8_t column) {
 
 	uint8_t mask = 1;
 
-	for(uint8_t i = COL0; i < PIN_NUMBER_FOR_COLUMN; ++i) {
+	for(uint8_t i = COL0; i < PIN_NUMBER_FOR_COLUMN + COL0; ++i) {
 		if(column & mask) {
 			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_SET);
 		} else {
@@ -562,9 +555,20 @@ uint8_t read_reed_value(Square square) {
 	// Set the value with the decodeur
 	set_gpio_column(square.column);
 	set_gpio_line(square.line);
+	/*
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
 
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO
+
+	_PIN_5, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+	*/
+	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	// Add delay ?? for commutation time ?
-	// HAL_delay(1); // 1 ms de temporisation
+	//HAL_Delay(20); // 1 ms de temporisation
 
 	// Get the value on the READ pin (see schematics)
 	return HAL_GPIO_ReadPin(gpio_pins[READ].port, gpio_pins[READ].pin);
@@ -573,7 +577,7 @@ uint8_t read_reed_value(Square square) {
 /*
  * Return : void
  */
-void read_full_board(uint64_t board_bitmap) {
+void read_full_board(uint64_t *board_bitmap) {
 
 	Square square = {0, 0};
 
@@ -589,6 +593,17 @@ void read_full_board(uint64_t board_bitmap) {
 			}
 
 		}
+	}
+}
+
+/* Convert reed index to
+ *
+ */
+uint8_t convert_reed_index_to_led_index(uint8_t reed_index) {
+	if((reed_index / 8) % 2 == 0) {
+		return reed_index;
+	} else {
+		return (16 * (uint8_t)(reed_index / 8)) + 7 - reed_index;
 	}
 }
 
