@@ -3,6 +3,16 @@ from .gen_move import get_legal_moves_for_piece
 from .gen_move import get_matrix_of_legal_move
 from .gen_move import get_legal_squares_for_piece
 from  gui.draw_board import draw_chessboard
+from uart.uart_com  import wait_for_square_event
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+print(BASE_DIR)
+UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+print(UART_PATH)
+sys.path.append(UART_PATH)
+
+import board_com_ctypes as cb
 
 
 def online_game_loop(board_container,board,player_color) :
@@ -27,8 +37,15 @@ def local_game_loop(board_container, board, player_color):
                 # 8  9  10 11 12 13 14 15 
                 # 0  1  2  3  4  5  6  7  
                 #valeur recu
-                start_square_input = input("Pièce à déplacer: ")# UART
-                start_square = int(start_square_input)
+
+                start_square = wait_for_square_event(cb.CB_EVT_LIFT)
+                piece = board.piece_at(start_square)
+                if not piece or piece.color != board.turn:
+                    # gérer l'erreur et effet LED 
+                    continue
+
+                #start_square_input = input("Pièce à déplacer: ")
+                #start_square = int(start_square_input)
                 
                 piece = board.piece_at(start_square)
                 if not piece or piece.color != board.turn:
@@ -42,8 +59,10 @@ def local_game_loop(board_container, board, player_color):
                 legal_squares = get_legal_squares_for_piece(board,start_square)
                 for row in range(8):
                     print(" ".join(playable_square[row]))
-                dest_square_input = input("case de destination : ") # UART
-                dest_square = int(dest_square_input)
+
+                dest_square = wait_for_square_event(cb.CB_EVT_PLACE)
+                #dest_square_input = input("case de destination : ") # UART
+                #dest_square = int(dest_square_input)
                 
                 if dest_square == start_square :
                     draw_chessboard(board_container, board=board, player_color=player_color)
@@ -76,7 +95,7 @@ def local_game_loop(board_container, board, player_color):
                         playable_square[7-row][col] = "."
                         #ingnorer le soulever de piece, il est nécessaire de rejouer la derniere piece deplacer
 
-                        new_dest_square_input = input("nouvelle destination : ")# UART
+                        new_dest_square_input = wait_for_square_event(cb.CB_EVT_LIFT)# UART
                         new_dest_square = int(new_dest_square_input)
                
 
