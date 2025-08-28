@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdint.h>
+#include "rgb_led.h"
 #include "bitmap.h"
 /* USER CODE END Includes */
 
@@ -32,7 +33,7 @@
 // ENUM qui permet de sélectionner le PORT correct correspondant à la ligne ou colonne
 typedef enum {
 	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
-};
+} Pins;
 
 // Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
 typedef struct {
@@ -90,6 +91,8 @@ static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
+void HAL_TIM_PWM_Send_To_DMA(uint16_t *pwm_data);
 void UART_Flush(UART_HandleTypeDef *huart);
 void set_gpio_column(uint8_t column);
 void set_gpio_line(uint8_t line);
@@ -101,66 +104,6 @@ uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define LED_NUMBER      	64
-#define LED_TEST         	1
-#define RESET_SLOTS      	50
-#define LED_BUFFER_SIZE  	(24*LED_NUMBER + RESET_SLOTS)
-
-// Avec ARR = 39 (32 MHz -> 800 kHz)
-#define HIGH_DUTY  26   // ≈ 0.8 µs (logique "1")
-#define LOW_DUTY   13   // ≈ 0.4 µs (logique "0")
-
-uint16_t pwmData[LED_BUFFER_SIZE];
-uint8_t colors[LED_NUMBER][3];
-
-volatile uint8_t ws2812_transfer_complete = 0;
-
-// -------------------------------------------------------------------
-// Remplit le buffer PWM à partir du tableau "colors"
-// -------------------------------------------------------------------
-void updateBuffer(void)
-{
-    for(int led = 0; led < LED_NUMBER; led++)
-    {
-        uint32_t color = ((uint32_t)colors[led][1] << 16) |  // R
-        				 ((uint32_t)colors[led][0] << 8) |  // G
-                         ((uint32_t)colors[led][2] << 0);  // R
-        for(int i = 0; i < 24; i++)
-        {
-            if(color & (1 << (23-i)))
-                pwmData[led*24 + i] = HIGH_DUTY;
-            else
-                pwmData[led*24 + i] = LOW_DUTY;
-        }
-    }
-
-    // Ajoute les zéros pour le reset (>50µs)
-    for(int i = 24*LED_NUMBER; i < LED_BUFFER_SIZE; i++)
-    {
-        pwmData[i] = 0;
-    }
-}
-
-// -------------------------------------------------------------------
-// Lance l’envoi vers la bande LED
-// -------------------------------------------------------------------
-void WS2812_Send(void)
-{
-    ws2812_transfer_complete = 0;
-    HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t*)pwmData, LED_BUFFER_SIZE);
-
-    while(!ws2812_transfer_complete) {}
-}
-
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-    if(htim->Instance == TIM17)
-    {
-        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-        ws2812_transfer_complete = 1;
-    }
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -171,7 +114,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  uint64_t board_bitmap = 0;
+  uint64_t  board_bitmap = 0;
+  uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
+  ColorName colors[LED_NUMBER] = {0};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -196,32 +141,33 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_TIM17_Init();
+
   /* USER CODE BEGIN 2 */
   UART_Flush(&huart2);
-
-  memset(colors, 0, sizeof(colors));
-  uint8_t red = 64;
-  uint8_t green = 0;
-  uint8_t blue = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	// Reading the state of every reed sensors
 	read_full_board(&board_bitmap);
-
-	for(uint8_t i = 0; i < LED_NUMBER; ++i) {
+	// For all the LED's
+	for(uint8_t i = 0; i < LED_NUMBER; ++i){
+		// Convert the reed index to the led index, because they aren't not connected the same way (see schematic)
 		uint8_t led_index = convert_reed_index_to_led_index(i);
+		// Take the bitmap value from the current index
 		if(bitmap_get_bit(board_bitmap, i)) {
-			colors[led_index][0] = 0;   colors[led_index][1] = 200; colors[led_index][2] = 0;
+			// if the sensor is closed, led will be green
+			colors[led_index] = GREEN;
 		} else {
-			colors[led_index][0] = 200;   colors[led_index][1] = 0; colors[led_index][2] = 0;
+			// If the sensor is open, led will be red
+			colors[led_index] = RED;
 		}
 	}
-
-	updateBuffer();
-	WS2812_Send();
+	// Prepare data for DMA
+	rgb_update_buffer(pwm_data, colors);
+	HAL_TIM_PWM_Send_To_DMA(pwm_data);
 
     /* USER CODE END WHILE */
 
@@ -496,6 +442,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*
+ * Start sending data
+ */
+void HAL_TIM_PWM_Send_To_DMA(uint16_t *pwm_data)
+{
+    ws2812_transfer_complete = 0;
+    HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t*)pwm_data, LED_BUFFER_SIZE);
+
+    while(!ws2812_transfer_complete) {}
+}
+
+/*
+ * DMA Callback
+ */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim->Instance == TIM17)
+    {
+        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
+        ws2812_transfer_complete = 1;
+    }
+}
+
+/*
+ * Flush the TX UART
+ */
 void UART_Flush(UART_HandleTypeDef *huart)
 {
     // Vider le registre RX tant qu’il reste des données
@@ -512,7 +484,7 @@ void UART_Flush(UART_HandleTypeDef *huart)
 
 }
 
-/*
+/* Set the GPIO column for the decoder
  * Return : void
  */
 void set_gpio_column(uint8_t column) {
@@ -529,9 +501,8 @@ void set_gpio_column(uint8_t column) {
 	}
 }
 
-/*
+/* Set the GPIO line for the decoder
  * Return void
- *
  */
 void set_gpio_line(uint8_t line) {
 
@@ -547,7 +518,7 @@ void set_gpio_line(uint8_t line) {
 	}
 }
 
-/*
+/* This function read one reed sensor, depending on the selected square
  * Return the : ON or OFF
  */
 uint8_t read_reed_value(Square square) {
@@ -555,40 +526,28 @@ uint8_t read_reed_value(Square square) {
 	// Set the value with the decodeur
 	set_gpio_column(square.column);
 	set_gpio_line(square.line);
-	/*
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO
-
-	_PIN_5, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-	*/
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	// Add delay ?? for commutation time ?
-	//HAL_Delay(20); // 1 ms de temporisation
 
 	// Get the value on the READ pin (see schematics)
 	return HAL_GPIO_ReadPin(gpio_pins[READ].port, gpio_pins[READ].pin);
 }
 
-/*
+/* This method will fill the bitmap depending on the reeds sensors states
  * Return : void
  */
 void read_full_board(uint64_t *board_bitmap) {
 
 	Square square = {0, 0};
-
+	// For all the board's squares
 	for(uint8_t line = 0; line < BOARD_WIDTH; ++line) {
 		for(uint8_t column = 0; column < BOARD_HEIGHT; ++column) {
+			// Init square (each column and lines)
 			square.column = column;
 			square.line = line;
-
+			// If the reed sensor is closed, the bit is set
 			if(read_reed_value(square)) {
 				bitmap_set_bit(board_bitmap, line * BOARD_WIDTH + column);
 			} else {
+				// If the reed sensor is open, the bit is clear
 				bitmap_clear_bit(board_bitmap, line * BOARD_WIDTH + column);
 			}
 
@@ -596,13 +555,14 @@ void read_full_board(uint64_t *board_bitmap) {
 	}
 }
 
-/* Convert reed index to
- *
+/* Convert reed index to led index
+ * Return the led index corresponding to the reed triggered
  */
 uint8_t convert_reed_index_to_led_index(uint8_t reed_index) {
 	if((reed_index / 8) % 2 == 0) {
 		return reed_index;
 	} else {
+		// The magical formule to get the led index
 		return (16 * (uint8_t)(reed_index / 8)) + 7 - reed_index;
 	}
 }

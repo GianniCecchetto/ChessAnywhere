@@ -1,7 +1,35 @@
+#include "rgb_led.h"
+
 // -------------------------------------------------------------------
 // Fill the buffer PWM depending on the table "colors"
 // -------------------------------------------------------------------
-void updateBuffer(void)
+void rgb_update_buffer(uint16_t *pwm_data, ColorName *colors) {
+    for(int led = 0; led < LED_NUMBER; led++)
+    {
+        uint32_t color = ((uint32_t)colors_values[colors[led]].r << 16) |  // R
+        				 ((uint32_t)colors_values[colors[led]].g << 8) |  // G
+                         ((uint32_t)colors_values[colors[led]].b << 0);  // R
+        for(int i = 0; i < 24; i++)
+        {
+            if(color & (1 << (23-i)))
+            	pwm_data[led*24 + i] = HIGH_DUTY;
+            else
+            	pwm_data[led*24 + i] = LOW_DUTY;
+        }
+    }
+
+    // Ajoute les zéros pour le reset (>50µs)
+    for(int i = 24*LED_NUMBER; i < LED_BUFFER_SIZE; i++)
+    {
+    	pwm_data[i] = 0;
+    }
+}
+
+/* OLD
+// -------------------------------------------------------------------
+// Fill the buffer PWM depending on the table "colors"
+// -------------------------------------------------------------------
+void rgb_update_buffer(uint16_t *pwm_data, uint8_t colors[][3])
 {
     for(int led = 0; led < LED_NUMBER; led++)
     {
@@ -11,39 +39,16 @@ void updateBuffer(void)
         for(int i = 0; i < 24; i++)
         {
             if(color & (1 << (23-i)))
-                pwmData[led*24 + i] = HIGH_DUTY;
+            	pwm_data[led*24 + i] = HIGH_DUTY;
             else
-                pwmData[led*24 + i] = LOW_DUTY;
+            	pwm_data[led*24 + i] = LOW_DUTY;
         }
     }
 
     // Ajoute les zéros pour le reset (>50µs)
     for(int i = 24*LED_NUMBER; i < LED_BUFFER_SIZE; i++)
     {
-        pwmData[i] = 0;
+    	pwm_data[i] = 0;
     }
 }
-
-// -------------------------------------------------------------------
-// Start sending data
-// -------------------------------------------------------------------
-void WS2812_Send(void)
-{
-    ws2812_transfer_complete = 0;
-    HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t*)pwmData, LED_BUFFER_SIZE);
-
-    while(!ws2812_transfer_complete) {}
-}
-
-
-// -------------------------------------------------------------------
-// Callback
-// -------------------------------------------------------------------
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-    if(htim->Instance == TIM17)
-    {
-        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-        ws2812_transfer_complete = 1;
-    }
-}
+*/
