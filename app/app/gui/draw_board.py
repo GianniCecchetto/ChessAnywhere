@@ -3,20 +3,40 @@ import tkinter as tk
 from PIL import Image, ImageTk 
 import chess
 from . import app_color as c 
+from uart.uart_com  import send_command
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+print(BASE_DIR)
+UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+print(UART_PATH)
+sys.path.append(UART_PATH)
+
+import board_com_ctypes as cb
+
+
 
 OUTLINE_WIDTH = 0
 PIECES_PATH = "assets/" 
 
-# mappage des noms des pièces de python-chess aux noms des fichiers
 PIECES_MAP = {
     'p': 'bP', 'n': 'bN', 'b': 'bB', 'r': 'bR', 'q': 'bQ', 'k': 'bK',
     'P': 'wP', 'N': 'wN', 'B': 'wB', 'R': 'wR', 'Q': 'wQ', 'K': 'wK'
 }
 
-def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=None,player_color = True):
-    """
-    Dessine un échiquier avec les pièces.
-    """
+# Mapping des symboles vers couleurs LED (R, G, B)
+LED_COLORS = {
+    "X": (255, 0, 0),      # rouge
+    "O": (0, 0, 255),      # bleu
+    "P": (0, 255, 255),    # cyan
+    "W": (255, 174, 0),    # orange
+}
+
+def square_to_idx(row: int, col: int) -> int:
+    return row * 8 + col
+
+def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=None, player_color=True):
     canvas = tk.Canvas(parent, 
                        width=size * square_size, 
                        height=size * square_size, 
@@ -26,7 +46,6 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
     
     colors = [c.WHITE_SQUARE, c.BLACK_SQUARE]
     
-    # Dictionnaire pour stocker les références aux images
     piece_images = {}
 
     for row in range(size):
@@ -42,14 +61,24 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
             fill_color = square_color
 
             if playable_square:
-                if playable_square[row_index][col_index] == "X":
-                    fill_color = "#FF0000"
-                elif playable_square[row_index][col_index] == "O":
-                    fill_color = "#0026FF"
-                elif playable_square[row_index][col_index] == "P":
-                    fill_color = "#00FBFF"
-                elif playable_square[row_index][col_index] == "W":
-                    fill_color = "#FFAE00"
+                symbol = playable_square[row_index][col_index]
+                if symbol in LED_COLORS:
+                    r, g, b = LED_COLORS[symbol]
+                    idx = square_to_idx(row_index, col_index)
+
+                    # === UART : envoyer commande LED ===
+                    cmd = cb.fmt_led_set(idx, r, g, b)
+                    send_command(cmd)
+
+                    # === Graphique : colorier la case ===
+                    if symbol == "X":
+                        fill_color = "#FF0000"
+                    elif symbol == "O":
+                        fill_color = "#0026FF"
+                    elif symbol == "P":
+                        fill_color = "#00FBFF"
+                    elif symbol == "W":
+                        fill_color = "#FFAE00"
 
             x1 = col * square_size
             y1 = row * square_size
@@ -61,7 +90,6 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
             if playable_square and playable_square[row_index][col_index] != ".":
                 canvas.create_rectangle(x1 + 6, y1 + 6, x2 - 6, y2 - 6, 
                                         fill=fill_color, width=OUTLINE_WIDTH, outline="gray")
-                # uart envoyer la couleur via fmt_led_set
 
     # ----- dessiner les pièces -----
     if board:
