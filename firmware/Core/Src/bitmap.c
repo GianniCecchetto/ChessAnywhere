@@ -13,7 +13,7 @@ uint8_t is_index_out_of_bound(int index) {
 /*
  * Bitmap set a bit value
  */
-void set_bit(uint64_t *bitmap, int index) {
+void bitmap_set_bit(uint64_t *bitmap, int index) {
 	if(is_index_out_of_bound(index)) return;
     *bitmap |= (1ULL << index);
 }
@@ -21,7 +21,7 @@ void set_bit(uint64_t *bitmap, int index) {
 /*
  * Bitmap clear a bit value
  */
-void clear_bit(uint64_t *bitmap, int index) {
+void bitmap_clear_bit(uint64_t *bitmap, int index) {
 	if(is_index_out_of_bound(index)) return;
 	*bitmap &= ~(1ULL << index);
 }
@@ -29,7 +29,7 @@ void clear_bit(uint64_t *bitmap, int index) {
 /*
  * Bitmap get a bit value
  */
-int get_bit(uint64_t bitmap, int index) {
+int bitmap_get_bit(uint64_t bitmap, int index) {
 	if(is_index_out_of_bound(index)) return -1;
 	return (bitmap >> index) & 1;
 }
