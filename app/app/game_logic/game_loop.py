@@ -3,6 +3,8 @@ from .gen_move import get_legal_moves_for_piece
 from .gen_move import get_matrix_of_legal_move
 from .gen_move import get_legal_squares_for_piece
 from  gui.draw_board import draw_chessboard
+from .uart_com import send_string
+from .uart_com import write_string
 
 def online_game_loop(board_container,board,player_color) :
     print("starting online game \n", board)
