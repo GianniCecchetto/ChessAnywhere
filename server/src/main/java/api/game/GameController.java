@@ -1,20 +1,35 @@
 package api.game;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
+import lichess.LichessClient;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
-import static lichess.LichessClient.*;
 
 public class GameController {
-    private Map<String, Game> activeGames = new ConcurrentHashMap<>();
+    private Map<String, Game> activeGames;
+    LichessClient lichessClient;
+
+    public GameController() {
+        activeGames = new ConcurrentHashMap<>();
+        lichessClient = new LichessClient(this);
+    }
+
+    public Set<String> getGames() {
+        return activeGames.keySet();
+    }
+
+    public void addGame(Game game) {
+        activeGames.put(game.id, game);
+    }
+
+    public void removeGame(String gameId) {
+        activeGames.remove(gameId);
+    }
 
     public void getAll(Context ctx) {
+        lichessClient.updateGames(ctx, activeGames.keySet());
         try {
             ctx.status(200).json(activeGames.values());
         } catch (Exception e) {
@@ -26,6 +41,7 @@ public class GameController {
     public void getOne(Context ctx) {
         String gameId = ctx.pathParamAsClass("gameId", String.class).get();
 
+        lichessClient.updateGame(ctx, gameId);
         try {
             ctx.status(200).json(activeGames.get(gameId));
         } catch (Exception e) {
@@ -36,35 +52,9 @@ public class GameController {
 
     public void create(Context ctx) {
         String color = ctx.pathParamAsClass("color", String.class).get();
-
     }
 
     public void createRandom(Context ctx) {
-        ctx.future(() -> createGame()
-                .thenApply(json -> {
-                    try {
-                        if (json.contains("\"error\"")) {
-                            System.err.println("Lichess API error: " + json);
-                            throw new RuntimeException();
-                        }
-                        System.out.println(json);
-                        ObjectMapper mapper = new ObjectMapper();
-                        return mapper.readValue(json, Game.class); // transform JSON -> Game
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .thenAccept(game -> {
-                    // Now you can store the Game object in your map
-                    activeGames.put(game.id, game);
-                    System.out.println("Stored game " + game.id + " in hashmap");
-
-                    ctx.status(201).json(game.url);
-                })
-                .exceptionally(e -> {
-                    ctx.status(500).result("Failed to create game: " + e.getMessage());
-                    return null;
-                })
-        );
+        lichessClient.createGame(ctx);
     }
 }
