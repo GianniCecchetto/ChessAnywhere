@@ -1,13 +1,10 @@
 import api.Api;
-import api.challenge.Challenge;
 import io.restassured.RestAssured;
-import org.apache.http.util.Asserts;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
 import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ChallengeApiTest {
@@ -31,7 +28,7 @@ class ChallengeApiTest {
     @Test
     void testCreateChallenge() {
         given()
-                .post("/api/challenge/1")
+                .post("/api/game/1")
                 .then()
                 .statusCode(201);
     }
@@ -39,7 +36,7 @@ class ChallengeApiTest {
     @Test
     void testCreateWithSameUserIdChallenge() {
         given()
-                .post("/api/challenge/1")
+                .post("/api/game/1")
                 .then()
                 .statusCode(409);
     }
@@ -47,7 +44,7 @@ class ChallengeApiTest {
     @Test
     void testCreateChallengeWithAnotherUserId() {
         given()
-                .post("/api/challenge/2")
+                .post("/api/game/2")
                 .then()
                 .statusCode(201);
     }
@@ -66,7 +63,7 @@ class ChallengeApiTest {
     @Test
     void testDeleteChallenge() {
         given()
-                .delete("/api/challenge/1")
+                .delete("/api/game/1")
                 .then()
                 .statusCode(204);
     }
