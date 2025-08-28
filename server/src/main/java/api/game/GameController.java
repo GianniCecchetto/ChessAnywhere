@@ -35,30 +35,12 @@ public class GameController {
     }
 
     public void create(Context ctx) {
-        String userId = ctx.pathParamAsClass("userId", String.class).get();
-
-        if (activeGames.containsKey(userId)) {
-            ctx.status(409);
-            return;
-        }
-
         String color = ctx.pathParamAsClass("color", String.class).get();
 
-        Game newGame = new Game(userId);
-        activeGames.put(userId, newGame);
-
-        ctx.status(201).json(newGame);
     }
 
     public void createRandom(Context ctx) {
-        String userId = ctx.pathParamAsClass("userId", String.class).get();
-
-        if (activeGames.containsKey(userId)) {
-            ctx.status(409);
-            return;
-        }
-
-        ctx.future(() -> createGame() // returns CompletableFuture<String> (the JSON body)
+        ctx.future(() -> createGame()
                 .thenApply(json -> {
                     try {
                         if (json.contains("\"error\"")) {
@@ -84,17 +66,5 @@ public class GameController {
                     return null;
                 })
         );
-    }
-
-    public void delete(Context ctx) {
-        String userId = ctx.pathParamAsClass("userId", String.class).get();
-
-        Game removed = activeGames.remove(userId);
-
-        if (removed != null) {
-            ctx.status(204);
-        } else {
-            ctx.status(404).result("Game not found"); // ✅ more accurate
-        }
     }
 }

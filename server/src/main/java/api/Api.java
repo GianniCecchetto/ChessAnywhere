@@ -33,10 +33,9 @@ public class Api {
 
         // Challenges
         app.get("/api/games", gameController::getAll);
-        app.get("/api/game/{gameId}", gameController::getOne);
-        app.post("/api/game/{userId}", gameController::createRandom);
-        app.post("/api/game/{color}/{userId}", gameController::create);
-        app.delete("/api/game/{userId}", gameController::delete);
+        app.get("/api/games/{gameId}", gameController::getOne);
+        app.post("/api/games/create", gameController::createRandom);
+        app.post("/api/games/create/{color}", gameController::create);
 
         app.start("0.0.0.0", port);
     }
