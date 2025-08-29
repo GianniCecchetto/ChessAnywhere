@@ -18,38 +18,87 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include "rgb_led.h"
+#include "bitmap.h"
+#include "board_com.h"
+#include "fifo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+// ENUM qui permet de sélectionner le PORT correct correspondant à la ligne ou colonne
+typedef enum {
+	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
+} Pins;
 
+typedef enum {
+	INIT_BOARD, WORKING, WAIT_LIFT_PIECE, IN_GAME, GAME_END, UART
+} States;
+
+// Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
+typedef struct {
+    GPIO_TypeDef *port;   // pointeur vers le bloc GPIO (GPIOA, GPIOB…)
+    uint16_t pin;         // Numéro pin
+} GPIO_pin;
+
+typedef struct {
+	uint8_t column;
+	uint8_t line;
+} Square;
+
+// Put this define here, so I can use it in the structure
+#define UART_BUFFER_CAPACITY		32
+
+typedef struct {
+	uint8_t data[UART_BUFFER_CAPACITY]; // capacity
+	uint8_t size;
+	uint8_t capacity;
+} Array;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+// DEFINE
+#define BOARD_WIDTH							8
+#define BOARD_HEIGHT						8
+#define PIN_NUMBER_FOR_COLUMN 	3
+#define PIN_NUMBER_FOR_LINE	 		3
+#define NO_INDEX_FOUND					255
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+// MACRO
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-TIM_HandleTypeDef htim1;
-DMA_HandleTypeDef hdma_tim1_ch1;
+TIM_HandleTypeDef htim17;
+DMA_HandleTypeDef hdma_tim17_ch1;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+// PRIVATE VARIABLE
+// LED RGB control variable
 
+static const GPIO_pin gpio_pins[] = {
+		{GPIOA, GPIO_PIN_4},  // ROW0
+		{GPIOA, GPIO_PIN_5},  // ROW1
+		{GPIOA, GPIO_PIN_6},  // ROW2
+		{GPIOC, GPIO_PIN_15}, // COL0
+		{GPIOA, GPIO_PIN_11}, // COL1
+		{GPIOA, GPIO_PIN_12}, // COL2
+		{GPIOB, GPIO_PIN_0},  // READ
+		{GPIOB, GPIO_PIN_7}   // BUTTON
+}; // ROW0
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,15 +106,38 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_TIM1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
+void HAL_TIM_PWM_Send_To_DMA(uint16_t *pwm_data);
 void UART_Flush(UART_HandleTypeDef *huart);
+void set_gpio_column(uint8_t column);
+void set_gpio_line(uint8_t line);
+uint8_t read_reed_value(Square square);
+void read_full_board(uint64_t *board_bitmap);
+uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
+uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b);
+uint8_t is_a_piece_lift(uint64_t current, uint64_t old);
+uint8_t is_a_piece_placed(uint64_t current, uint64_t old);
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]);
+void leds_clear(uint8_t colors[][3]);
+
+/* --- helpers UART --- */
+static inline uint32_t t_ms(void){ return HAL_GetTick(); }
+static void uart_write(const char *s)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t*)s, (uint16_t)strlen(s), 100);
+}
+static void uart_write_n(const char *s, size_t n){ HAL_UART_Transmit(&huart2,(uint8_t*)s,(uint16_t)n,100); }
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+// GLOBAL VARIABLE
+static uint8_t rx_data;                  // Octet reçu
+uart_fifo_t uartFifo;
 /* USER CODE END 0 */
 
 /**
@@ -76,6 +148,18 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	// State machine variable
+	States 		game_state = INIT_BOARD;
+	uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
+	uint8_t colors[LED_NUMBER][3] = {0};
+	// Save the board state for led
+  uint64_t  old_board_bitmap = 0;
+  uint64_t  board_bitmap = 0;
+
+  char msg[64] = {0};
+  char command[128];
+  cb_cmd_t cmd;
+  int idx;
 
   /* USER CODE END 1 */
 
@@ -85,7 +169,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -99,16 +182,117 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C1_Init();
-  MX_TIM1_Init();
   MX_USART2_UART_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  UART_Flush(&huart2);
+  // UART_Flush(&huart2);
+  // Lancer la réception du premier octet en interruption
+  HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  uart_fifo_init(&uartFifo);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  	switch(game_state) {
+  		case INIT_BOARD:
+  			old_board_bitmap = board_bitmap;
+  			// Reading the state of every reed sensors
+				read_full_board(&board_bitmap);
+				idx = are_bitamps_the_same(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+					game_state = WORKING;
+				}
+				// For all the LED's
+				for(uint8_t i = 0; i < LED_NUMBER; ++i){
+					// Convert the reed index to the led index, because they aren't not connected the same way (see schematic)
+					uint8_t led_index = convert_reed_index_to_led_index(i);
+					// Take the bitmap value from the current index
+					if(bitmap_get_bit(board_bitmap, i)) {
+						// if the sensor is closed, led will be green
+						colors[led_index][0] = 0; colors[led_index][1] = 255; colors[led_index][2] = 0;
+					} else {
+						// If the sensor is open, led will be red
+						colors[led_index][0] = 255; colors[led_index][1] = 0; colors[led_index][2] = 0;
+					}
+				}
+				// Prepare data for DMA
+				rgb_update_buffer(pwm_data, colors);
+				HAL_TIM_PWM_Send_To_DMA(pwm_data);
+  			break;
+  		case WORKING:
+
+  			old_board_bitmap = board_bitmap;
+				// Reading the state of every reed sensors
+				read_full_board(&board_bitmap);
+				idx = is_a_piece_lift(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+				idx = is_a_piece_placed(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					leds_clear(colors);
+					cb_fmt_evt_place(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+  			int r = uart_fifo_get_command(&uartFifo, command, sizeof(command));
+				if (r > 0) {
+						// commande complète reçue (cmd contient la commande sans CR/LF)
+					uart_write(command);
+					cb_parse_cmd(command, &cmd);
+					memset(command, 0, 64);
+					switch(cmd.type) {
+						case CB_CMD_PING:      uart_write("OK PING\r\n"); break;
+						case CB_CMD_VER_Q:     uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n"); break;
+						case CB_CMD_TIME_Q:   { char o[48]; int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms()); uart_write_n(o,(size_t)n); } break;
+						case CB_CMD_RST:       NVIC_SystemReset(); break;
+						case CB_CMD_SAVE:      uart_write("OK SAVE\r\n"); break;
+						case CB_CMD_STREAM:    /* cmd.u.stream.on */ uart_write("OK STREAM\r\n"); break;
+
+						/* READ */
+						case CB_CMD_READ_ALL:  uart_write("OK READ ALL 0x0000000000000000\r\n"); break;
+						case CB_CMD_READ_SQ:  { char sq[3]; cb_sq_to_str(cmd.u.read_sq.idx,sq);
+																		char o[32]; int n=snprintf(o,sizeof o,"OK READ SQ %s 0\r\n",sq); uart_write_n(o,(size_t)n); } break;
+						/* LED */
+						case CB_CMD_LED_SET:       led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_OFF_ALL:   led_off_all(); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_FILL:      led_fill(cmd.u.led_fill.r, cmd.u.led_fill.g, cmd.u.led_fill.b); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_BITBOARD:  led_bitboard(cmd.u.led_bitboard.bits); uart_write("OK\r\n"); break;
+						case CB_CMD_LED_MAP_HEX:   /* cmd.u.led_map_hex.hex192 */ uart_write("OK\r\n"); break;
+						case CB_CMD_LED_MOVES:     uart_write("OK\r\n"); break;
+						case CB_CMD_LED_OK:        uart_write("OK\r\n"); break;
+						case CB_CMD_LED_FAIL:      uart_write("OK\r\n"); break;
+
+						/* MOVE */
+						case CB_CMD_MOVE_ACK:      uart_write("OK\r\n"); break;
+						case CB_CMD_MOVE_NACK:     uart_write("OK\r\n"); break;
+
+						/* CFG */
+						case CB_CMD_CFG_Q:         uart_write("OK CFG\r\n"); break;
+						case CB_CMD_CFG_GET:       uart_write("OK CFG VAL\r\n"); break;
+						//case CB_CMD_CFG_SET_KV:    for(int i=0;i<cmd.u.cfg_set_kv.n_pairs;i++) cfg_set_kv(cmd.u.cfg_set_kv.pairs[i]); uart_write("OK\r\n"); break;
+
+						default: uart_write("ERR CMD\r\n"); break;
+					}
+					rgb_update_buffer(pwm_data, colors);
+					HAL_TIM_PWM_Send_To_DMA(pwm_data);
+				} else if (r == -1) {
+						// commande reçue mais tronquée dans buffer 'cmd'
+						// handle_truncated_command(command);
+						uart_write(command);
+				}
+  			break;
+  	}
+
+  	// Exemple : traiter des commandes reçues
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -136,7 +320,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 8;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -146,11 +335,11 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -172,7 +361,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00503D58;
+  hi2c1.Init.Timing = 0x00B07CB4;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -205,49 +394,35 @@ static void MX_I2C1_Init(void)
 }
 
 /**
-  * @brief TIM1 Initialization Function
+  * @brief TIM17 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_TIM1_Init(void)
+static void MX_TIM17_Init(void)
 {
 
-  /* USER CODE BEGIN TIM1_Init 0 */
+  /* USER CODE BEGIN TIM17_Init 0 */
 
-  /* USER CODE END TIM1_Init 0 */
+  /* USER CODE END TIM17_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-  /* USER CODE BEGIN TIM1_Init 1 */
+  /* USER CODE BEGIN TIM17_Init 1 */
 
-  /* USER CODE END TIM1_Init 1 */
-  htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 19;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 0;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 39;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
   {
     Error_Handler();
   }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  if (HAL_TIM_PWM_Init(&htim17) != HAL_OK)
   {
     Error_Handler();
   }
@@ -258,7 +433,7 @@ static void MX_TIM1_Init(void)
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim17, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -269,20 +444,15 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
-  sBreakDeadTimeConfig.BreakAFMode = TIM_BREAK_AFMODE_INPUT;
-  sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
-  sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
-  sBreakDeadTimeConfig.Break2Filter = 0;
-  sBreakDeadTimeConfig.Break2AFMode = TIM_BREAK_AFMODE_INPUT;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim17, &sBreakDeadTimeConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM1_Init 2 */
+  /* USER CODE BEGIN TIM17_Init 2 */
 
-  /* USER CODE END TIM1_Init 2 */
-  HAL_TIM_MspPostInit(&htim1);
+  /* USER CODE END TIM17_Init 2 */
+  HAL_TIM_MspPostInit(&htim17);
 
 }
 
@@ -307,7 +477,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
@@ -317,6 +487,7 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
+  // NVIC
 
   /* USER CODE END USART2_Init 2 */
 
@@ -362,8 +533,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_11
                           |GPIO_PIN_12, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB7 PB0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_0;
+  /*Configure GPIO pin : PB7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -384,12 +555,60 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+/*
+ * Start sending data
+ */
+void HAL_TIM_PWM_Send_To_DMA(uint16_t *pwm_data)
+{
+    ws2812_transfer_complete = 0;
+    HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t*)pwm_data, LED_BUFFER_SIZE);
+
+    while(!ws2812_transfer_complete) {}
+}
+
+/*
+ * DMA Callback
+ */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim->Instance == TIM17)
+    {
+        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
+        ws2812_transfer_complete = 1;
+    }
+}
+
+/*
+ *
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART2)
+    {
+        // Stocke l'octet reçu dans le FIFO RX
+    		// putCharInFifo(&usartFifoRx, rx_data);
+    		uart_fifo_push_isr(&uartFifo, rx_data);
+
+        // Relance la réception du prochain octet
+        HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+    }
+}
+
+/*
+ * Flush the TX UART
+ */
 void UART_Flush(UART_HandleTypeDef *huart)
 {
     // Vider le registre RX tant qu’il reste des données
@@ -405,6 +624,144 @@ void UART_Flush(UART_HandleTypeDef *huart)
     while(__HAL_UART_GET_FLAG(huart, UART_FLAG_TC) == RESET);
 
 }
+
+/*
+ *
+ */
+uint8_t is_a_piece_lift(uint64_t current, uint64_t old) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+
+		// Old state was activ and new state is open
+		if(bitmap_get_bit(old, index) == 1 && bitmap_get_bit(current, index) == 0) {
+				return index;
+		}
+	}
+
+	return NO_INDEX_FOUND;
+}
+
+/*
+ *
+ */
+uint8_t is_a_piece_placed(uint64_t current, uint64_t old) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+
+		if(bitmap_get_bit(old, index) == 0 && bitmap_get_bit(current, index) == 1) {
+				return index;
+		}
+	}
+
+
+	return NO_INDEX_FOUND;
+}
+
+/*
+ * Compare the two bitmaps
+ */
+uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+		if(bitmap_get_bit(bitmap_a, index) != bitmap_get_bit(bitmap_b, index)) {
+			return index;
+		}
+	}
+
+	return NO_INDEX_FOUND;
+}
+
+/* Set the GPIO column for the decoder
+ * Return : void
+ */
+void set_gpio_column(uint8_t column) {
+
+	uint8_t mask = 1;
+
+	for(uint8_t i = COL0; i < PIN_NUMBER_FOR_COLUMN + COL0; ++i) {
+		if(column & mask) {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_SET);
+		} else {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_RESET);
+		}
+		mask *= 2;
+	}
+}
+
+/* Set the GPIO line for the decoder
+ * Return void
+ */
+void set_gpio_line(uint8_t line) {
+
+	uint8_t mask = 1;
+
+	for(uint8_t i = ROW0; i < PIN_NUMBER_FOR_LINE; ++i) {
+		if(line & mask) {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_SET);
+		} else {
+			HAL_GPIO_WritePin(gpio_pins[i].port, gpio_pins[i].pin, GPIO_PIN_RESET);
+		}
+		mask *= 2;
+	}
+}
+
+/* This function read one reed sensor, depending on the selected square
+ * Return the : ON or OFF
+ */
+uint8_t read_reed_value(Square square) {
+
+	// Set the value with the decodeur
+	set_gpio_column(square.column);
+	set_gpio_line(square.line);
+
+	// Get the value on the READ pin (see schematics)
+	return HAL_GPIO_ReadPin(gpio_pins[READ].port, gpio_pins[READ].pin);
+}
+
+/* This method will fill the bitmap depending on the reeds sensors states
+ * Return : void
+ */
+void read_full_board(uint64_t *board_bitmap) {
+
+	Square square = {0, 0};
+	// For all the board's squares
+	for(uint8_t line = 0; line < BOARD_WIDTH; ++line) {
+		for(uint8_t column = 0; column < BOARD_HEIGHT; ++column) {
+			// Init square (each column and lines)
+			square.column = column;
+			square.line = line;
+			// If the reed sensor is closed, the bit is set
+			if(read_reed_value(square)) {
+				bitmap_set_bit(board_bitmap, line * BOARD_WIDTH + column);
+			} else {
+				// If the reed sensor is open, the bit is clear
+				bitmap_clear_bit(board_bitmap, line * BOARD_WIDTH + column);
+			}
+
+		}
+	}
+}
+
+/*
+ * Clear Led
+ */
+void leds_clear(uint8_t colors[][3]) {
+	for(uint8_t index = 0; index < LED_NUMBER; ++index) {
+		colors[index][0] = 0;
+		colors[index][1] = 0;
+		colors[index][2] = 0;
+	}
+}
+
+/*
+ * set_led
+ */
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]) {
+	colors[index][0] = r;
+	colors[index][1] = g;
+	colors[index][2] = b;
+}
+
 /* USER CODE END 4 */
 
 /**

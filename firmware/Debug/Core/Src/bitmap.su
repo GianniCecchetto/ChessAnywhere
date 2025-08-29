@@ -1,0 +1,4 @@
+../Core/Src/bitmap.c:8:9:is_index_out_of_bound	0	static
+../Core/Src/bitmap.c:16:6:bitmap_set_bit	8	static
+../Core/Src/bitmap.c:24:6:bitmap_clear_bit	8	static
+../Core/Src/bitmap.c:32:5:bitmap_get_bit	8	static
