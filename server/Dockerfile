@@ -15,10 +15,10 @@ FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
 # Copier le JAR construit depuis l’étape précédente
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/server-1.0-SNAPSHOT.jar /app/server.jar
 
 # Exposer le port 8080
 EXPOSE 8080
 
 # Commande de lancement
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "server.jar"]
