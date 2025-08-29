@@ -1,4 +1,6 @@
 "./Core/Src/bitmap.o"
+"./Core/Src/board_com.o"
+"./Core/Src/fifo.o"
 "./Core/Src/main.o"
 "./Core/Src/rgb_led.o"
 "./Core/Src/stm32g0xx_hal_msp.o"
