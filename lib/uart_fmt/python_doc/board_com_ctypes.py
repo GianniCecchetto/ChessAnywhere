@@ -9,6 +9,7 @@ from ctypes import (
     create_string_buffer, byref
 )
 
+"""
 # ---------- Localisation de la lib ----------
 def _default_libname():
     if sys.platform.startswith("win"):
@@ -21,6 +22,18 @@ def _default_libname():
 # Priorité à la variable d'env BOARD_COM_LIB, sinon CBPROTO_LIB (compat), sinon défaut
 _LIBNAME = os.environ.get("BOARD_COM_LIB") or os.environ.get("CBPROTO_LIB") or _default_libname()
 _lib = CDLL(_LIBNAME)
+"""
+from ctypes import CDLL
+
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))  # .../lib/uart_fmt/python_doc
+_LIBPATH = os.path.abspath(os.path.join(_THIS_DIR, "..", "src", "build", "board_com.dll"))
+
+_LIBNAME = os.environ.get("BOARD_COM_LIB") or os.environ.get("CBPROTO_LIB") or _LIBPATH
+
+# Chargement de la lib
+_lib = CDLL(_LIBNAME)
+
+print("Lib loaded from:", _LIBNAME)
 
 # ---------- Constantes (doivent matcher board_com.h) ----------
 CB_MAX_LINE   = 256
