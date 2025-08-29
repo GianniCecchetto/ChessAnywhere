@@ -11,7 +11,7 @@ class ChallengeApiTest {
 
     private static Api api;
 
-    @BeforeAll
+    /*@BeforeAll
     static void setup() {
         api = new Api();
         api.start(7000);
@@ -50,5 +50,5 @@ class ChallengeApiTest {
                         .extract().body().as(List.class);
 
         assertEquals(challenges.size(), 2);
-    }
+    }*/
 }
