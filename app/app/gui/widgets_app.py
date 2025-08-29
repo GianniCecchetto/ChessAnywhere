@@ -3,8 +3,7 @@ import tkinter as tk
 from . import app_color as c    
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
-from .join_game import join_online_game
-from .join_game import create_local_game
+from .join_game import join_online_game, create_online_game, create_local_game
 
 
 def create_widgets(app):
@@ -143,10 +142,21 @@ def create_widgets(app):
                                 command=lambda g=game: join_online_game(g,board_container))
             btn.pack(fill="x", pady=5)
 
+        game_buttons_frame = ctk.CTkFrame(main_content_frame, fg_color="transparent")
+        game_buttons_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(10, 5))
+        game_buttons_frame.columnconfigure(0, weight=1)
+        game_buttons_frame.columnconfigure(1, weight=1)
+        
         # Bouton Local Game
-        local_btn = ctk.CTkButton(main_content_frame, text="👥 Local Game", corner_radius=15,
-                                  fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,command=lambda :create_local_game(board_container))
+        local_btn = ctk.CTkButton(game_buttons_frame, text="👥 Local Game", corner_radius=15,
+                                fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
+                                command=lambda: create_local_game(board_container))
+        local_btn.grid(row=0, column=0, sticky="ew", padx=(10, 5))
 
-        local_btn.grid(row=1, column=0, sticky="ew", padx=(10, 20), pady=(10, 5))
+        # bouton Host Game
+        host_btn = ctk.CTkButton(game_buttons_frame, text="🔗 Host Game", corner_radius=15,
+                                fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
+                                command=lambda: create_online_game(board_container))
+        host_btn.grid(row=0, column=1, sticky="ew", padx=(5, 10))
 
         draw_chessboard(board_container)

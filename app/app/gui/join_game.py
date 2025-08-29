@@ -4,25 +4,22 @@ import chess
 from game_logic.game_loop import local_game_loop
 from game_logic.game_loop import online_game_loop
 
-mylib = ctypes.CDLL("./libc/test.so")
-mylib.get_msg.restype = ctypes.c_char_p
+#mylib = ctypes.CDLL("./libc/test.so")
+#mylib.get_msg.restype = ctypes.c_char_p
 
 def join_online_game(board_container,game_name):
-    test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
+ #   test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
     messagebox.showinfo(
         "Rejoindre une partie en ligne",
         f"Vous avez rejoint la partie : {game_name}\n"
-        f"msg: {test}"
+        #f"msg: {test}"
     )
     board = chess.Board()
     online_game_loop(board_container,board,player_color)
 
-def create_online_game(board_container,game_name):
-    test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
+def create_online_game(board_container):
     messagebox.showinfo(
-        "Rejoindre une partie en ligne",
-        f"Vous avez rejoint la partie : {game_name}\n"
-        f"msg: {test}"
+        "Créer une partie en ligne",
     )
     # recuperer la couleur, par défaut BLACK
     player_color = chess.BLACK
