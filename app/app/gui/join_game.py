@@ -17,12 +17,9 @@ def join_online_game(board_container,game_name):
     board = chess.Board()
     online_game_loop(board_container,board,player_color)
 
-def create_online_game(board_container,game_name):
-    test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
+def create_online_game(board_container):
     messagebox.showinfo(
-        "Rejoindre une partie en ligne",
-        f"Vous avez rejoint la partie : {game_name}\n"
-        f"msg: {test}"
+        "Créer une partie en ligne",
     )
     # recuperer la couleur, par défaut BLACK
     player_color = chess.BLACK

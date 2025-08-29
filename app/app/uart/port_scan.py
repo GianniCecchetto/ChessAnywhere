@@ -4,11 +4,11 @@ import glob
 import serial.tools.list_ports
 
 def list_serial_ports():
-    """Retourne la liste des ports série ttyS* sous WSL."""
+    """Retourne la liste des ports série ttyS* sous WSL"""
     return sorted(glob.glob("/dev/ttyS*"))
 
 def get_port_info(port):
-    """Récupère les infos détaillées si possible via pyserial."""
+    """Récupère les infos détaillées"""
     for p in serial.tools.list_ports.comports():
         if p.device == port:
             return {

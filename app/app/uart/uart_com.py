@@ -14,7 +14,7 @@ import board_com_ctypes as cb
 # --- Configuration du port COM ---
 try:
     ser = serial.Serial(
-        port="COM7",
+        port="COM5",
         baudrate=115200,
         bytesize=serial.EIGHTBITS,
         parity=serial.PARITY_NONE,
