@@ -58,7 +58,7 @@ public class LichessClient {
                             }
                         }
 
-                        ctx.status(200).json(mapper.writeValueAsString(allGames));
+                        ctx.status(200).json(allGames);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -85,7 +85,7 @@ public class LichessClient {
 
                         gameController.addGame(game);
 
-                        ctx.status(200).json(mapper.writeValueAsString(game));
+                        ctx.status(200).json(game);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -125,7 +125,7 @@ public class LichessClient {
                     })
                     .thenAccept(game -> {
                         System.out.println("Stored game " + game.id + " in hashmap");
-                        ctx.result(game.url); // return URL as plain text
+                        ctx.status(201).result(game.url); // return URL as plain text
                     })
                     .exceptionally(e -> {
                         ctx.status(500).result("Failed to create game: " + e.getMessage());
