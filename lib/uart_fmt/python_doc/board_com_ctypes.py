@@ -26,7 +26,7 @@ _lib = CDLL(_LIBNAME)
 from ctypes import CDLL
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))  # .../lib/uart_fmt/python_doc
-_LIBPATH = os.path.abspath(os.path.join(_THIS_DIR, "..", "src", "build", "board_com.so"))
+_LIBPATH = os.path.abspath(os.path.join(_THIS_DIR, "..", "src", "build", "board_com.dll"))
 
 _LIBNAME = os.environ.get("BOARD_COM_LIB") or os.environ.get("CBPROTO_LIB") or _LIBPATH
 

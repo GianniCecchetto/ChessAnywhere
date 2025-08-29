@@ -1,65 +1,70 @@
 import serial
 import sys
 import os
+import threading
+import queue
+import time
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
 UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
 sys.path.append(UART_PATH)
 
 import board_com_ctypes as cb
 
-# === Configuration du port COM ===
-ser = serial.Serial(
-    port="/dev/ttyS4",  # sur wsl /dev/tyyS 1 2 3 etc corresponde au COM 1 2 3 (apparment)
-    baudrate=115200,
-    bytesize=serial.EIGHTBITS,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    timeout=1
-)
+# --- Configuration du port COM ---
+try:
+    ser = serial.Serial(
+        port="COM7",
+        baudrate=115200,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        timeout=0.1
+    )
+except serial.SerialException as e:
+    print(f"Erreur de connexion au port série: {e}. Le programme continuera sans UART.")
+    ser = None
 
+# Queue pour stocker les événements reçus
+uart_queue = queue.Queue()
+
+# Thread de lecture UART
+def uart_reader():
+    if not ser:
+        return
+    while True:
+        try:
+            if ser.is_open:
+                line = ser.readline()
+                if line:
+                    line = line.decode("ascii", errors="ignore").strip()
+                    parsed = cb.parse_line(line)
+                    if parsed:
+                        uart_queue.put(parsed)
+        except Exception as e:
+            print(f"Erreur de lecture UART: {e}")
+        time.sleep(0.01)
+
+threading.Thread(target=uart_reader, daemon=True).start()
+
+# Envoi de commande
 def send_command(cmd: str):
     print(f"[TX] {cmd}")
-    if ser.is_open:
-        ser.write((cmd + "\n").encode("ascii"))
-        print(f"[TX] {cmd}")
+    if ser and ser.is_open:
+        try:
+            ser.write((cmd + "\n").encode("ascii"))
+        except Exception as e:
+            print(f"Erreur d'écriture UART: {e}")
     else:
-        print("Port série non ouvert")
+        print("Port série non ouvert ou déconnecté. Commande non envoyée.")
 
-def read_responses():
-    if not ser.is_open:
-        print("Port série non ouvert")
-        return []
-
-    responses = []
-    while True:
-        line = ser.readline()
-        if not line:
-            break
-        line = line.decode("ascii", errors="ignore").strip()
-        if line:
-            parsed = cb.parse_line(line)
-            print(f"[RX] {line} → {parsed}")
-            responses.append(parsed or {"raw": line})
-    return responses
-
-
-def wait_for_square_event(event_type, timeout=None):
-    import time
-    if not ser.is_open:
-        raise RuntimeError("Port série non ouvert")
-
-    start_time = time.time()
-    while True:
-        line = ser.readline()
-        if line:
-            line = line.decode("ascii", errors="ignore").strip()
-            parsed = cb.parse_line(line)
-            print(f"[RX] {line} → {parsed}")
-            if parsed and parsed.get("type") == event_type:
-                return parsed.get("idx")
-        if timeout and (time.time() - start_time) > timeout:
-            raise TimeoutError("Aucun événement reçu avant le timeout")
-        time.sleep(0.01)
+# Lecture non bloquante des événements
+def get_next_event(event_type=None):
+    try:
+        while True:
+            parsed = uart_queue.get_nowait()
+            print(f"[RX] {parsed}")
+            if event_type is None or parsed.get("type") == event_type:
+                return parsed
+    except queue.Empty:
+        return None
