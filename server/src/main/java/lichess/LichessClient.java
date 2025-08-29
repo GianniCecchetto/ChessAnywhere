@@ -134,6 +134,35 @@ public class LichessClient {
         });
     }
 
+    public void joinGame(Context ctx, String gameId) {
+        HttpRequest check = HttpRequest.newBuilder()
+                .uri(URI.create(lichessUrl + "/api/challenge/" + gameId + "/show"))
+                .header("Authorization", "Bearer " + lichessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+
+        ctx.future(() -> client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(json -> {
+                    try {
+                        Game game = mapper.readValue(json, Game.class);
+
+                        gameController.addGame(game);
+
+                        System.out.println("Player joined game " + game.url);
+                        ctx.status(200).json(game.url);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                })
+                .exceptionally(e -> {
+                    ctx.status(500).result("Failed to join game: " + e.getMessage());
+                    return null;
+                })
+        );
+    }
+
     private void scheduleCancel(String gameId, Duration timeout) {
         scheduler.schedule(() -> cancelIfUnjoined(gameId), timeout.toSeconds(), TimeUnit.SECONDS);
         System.out.println("Scheduled cancel check for game " + gameId);

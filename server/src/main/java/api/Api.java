@@ -36,6 +36,7 @@ public class Api {
         app.get("/api/games/{gameId}", gameController::getOne);
         app.post("/api/games/create", gameController::createRandom);
         app.post("/api/games/create/{color}", gameController::create);
+        app.post("/api/games/join/{gameId}", gameController::join);
 
         app.start("0.0.0.0", port);
     }
