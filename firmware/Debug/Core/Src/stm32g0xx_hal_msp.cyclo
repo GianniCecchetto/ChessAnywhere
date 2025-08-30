@@ -5,4 +5,8 @@
 ../Core/Src/stm32g0xx_hal_msp.c:206:6:HAL_TIM_MspPostInit	2
 ../Core/Src/stm32g0xx_hal_msp.c:238:6:HAL_TIM_Base_MspDeInit	2
 ../Core/Src/stm32g0xx_hal_msp.c:266:6:HAL_UART_MspInit	2
+<<<<<<< HEAD
 ../Core/Src/stm32g0xx_hal_msp.c:305:6:HAL_UART_MspDeInit	2
+=======
+../Core/Src/stm32g0xx_hal_msp.c:306:6:HAL_UART_MspDeInit	2
+>>>>>>> 53-création-de-la-gui

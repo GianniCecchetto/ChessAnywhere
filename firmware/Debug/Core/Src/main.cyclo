@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ../Core/Src/main.c:113:5:main	3
 ../Core/Src/main.c:183:6:SystemClock_Config	3
 ../Core/Src/main.c:229:13:MX_I2C1_Init	4
@@ -14,3 +15,22 @@
 ../Core/Src/main.c:537:6:read_full_board	4
 ../Core/Src/main.c:561:9:convert_reed_index_to_led_index	2
 ../Core/Src/main.c:576:6:Error_Handler	1
+=======
+../Core/Src/main.c:128:13:uart_write	1
+../Core/Src/main.c:307:6:SystemClock_Config	3
+../Core/Src/main.c:573:6:HAL_TIM_PWM_Send_To_DMA	2
+../Core/Src/main.c:584:6:HAL_TIM_PWM_PulseFinishedCallback	2
+../Core/Src/main.c:596:6:HAL_UART_RxCpltCallback	2
+../Core/Src/main.c:612:6:UART_Flush	2
+../Core/Src/main.c:631:9:is_a_piece_lift	4
+../Core/Src/main.c:647:9:is_a_piece_placed	4
+../Core/Src/main.c:663:9:are_bitamps_the_same	3
+../Core/Src/main.c:677:6:set_gpio_column	3
+../Core/Src/main.c:694:6:set_gpio_line	3
+../Core/Src/main.c:711:9:read_reed_value	1
+../Core/Src/main.c:724:6:read_full_board	4
+../Core/Src/main.c:748:6:leds_clear	2
+../Core/Src/main.c:147:5:main	30
+../Core/Src/main.c:759:6:led_set	1
+../Core/Src/main.c:771:6:Error_Handler	1
+>>>>>>> 53-création-de-la-gui
