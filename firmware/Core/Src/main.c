@@ -34,11 +34,20 @@
 /* USER CODE BEGIN PTD */
 // ENUM qui permet de sélectionner le PORT correct correspondant à la ligne ou colonne
 typedef enum {
+	NO, NE, SO, SE
+} Direction;
+
+typedef struct {
+	Direction dir;
+	uint8_t index;
+} Led_Index;
+
+typedef enum {
 	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
 } Pins;
 
 typedef enum {
-	INIT_BOARD, WORKING, WAIT_LIFT_PIECE, IN_GAME, GAME_END, UART
+	STARTING_ANIMATION, INIT_BOARD, IN_GAME, GAME_END
 } States;
 
 // Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
@@ -70,6 +79,7 @@ typedef struct {
 #define PIN_NUMBER_FOR_COLUMN 	3
 #define PIN_NUMBER_FOR_LINE	 		3
 #define NO_INDEX_FOUND					255
+#define GLOBAL_BRIGHTNESS				64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -120,7 +130,11 @@ uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
 uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b);
 uint8_t is_a_piece_lift(uint64_t current, uint64_t old);
 uint8_t is_a_piece_placed(uint64_t current, uint64_t old);
-void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]);
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3], uint8_t brightness);
+void leds_clear(uint8_t colors[][3]);
+void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index);
+uint8_t is_board_at_init_setup(uint64_t board_bitmap);
+
 
 /* --- helpers UART --- */
 static inline uint32_t t_ms(void){ return HAL_GetTick(); }
@@ -148,9 +162,9 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	// State machine variable
-	States 		game_state = WORKING;
+	States 		game_state = STARTING_ANIMATION;
 	uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
-	uint8_t colors[LED_NUMBER][3] = {0};
+	uint8_t   colors[LED_NUMBER][3] = {0};
 	// Save the board state for led
   uint64_t  old_board_bitmap = 0;
   uint64_t  board_bitmap = 0;
@@ -158,6 +172,9 @@ int main(void)
   char msg[64] = {0};
   char command[128];
   cb_cmd_t cmd;
+  uint8_t idx;
+  uint8_t status;
+  static int hue = 0;
 
   /* USER CODE END 1 */
 
@@ -194,15 +211,42 @@ int main(void)
   while (1)
   {
   	switch(game_state) {
+  	  case STARTING_ANIMATION:
+				for(uint8_t j = 0; j < 255; ++j) {
+
+					// Only display when color are everywhere on the colors table
+					if(colors[63][0] != 0 || colors[63][1] != 0 || colors[63][2] != 0) {
+						// Prepare data for DMA
+						rgb_update_buffer(pwm_data, colors);
+						HAL_TIM_PWM_Send_To_DMA(pwm_data);
+						HAL_Delay(50);
+					}
+					// Scroll down the color, row per row
+					for(int i = 7; i > 0; --i) {
+						for(int k = 0; k < 8; ++k) {
+							colors[(i)*8+k][0] = colors[(i-1)*8+k][0];
+							colors[(i)*8+k][1] = colors[(i-1)*8+k][1];
+							colors[(i)*8+k][2] = colors[(i-1)*8+k][2];
+						}
+					}
+					// Generate the new line of rgb
+					hsv_to_rgb(hue, 255, 255, colors, 0);
+					// Change color
+					hue = (hue + 4) % 256;
+				}
+				// End of init animation
+				leds_clear(colors);
+  	  	game_state = INIT_BOARD;
+  	  	break;
   		case INIT_BOARD:
-  			old_board_bitmap = board_bitmap;
+  			// old_board_bitmap = board_bitmap;
   			// Reading the state of every reed sensors
 				read_full_board(&board_bitmap);
-				int idx = are_bitamps_the_same(board_bitmap, old_board_bitmap);
-				if(idx != NO_INDEX_FOUND) {
-					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
-					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-					game_state = WORKING;
+				status = is_board_at_init_setup(board_bitmap);
+				if(status == 1) {
+					/* cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY); */
+					game_state = IN_GAME;
 				}
 				// For all the LED's
 				for(uint8_t i = 0; i < LED_NUMBER; ++i){
@@ -211,17 +255,33 @@ int main(void)
 					// Take the bitmap value from the current index
 					if(bitmap_get_bit(board_bitmap, i)) {
 						// if the sensor is closed, led will be green
-						colors[led_index][0] = 0; colors[led_index][1] = 255; colors[led_index][2] = 0;
+						led_set(led_index, 0, 255, 0, colors, GLOBAL_BRIGHTNESS);
 					} else {
 						// If the sensor is open, led will be red
-						colors[led_index][0] = 255; colors[led_index][1] = 0; colors[led_index][2] = 0;
+						led_set(led_index, 255, 0, 0, colors, GLOBAL_BRIGHTNESS);
 					}
 				}
 				// Prepare data for DMA
 				rgb_update_buffer(pwm_data, colors);
 				HAL_TIM_PWM_Send_To_DMA(pwm_data);
   			break;
-  		case WORKING:
+  		case IN_GAME:
+
+  			old_board_bitmap = board_bitmap;
+				// Reading the state of every reed sensors
+				read_full_board(&board_bitmap);
+				idx = is_a_piece_lift(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+				idx = is_a_piece_placed(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					leds_clear(colors);
+					cb_fmt_evt_place(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
 
   			int r = uart_fifo_get_command(&uartFifo, command, sizeof(command));
 				if (r > 0) {
@@ -242,7 +302,7 @@ int main(void)
 						case CB_CMD_READ_SQ:  { char sq[3]; cb_sq_to_str(cmd.u.read_sq.idx,sq);
 																		char o[32]; int n=snprintf(o,sizeof o,"OK READ SQ %s 0\r\n",sq); uart_write_n(o,(size_t)n); } break;
 						/* LED */
-						case CB_CMD_LED_SET:       led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors); uart_write("OK\r\n"); break;
+						case CB_CMD_LED_SET:       led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors, GLOBAL_BRIGHTNESS); uart_write("OK\r\n"); break;
 					//	case CB_CMD_LED_OFF_ALL:   led_off_all(); uart_write("OK\r\n"); break;
 					//	case CB_CMD_LED_FILL:      led_fill(cmd.u.led_fill.r, cmd.u.led_fill.g, cmd.u.led_fill.b); uart_write("OK\r\n"); break;
 					//	case CB_CMD_LED_BITBOARD:  led_bitboard(cmd.u.led_bitboard.bits); uart_write("OK\r\n"); break;
@@ -548,6 +608,41 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
+/*
+ * Chroma
+ */
+// Fonction de conversion HSV → RGB
+void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index) {
+  float hh = h / 255.0 * 360;
+  float ss = s / 255.0;
+  float vv = v / 255.0;
+
+  int i = (int)(hh / 60) % 6;
+  float f = (hh / 60) - i;
+  float p = vv * (1 - ss);
+  float q = vv * (1 - f * ss);
+  float t = vv * (1 - (1 - f) * ss);
+
+  float rf, gf, bf;
+  switch (i) {
+    case 0: rf = vv; gf = t; bf = p; break;
+    case 1: rf = q; gf = vv; bf = p; break;
+    case 2: rf = p; gf = vv; bf = t; break;
+    case 3: rf = p; gf = q; bf = vv; break;
+    case 4: rf = t; gf = p; bf = vv; break;
+    default: rf = vv; gf = p; bf = q; break;
+  }
+
+  int brightness = 64;
+
+  for(uint8_t i = from_index; i < from_index + 8; ++i) {
+  	int r = (uint8_t)(rf*255);
+  	int g = (uint8_t)(gf*255);
+  	int b = (uint8_t)(bf*255);
+  	led_set(i, r, g, b, colors, brightness);
+  }
+}
+
 /* USER CODE BEGIN 4 */
 /*
  * Start sending data
@@ -605,6 +700,25 @@ void UART_Flush(UART_HandleTypeDef *huart)
     // Attendre que la transmission en cours (TX) soit terminée
     while(__HAL_UART_GET_FLAG(huart, UART_FLAG_TC) == RESET);
 
+}
+
+uint8_t is_board_at_init_setup(uint64_t board_bitmap) {
+
+	// Verify the white side
+	for(uint8_t index = 0; index < 16; ++index) {
+		if(bitmap_get_bit(board_bitmap, index) == 0) {
+				return 0;
+		}
+	}
+
+	// Verify the black side
+	for(uint8_t index = 48; index < 64; ++index) {
+		if(bitmap_get_bit(board_bitmap, index) == 0) {
+				return 0;
+		}
+	}
+
+	return 1;
 }
 
 /*
@@ -725,12 +839,23 @@ void read_full_board(uint64_t *board_bitmap) {
 }
 
 /*
+ * Clear Led
+ */
+void leds_clear(uint8_t colors[][3]) {
+	for(uint8_t index = 0; index < LED_NUMBER; ++index) {
+		colors[index][0] = 0;
+		colors[index][1] = 0;
+		colors[index][2] = 0;
+	}
+}
+
+/*
  * set_led
  */
-void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]) {
-	colors[index][0] = r;
-	colors[index][1] = g;
-	colors[index][2] = b;
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3], uint8_t brightness) {
+	colors[index][0] = (uint8_t)(r * brightness / 255);
+	colors[index][1] = (uint8_t)(g * brightness / 255);
+	colors[index][2] = (uint8_t)(b * brightness / 255);
 }
 
 /* USER CODE END 4 */
