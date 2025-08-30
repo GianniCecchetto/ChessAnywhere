@@ -205,7 +205,8 @@ def create_widgets(app):
         if selected_port not in ["Select a COM port...", "No port found"]:
             print(f"Tentative de connexion au port: {selected_port}")
             com_connect_btn.configure(state="disabled")
-            uart_com.set_serial_port(selected_port, update_connection_status)
+            uart_com.set_serial_port(selected_port)
+            update_connection_status(True)
 
     def on_port_selected(choice):
         if choice not in ["Select a COM port...", "No port found"]:
