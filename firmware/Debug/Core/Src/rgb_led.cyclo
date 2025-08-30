@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 ../Core/Src/rgb_led.c:6:6:rgb_update_buffer	5
+=======
+../Core/Src/rgb_led.c:33:6:rgb_update_buffer	4
+>>>>>>> 53-création-de-la-gui

@@ -21,11 +21,20 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+<<<<<<< HEAD
 #include <stdint.h>
+=======
+#include <stdio.h>
+>>>>>>> 53-création-de-la-gui
 #include <string.h>
 #include <stdint.h>
 #include "rgb_led.h"
 #include "bitmap.h"
+<<<<<<< HEAD
+=======
+#include "board_com.h"
+#include "fifo.h"
+>>>>>>> 53-création-de-la-gui
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,6 +44,13 @@ typedef enum {
 	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
 } Pins;
 
+<<<<<<< HEAD
+=======
+typedef enum {
+	INIT_BOARD, WORKING, WAIT_LIFT_PIECE, IN_GAME, GAME_END, UART
+} States;
+
+>>>>>>> 53-création-de-la-gui
 // Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
 typedef struct {
     GPIO_TypeDef *port;   // pointeur vers le bloc GPIO (GPIOA, GPIOB…)
@@ -45,15 +61,35 @@ typedef struct {
 	uint8_t column;
 	uint8_t line;
 } Square;
+<<<<<<< HEAD
+=======
+
+// Put this define here, so I can use it in the structure
+#define UART_BUFFER_CAPACITY		32
+
+typedef struct {
+	uint8_t data[UART_BUFFER_CAPACITY]; // capacity
+	uint8_t size;
+	uint8_t capacity;
+} Array;
+>>>>>>> 53-création-de-la-gui
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 // DEFINE
+<<<<<<< HEAD
 #define BOARD_WIDTH				8
 #define BOARD_HEIGHT			8
 #define PIN_NUMBER_FOR_COLUMN 	3
 #define PIN_NUMBER_FOR_LINE	 	3
+=======
+#define BOARD_WIDTH							8
+#define BOARD_HEIGHT						8
+#define PIN_NUMBER_FOR_COLUMN 	3
+#define PIN_NUMBER_FOR_LINE	 		3
+#define NO_INDEX_FOUND					255
+>>>>>>> 53-création-de-la-gui
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,6 +107,11 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 // PRIVATE VARIABLE
+<<<<<<< HEAD
+=======
+// LED RGB control variable
+
+>>>>>>> 53-création-de-la-gui
 static const GPIO_pin gpio_pins[] = {
 		{GPIOA, GPIO_PIN_4},  // ROW0
 		{GPIOA, GPIO_PIN_5},  // ROW1
@@ -99,11 +140,30 @@ void set_gpio_line(uint8_t line);
 uint8_t read_reed_value(Square square);
 void read_full_board(uint64_t *board_bitmap);
 uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
+<<<<<<< HEAD
+=======
+uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b);
+uint8_t is_a_piece_lift(uint64_t current, uint64_t old);
+uint8_t is_a_piece_placed(uint64_t current, uint64_t old);
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]);
+void leds_clear(uint8_t colors[][3]);
+
+/* --- helpers UART --- */
+static inline uint32_t t_ms(void){ return HAL_GetTick(); }
+static void uart_write(const char *s)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t*)s, (uint16_t)strlen(s), 100);
+}
+static void uart_write_n(const char *s, size_t n){ HAL_UART_Transmit(&huart2,(uint8_t*)s,(uint16_t)n,100); }
+
+>>>>>>> 53-création-de-la-gui
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+// GLOBAL VARIABLE
+static uint8_t rx_data;                  // Octet reçu
+uart_fifo_t uartFifo;
 /* USER CODE END 0 */
 
 /**
@@ -114,9 +174,25 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+<<<<<<< HEAD
   uint64_t  board_bitmap = 0;
   uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
   ColorName colors[LED_NUMBER] = {0};
+=======
+	// State machine variable
+	States 		game_state = INIT_BOARD;
+	uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
+	uint8_t colors[LED_NUMBER][3] = {0};
+	// Save the board state for led
+  uint64_t  old_board_bitmap = 0;
+  uint64_t  board_bitmap = 0;
+
+  char msg[64] = {0};
+  char command[128];
+  cb_cmd_t cmd;
+  int idx;
+
+>>>>>>> 53-création-de-la-gui
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -125,7 +201,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -141,15 +216,22 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_TIM17_Init();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 53-création-de-la-gui
   /* USER CODE BEGIN 2 */
-  UART_Flush(&huart2);
+  // UART_Flush(&huart2);
+  // Lancer la réception du premier octet en interruption
+  HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  uart_fifo_init(&uartFifo);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+<<<<<<< HEAD
 	// Reading the state of every reed sensors
 	read_full_board(&board_bitmap);
 	// For all the LED's
@@ -168,6 +250,105 @@ int main(void)
 	// Prepare data for DMA
 	rgb_update_buffer(pwm_data, colors);
 	HAL_TIM_PWM_Send_To_DMA(pwm_data);
+=======
+  	switch(game_state) {
+  		case INIT_BOARD:
+  			old_board_bitmap = board_bitmap;
+  			// Reading the state of every reed sensors
+				read_full_board(&board_bitmap);
+				idx = are_bitamps_the_same(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+					game_state = WORKING;
+				}
+				// For all the LED's
+				for(uint8_t i = 0; i < LED_NUMBER; ++i){
+					// Convert the reed index to the led index, because they aren't not connected the same way (see schematic)
+					uint8_t led_index = convert_reed_index_to_led_index(i);
+					// Take the bitmap value from the current index
+					if(bitmap_get_bit(board_bitmap, i)) {
+						// if the sensor is closed, led will be green
+						colors[led_index][0] = 0; colors[led_index][1] = 255; colors[led_index][2] = 0;
+					} else {
+						// If the sensor is open, led will be red
+						colors[led_index][0] = 255; colors[led_index][1] = 0; colors[led_index][2] = 0;
+					}
+				}
+				// Prepare data for DMA
+				rgb_update_buffer(pwm_data, colors);
+				HAL_TIM_PWM_Send_To_DMA(pwm_data);
+  			break;
+  		case WORKING:
+
+  			old_board_bitmap = board_bitmap;
+				// Reading the state of every reed sensors
+				read_full_board(&board_bitmap);
+				idx = is_a_piece_lift(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+				idx = is_a_piece_placed(board_bitmap, old_board_bitmap);
+				if(idx != NO_INDEX_FOUND) {
+					leds_clear(colors);
+					cb_fmt_evt_place(msg, 64, idx, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+  			int r = uart_fifo_get_command(&uartFifo, command, sizeof(command));
+				if (r > 0) {
+						// commande complète reçue (cmd contient la commande sans CR/LF)
+					uart_write(command);
+					cb_parse_cmd(command, &cmd);
+					memset(command, 0, 64);
+					switch(cmd.type) {
+						case CB_CMD_PING:      uart_write("OK PING\r\n"); break;
+						case CB_CMD_VER_Q:     uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n"); break;
+						case CB_CMD_TIME_Q:   { char o[48]; int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms()); uart_write_n(o,(size_t)n); } break;
+						case CB_CMD_RST:       NVIC_SystemReset(); break;
+						case CB_CMD_SAVE:      uart_write("OK SAVE\r\n"); break;
+						case CB_CMD_STREAM:    /* cmd.u.stream.on */ uart_write("OK STREAM\r\n"); break;
+
+						/* READ */
+						case CB_CMD_READ_ALL:  uart_write("OK READ ALL 0x0000000000000000\r\n"); break;
+						case CB_CMD_READ_SQ:  { char sq[3]; cb_sq_to_str(cmd.u.read_sq.idx,sq);
+																		char o[32]; int n=snprintf(o,sizeof o,"OK READ SQ %s 0\r\n",sq); uart_write_n(o,(size_t)n); } break;
+						/* LED */
+						case CB_CMD_LED_SET:       led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_OFF_ALL:   led_off_all(); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_FILL:      led_fill(cmd.u.led_fill.r, cmd.u.led_fill.g, cmd.u.led_fill.b); uart_write("OK\r\n"); break;
+					//	case CB_CMD_LED_BITBOARD:  led_bitboard(cmd.u.led_bitboard.bits); uart_write("OK\r\n"); break;
+						case CB_CMD_LED_MAP_HEX:   /* cmd.u.led_map_hex.hex192 */ uart_write("OK\r\n"); break;
+						case CB_CMD_LED_MOVES:     uart_write("OK\r\n"); break;
+						case CB_CMD_LED_OK:        uart_write("OK\r\n"); break;
+						case CB_CMD_LED_FAIL:      uart_write("OK\r\n"); break;
+
+						/* MOVE */
+						case CB_CMD_MOVE_ACK:      uart_write("OK\r\n"); break;
+						case CB_CMD_MOVE_NACK:     uart_write("OK\r\n"); break;
+
+						/* CFG */
+						case CB_CMD_CFG_Q:         uart_write("OK CFG\r\n"); break;
+						case CB_CMD_CFG_GET:       uart_write("OK CFG VAL\r\n"); break;
+						//case CB_CMD_CFG_SET_KV:    for(int i=0;i<cmd.u.cfg_set_kv.n_pairs;i++) cfg_set_kv(cmd.u.cfg_set_kv.pairs[i]); uart_write("OK\r\n"); break;
+
+						default: uart_write("ERR CMD\r\n"); break;
+					}
+					rgb_update_buffer(pwm_data, colors);
+					HAL_TIM_PWM_Send_To_DMA(pwm_data);
+				} else if (r == -1) {
+						// commande reçue mais tronquée dans buffer 'cmd'
+						// handle_truncated_command(command);
+						uart_write(command);
+				}
+  			break;
+  	}
+
+  	// Exemple : traiter des commandes reçues
+
+>>>>>>> 53-création-de-la-gui
 
     /* USER CODE END WHILE */
 
@@ -353,7 +534,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
@@ -363,6 +544,7 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
+  // NVIC
 
   /* USER CODE END USART2_Init 2 */
 
@@ -466,6 +648,25 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 }
 
 /*
+<<<<<<< HEAD
+=======
+ *
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART2)
+    {
+        // Stocke l'octet reçu dans le FIFO RX
+    		// putCharInFifo(&usartFifoRx, rx_data);
+    		uart_fifo_push_isr(&uartFifo, rx_data);
+
+        // Relance la réception du prochain octet
+        HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+    }
+}
+
+/*
+>>>>>>> 53-création-de-la-gui
  * Flush the TX UART
  */
 void UART_Flush(UART_HandleTypeDef *huart)
@@ -484,6 +685,55 @@ void UART_Flush(UART_HandleTypeDef *huart)
 
 }
 
+<<<<<<< HEAD
+=======
+/*
+ *
+ */
+uint8_t is_a_piece_lift(uint64_t current, uint64_t old) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+
+		// Old state was activ and new state is open
+		if(bitmap_get_bit(old, index) == 1 && bitmap_get_bit(current, index) == 0) {
+				return index;
+		}
+	}
+
+	return NO_INDEX_FOUND;
+}
+
+/*
+ *
+ */
+uint8_t is_a_piece_placed(uint64_t current, uint64_t old) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+
+		if(bitmap_get_bit(old, index) == 0 && bitmap_get_bit(current, index) == 1) {
+				return index;
+		}
+	}
+
+
+	return NO_INDEX_FOUND;
+}
+
+/*
+ * Compare the two bitmaps
+ */
+uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b) {
+
+	for(uint8_t index = 0; index < 64; ++index) {
+		if(bitmap_get_bit(bitmap_a, index) != bitmap_get_bit(bitmap_b, index)) {
+			return index;
+		}
+	}
+
+	return NO_INDEX_FOUND;
+}
+
+>>>>>>> 53-création-de-la-gui
 /* Set the GPIO column for the decoder
  * Return : void
  */
@@ -555,6 +805,7 @@ void read_full_board(uint64_t *board_bitmap) {
 	}
 }
 
+<<<<<<< HEAD
 /* Convert reed index to led index
  * Return the led index corresponding to the reed triggered
  */
@@ -567,6 +818,28 @@ uint8_t convert_reed_index_to_led_index(uint8_t reed_index) {
 	}
 }
 
+=======
+/*
+ * Clear Led
+ */
+void leds_clear(uint8_t colors[][3]) {
+	for(uint8_t index = 0; index < LED_NUMBER; ++index) {
+		colors[index][0] = 0;
+		colors[index][1] = 0;
+		colors[index][2] = 0;
+	}
+}
+
+/*
+ * set_led
+ */
+void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]) {
+	colors[index][0] = r;
+	colors[index][1] = g;
+	colors[index][2] = b;
+}
+
+>>>>>>> 53-création-de-la-gui
 /* USER CODE END 4 */
 
 /**
