@@ -156,9 +156,11 @@ def handle_place_event(square):
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)
         else:
+            playable_matrix = get_matrix_of_legal_move(board, square)
+            y, x = divmod(square, 8)
+            playable_matrix[y][x] = "W"
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
-            send_command("LED_ERROR")
-            draw_chessboard(board_container, board=board, player_color=player_color) # Redessiner le plateau pour effacer les indicateurs
+            draw_chessboard(board_container, board=board,playable_square=playable_matrix, player_color=player_color) # Redessiner le plateau pour effacer les indicateurs
         
         game_state['start_square'] = None
             
