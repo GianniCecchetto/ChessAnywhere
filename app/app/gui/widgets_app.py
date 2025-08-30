@@ -4,7 +4,7 @@ from . import app_color as c
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
-
+from lichess_api.lichess_api import refresh_games
 
 def create_widgets(app):
         """
@@ -129,18 +129,7 @@ def create_widgets(app):
         board_container.grid_columnconfigure(0, weight=1)
         
         # ==== Liste des parties en ligne ====
-        games = ["Ali's game", "Nathan's game", "Gianni's game", "Thomas's game"]
-        for i, game in enumerate(games):
-            btn = ctk.CTkButton(games_list_frame, 
-                                text=f"▶️ {game} 📶", 
-                                corner_radius=15, 
-                                height=40, 
-                                fg_color=c.GAME_LIST_BTN, 
-                                text_color="white", 
-                                hover_color=c.DARK_BTN_HOVER,
-                                anchor="w",
-                                command=lambda g=game: join_online_game(g,board_container))
-            btn.pack(fill="x", pady=5)
+        refresh_games(app, games_list_frame, board_container)
 
         game_buttons_frame = ctk.CTkFrame(main_content_frame, fg_color="transparent")
         game_buttons_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(10, 5))

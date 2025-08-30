@@ -42,9 +42,9 @@ public class LichessClient {
                 .GET()
                 .build();
 
-        client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
+        ctx.future(() -> client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
-                .thenAccept(json -> {
+                .thenApply(json -> {
                     try {
                         GameWrapper wrapper = mapper.readValue(json, GameWrapper.class);
 
@@ -58,15 +58,17 @@ public class LichessClient {
                             }
                         }
 
-                        ctx.status(200).json(allGames);
+                        ctx.status(200).json(gameController.getGames());
+                        return allGames;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Failed to parse game", e);
                     }
                 })
                 .exceptionally(e -> {
                     ctx.status(500).result("Failed to update games: " + e.getMessage());
                     return null;
-                });
+                })
+        );
     }
 
     public void updateGame(Context ctx, String gameId) {
@@ -77,27 +79,28 @@ public class LichessClient {
                 .GET()
                 .build();
 
-        client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
+        ctx.future(() -> client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
-                .thenAccept(json -> {
+                .thenApply(json -> {
                     try {
                         Game game = mapper.readValue(json, Game.class);
 
                         gameController.addGame(game);
 
                         ctx.status(200).json(game);
+                        return game;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Failed to parse game", e);
                     }
                 })
                 .exceptionally(e -> {
                     ctx.status(500).result("Failed to update game: " + e.getMessage());
                     return null;
-                });
+                })
+        );
     }
 
     public void createGame(Context ctx) {
-        ctx.future(() -> {
             // Build the HTTP request and send it immediately
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(lichessUrl + "/api/challenge/open"))
@@ -106,6 +109,7 @@ public class LichessClient {
                     .POST(HttpRequest.BodyPublishers.ofString("rated=false"))
                     .build();
 
+        ctx.future(() -> {
             return client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .thenApply(json -> {
@@ -144,7 +148,7 @@ public class LichessClient {
 
         ctx.future(() -> client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
-                .thenAccept(json -> {
+                .thenApply(json -> {
                     try {
                         Game game = mapper.readValue(json, Game.class);
 
@@ -152,8 +156,9 @@ public class LichessClient {
 
                         System.out.println("Player joined game " + game.url);
                         ctx.status(200).json(game.url);
+                        return game.url;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Failed to parse game", e);
                     }
                 })
                 .exceptionally(e -> {
@@ -190,7 +195,7 @@ public class LichessClient {
                                     " because players are waiting");
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Failed to parse game", e);
                     }
                 });
     }
