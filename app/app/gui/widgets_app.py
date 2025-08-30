@@ -4,7 +4,7 @@ from . import app_color as c
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
-from lichess_api.lichess_api import refresh_games
+from networks.lichess_api import refresh_games
 
 def create_widgets(app):
         """
