@@ -28,9 +28,9 @@ def create_widgets(app):
 
     # Bouton Paramètres
     settings_btn = ctk.CTkButton(header, text="⚙️",font=("Arial", 40) ,width=80, height=80, corner_radius=20,
-                                fg_color=c.SETTINGS_BTN, text_color="white",
-                                hover_color=c.DARK_BTN_HOVER,
-                                command=lambda :toggle_settings_menu(app))
+                                 fg_color=c.SETTINGS_BTN, text_color="white",
+                                 hover_color=c.DARK_BTN_HOVER,
+                                 command=lambda :toggle_settings_menu(app))
     settings_btn.pack(side="right", padx=10, pady=2)
 
     # ==== CONTENU PRINCIPAL ====
@@ -80,7 +80,7 @@ def create_widgets(app):
     clear_btn.grid(row=0, column=1)
 
     connect_btn = ctk.CTkButton(connect_frame, text="Connect", width=80, corner_radius=15,
-                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER, state="disabled")
+                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER, state="enable")
     connect_btn.grid(row=0, column=2, padx=(5, 0))
 
     # Section "Joinable games"
@@ -150,8 +150,13 @@ def create_widgets(app):
     port_frame.pack(side="left", padx=(10, 5))
     
     # Créer le ComboBox
-    port_combo = ctk.CTkComboBox(port_frame, values=[], width=200)
+    port_combo = ctk.CTkComboBox(port_frame, values=[], width=120)
     port_combo.pack(side="left", fill="x", expand=True)
+
+    # bouton pour la connexion COM
+    com_connect_btn = ctk.CTkButton(port_frame, text="Connect COM", corner_radius=15,
+                                    fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER, state="disabled", width=120)
+    com_connect_btn.pack(side="left", padx=(5, 0))
     
     board_container = ctk.CTkFrame(app.right_panel, fg_color="transparent")
     board_container.grid(row=1, column=1, sticky="")
@@ -199,33 +204,32 @@ def create_widgets(app):
         selected_port = port_combo.get()
         if selected_port not in ["Select a COM port...", "No port found"]:
             print(f"Tentative de connexion au port: {selected_port}")
-            connect_btn.configure(state="disabled")
+            com_connect_btn.configure(state="disabled")
             uart_com.set_serial_port(selected_port, update_connection_status)
 
     def on_port_selected(choice):
         if choice not in ["Select a COM port...", "No port found"]:
-            connect_btn.configure(state="normal")
+            com_connect_btn.configure(state="normal")
         else:
-            connect_btn.configure(state="disabled")
+            com_connect_btn.configure(state="disabled")
 
     def scan_and_update_ports():
-        ports = uart_com.get_available_ports()
+        full_ports = uart_com.get_available_ports()
         
-        current_value = port_combo.get()
-        
-        if not ports:
+        if not full_ports:
             port_combo.configure(values=["No port found"])
             port_combo.set("No port found")
             on_port_selected("No port found")
         else:
-            port_combo.configure(values=ports)
-            if current_value not in ports and current_value not in ["Select a COM port...", "No port found"]:
+            formatted_ports = [p.split(' ')[0] for p in full_ports]
+            port_combo.configure(values=formatted_ports)
+            if port_combo.get() not in formatted_ports:
                 port_combo.set("Select a COM port...")
             on_port_selected(port_combo.get())
         
         app.after(1000, scan_and_update_ports)
 
-    connect_btn.configure(command=connect_to_port)
+    com_connect_btn.configure(command=connect_to_port)
     port_combo.bind("<<ComboboxSelected>>", lambda e: on_port_selected(port_combo.get()))
     update_connection_status(False)
     scan_and_update_ports()
