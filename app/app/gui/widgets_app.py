@@ -1,10 +1,12 @@
 import customtkinter as ctk
 import tkinter as tk
 from . import app_color as c    
+from PIL import Image
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
 
+LOGO_PATH = "assets/logo/Logo_ChessAnywhere_cropped.png" 
 
 def create_widgets(app):
         """
@@ -13,17 +15,22 @@ def create_widgets(app):
         # ==== HEADER ====
         header = ctk.CTkFrame(app, height=60, fg_color=c.HEADER_BG, corner_radius=0)
         header.grid(row=0, column=0, columnspan=3, sticky="ew")
-        
-        logo = ctk.CTkLabel(header, text="  ♞ Chess Anywhere", 
-                             font=("Arial", 26, "bold"), text_color="white")
-        logo.pack(side="left", padx=20, pady=10)
+        logo_image = ctk.CTkImage(
+            light_image=Image.open(LOGO_PATH), 
+            dark_image=Image.open(LOGO_PATH), 
+            size=(193, 103) 
+        )
+
+        logo_label = ctk.CTkLabel(header, image=logo_image, text="")
+        logo_label.image = logo_image
+        logo_label.pack(side="left", padx=20, pady=5)
 
         # Bouton Paramètres
-        settings_btn = ctk.CTkButton(header, text="⚙️", width=40, height=40, corner_radius=20,
+        settings_btn = ctk.CTkButton(header, text="⚙️",font=("Arial", 40) ,width=80, height=80, corner_radius=20,
                                      fg_color=c.SETTINGS_BTN, text_color="white",
                                      hover_color=c.DARK_BTN_HOVER,
                                      command=lambda :toggle_settings_menu(app))
-        settings_btn.pack(side="right", padx=20, pady=10)
+        settings_btn.pack(side="right", padx=10, pady=2)
 
         # ==== CONTENU PRINCIPAL ====
         # Frame principale pour le contenu (gauche et droite)
@@ -132,7 +139,8 @@ def create_widgets(app):
         games = ["Ali's game", "Nathan's game", "Gianni's game", "Thomas's game"]
         for i, game in enumerate(games):
             btn = ctk.CTkButton(games_list_frame, 
-                                text=f"▶️ {game} 📶", 
+                                text=f"▶️ {game} 📶",
+                                font=("Arial", 15),
                                 corner_radius=15, 
                                 height=40, 
                                 fg_color=c.GAME_LIST_BTN, 
@@ -148,13 +156,13 @@ def create_widgets(app):
         game_buttons_frame.columnconfigure(1, weight=1)
         
         # Bouton Local Game
-        local_btn = ctk.CTkButton(game_buttons_frame, text="👥 Local Game", corner_radius=15,
+        local_btn = ctk.CTkButton(game_buttons_frame, text="👥      Local Game", corner_radius=15,
                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
                                 command=lambda: create_local_game(board_container))
         local_btn.grid(row=0, column=0, sticky="ew", padx=(10, 5))
 
         # bouton Host Game
-        host_btn = ctk.CTkButton(game_buttons_frame, text="🔗 Host Game", corner_radius=15,
+        host_btn = ctk.CTkButton(game_buttons_frame, text="🔗      Host Game", corner_radius=15,
                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
                                 command=lambda: create_online_game(board_container))
         host_btn.grid(row=0, column=1, sticky="ew", padx=(5, 10))

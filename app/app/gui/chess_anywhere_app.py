@@ -13,7 +13,7 @@ class chess_anywhere_app(ctk.CTk):
         super().__init__()
 
         self.title("Chess Anywhere")
-        self.geometry("1000x710")
+        self.geometry("1000x750")
         self.resizable(True, True)
     
         # Configure le fond de la fenêtre principale en blanc pour le padding.
