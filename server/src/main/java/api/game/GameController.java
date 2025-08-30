@@ -30,24 +30,12 @@ public class GameController {
 
     public void getAll(Context ctx) {
         lichessClient.updateGames(ctx, activeGames.keySet());
-        try {
-            ctx.status(200).json(activeGames.values());
-        } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500).result("Internal error: " + e.getMessage());
-        }
     }
 
     public void getOne(Context ctx) {
         String gameId = ctx.pathParamAsClass("gameId", String.class).get();
 
         lichessClient.updateGame(ctx, gameId);
-        try {
-            ctx.status(200).json(activeGames.get(gameId));
-        } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500).result("Internal error: " + e.getMessage());
-        }
     }
 
     public void create(Context ctx) {
@@ -56,5 +44,11 @@ public class GameController {
 
     public void createRandom(Context ctx) {
         lichessClient.createGame(ctx);
+    }
+
+    public void join(Context ctx) {
+        String gameId = ctx.pathParamAsClass("gameId", String.class).get();
+
+        lichessClient.joinGame(ctx, gameId);
     }
 }
