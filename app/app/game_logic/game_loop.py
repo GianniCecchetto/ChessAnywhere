@@ -21,6 +21,8 @@ game_state = {
     'container': None,
     'player_color': None,
     'start_square': None,
+    'illegal_move_pending': False, 
+    'legal_moves_matrix': None,   
 }
 
 def online_game_loop(board_container, board, player_color):
@@ -44,6 +46,8 @@ def local_game_loop(board_container, board, player_color):
     game_state['container'] = board_container
     game_state['player_color'] = player_color
     game_state['start_square'] = None
+    game_state['illegal_move_pending'] = False
+    game_state['legal_moves_matrix'] = None
     
     draw_chessboard(board_container, board=board, player_color=player_color)
     
@@ -117,15 +121,24 @@ def handle_lift_event(square):
     board_container = game_state['container']
     player_color = game_state['player_color']
     
-    piece = board.piece_at(square)
-    if not piece or piece.color != board.turn:
-        print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
-        send_command("LED_ERROR")
-        return
-        
+    # Si un coup illégal est en attente, une pièce doit être déplacée
+    if game_state['illegal_move_pending']:
+        piece = board.piece_at(game_state['start_square'])
+        if square != game_state['start_square']:
+            print("Erreur : veuillez replacer la pièce mal jouée avant de soulever une nouvelle pièce.")
+            send_command("LED_ERROR")
+            return
+    else:
+        piece = board.piece_at(square)
+        if not piece or piece.color != board.turn:
+            print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
+            send_command("LED_ERROR")
+            return
+
     game_state['start_square'] = square
     
     playable_matrix = get_matrix_of_legal_move(board, square)
+    game_state['legal_moves_matrix'] = playable_matrix # Stocker la matrice pour une utilisation ultérieure
     draw_chessboard(board_container, board=board, playable_square=playable_matrix, player_color=player_color)
     print("Pièce soulevée, en attente de la destination.")
 
@@ -146,6 +159,8 @@ def handle_place_event(square):
         print("Coup annulé. Pièce reposée à la même place.")
         draw_chessboard(board_container, board=board, player_color=player_color)
         game_state['start_square'] = None
+        game_state['illegal_move_pending'] = False
+        game_state['legal_moves_matrix'] = None
         return
 
     try:
@@ -155,14 +170,25 @@ def handle_place_event(square):
             board.push(move)
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)
+            game_state['start_square'] = None
+            game_state['illegal_move_pending'] = False
+            game_state['legal_moves_matrix'] = None
         else:
-            playable_matrix = get_matrix_of_legal_move(board, square)
+            illegale_board = board.copy()
+            illegale_board.push(move)
+            
+            playable_matrix = game_state['legal_moves_matrix']
+            if playable_matrix is None:
+                playable_matrix = [["." for _ in range(8)] for _ in range(8)]
+            
             y, x = divmod(square, 8)
-            playable_matrix[y][x] = "W"
+            playable_matrix[7-y][x] = "W"
+            
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
-            draw_chessboard(board_container, board=board,playable_square=playable_matrix, player_color=player_color) # Redessiner le plateau pour effacer les indicateurs
-        
-        game_state['start_square'] = None
+            send_command("LED_ERROR")
+            draw_chessboard(board_container, board=illegale_board, playable_square=playable_matrix, player_color=player_color)
+            
+            game_state['illegal_move_pending'] = True
             
     except ValueError:
         print("Entrée invalide.")
@@ -188,10 +214,9 @@ def handle_online_move_event():
     board = game_state['board']
     board_container = game_state['container']
     player_color = game_state['player_color']
-
+    
     # --- SIMULATION DE L'APPEL API ---
     # move_from_api = api_client.get_opponent_move()
-
     
     # Placeholder pour récupérer un coup de l'API
     online_move = None
