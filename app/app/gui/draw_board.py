@@ -18,7 +18,7 @@ import board_com_ctypes as cb
 
 
 OUTLINE_WIDTH = 0
-PIECES_PATH = "assets/pieces" 
+PIECES_PATH = "assets/pieces/" 
 
 PIECES_MAP = {
     'p': 'bP', 'n': 'bN', 'b': 'bB', 'r': 'bR', 'q': 'bQ', 'k': 'bK',
