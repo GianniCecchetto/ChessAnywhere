@@ -4,8 +4,8 @@ from .gen_move import get_matrix_of_legal_move
 from .gen_move import get_legal_squares_for_piece
 from gui.draw_board import draw_chessboard
 from uart.uart_com import get_next_event, send_command
-from game_logic.local_func import *
-from game_logic.online_func import *
+from game_logic.local_func import process_game_events
+from game_logic.online_func import process_online_game_events
 import berserk
 import os
 import sys
@@ -24,24 +24,27 @@ game_state = {
     'container': None,
     'player_color': None,
     'start_square': None,
+    'end_square': None,
+    'current_turn': None,
+    'client': None,
+    'game_id': None,
+    'online_move': None
 }
 
-def online_game_loop(board_container, board, player_color):
+def online_game_loop(board_container, board, player_color, client, game_id):
     print("===== starting online game =====")
-    
-    session = berserk.TokenSession()
-    client = berserk.Client(session=session)
-    client.challenges.accept()
 
     game_state['board'] = board
     game_state['container'] = board_container
     game_state['player_color'] = player_color
     game_state['start_square'] = None
     game_state['current_turn'] = 'local' if player_color == chess.WHITE else 'online'
+    game_state['client'] = client
+    game_state['game_id'] = game_id
     
     draw_chessboard(board_container, board=board, player_color=player_color)
     
-    process_online_game_events()
+    process_online_game_events(game_state)
 
 
 def local_game_loop(board_container, board, player_color):
@@ -54,7 +57,7 @@ def local_game_loop(board_container, board, player_color):
     
     draw_chessboard(board_container, board=board, player_color=player_color)
     
-    process_game_events()
+    process_game_events(game_state)
 
 def handle_event(event):
     board = game_state['board']
@@ -82,6 +85,7 @@ def handle_lift_event(square):
         return
         
     game_state['start_square'] = square
+    game_state['end_square'] = None
     
     playable_matrix = get_matrix_of_legal_move(board, square)
     draw_chessboard(board_container, board=board, playable_square=playable_matrix, player_color=player_color)
@@ -113,6 +117,7 @@ def handle_place_event(square):
             board.push(move)
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)
+            game_state['end_square'] = move.uci()
         else:
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
             send_command("LED_ERROR")

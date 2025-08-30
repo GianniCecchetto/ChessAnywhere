@@ -1,6 +1,8 @@
 from game_logic.game_loop import *
+import chess
+from uart.uart_com import get_next_event, send_command
 
-def process_game_events():
+def process_game_events(game_state):
     board = game_state['board']
     board_container = game_state['container']
     player_color = game_state['player_color']
@@ -19,7 +21,7 @@ def process_game_events():
     if event:
         handle_event(event)
 
-    board_container.after(50, process_game_events)
+    board_container.after(50, lambda: process_game_events(game_state))
 
 def handle_local_move_event():
     """
