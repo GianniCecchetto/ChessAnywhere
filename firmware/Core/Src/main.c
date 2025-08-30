@@ -79,7 +79,7 @@ typedef struct {
 #define PIN_NUMBER_FOR_COLUMN 	3
 #define PIN_NUMBER_FOR_LINE	 		3
 #define NO_INDEX_FOUND					255
-#define GLOBAL_BRIGHTNESS				64
+#define GLOBAL_BRIGHTNESS				8
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -264,6 +264,8 @@ int main(void)
 				// Prepare data for DMA
 				rgb_update_buffer(pwm_data, colors);
 				HAL_TIM_PWM_Send_To_DMA(pwm_data);
+				// TODO enlever
+				game_state = IN_GAME;
   			break;
   		case IN_GAME:
 
@@ -633,13 +635,11 @@ void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index) {
     default: rf = vv; gf = p; bf = q; break;
   }
 
-  int brightness = 64;
-
   for(uint8_t i = from_index; i < from_index + 8; ++i) {
   	int r = (uint8_t)(rf*255);
   	int g = (uint8_t)(gf*255);
   	int b = (uint8_t)(bf*255);
-  	led_set(i, r, g, b, colors, brightness);
+  	led_set(i, r, g, b, colors, GLOBAL_BRIGHTNESS);
   }
 }
 
