@@ -63,10 +63,19 @@ def process_game_events():
         print(board, "\n")
         if board.is_checkmate():
             print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
-        elif board.is_stalemate():
-            print("Partie nulle par pat.")
-        # Gérer d'autres fins de partie si nécessaire
+        
+        if board.turn == chess.WHITE:
+            send_command(":WIN 0")# les noirs ont gagné
+        else:
+            send_command(":WIN 1")# les blancs ont gagné
         return
+    elif board.is_stalemate():
+        send_command(":DRAW STALE")
+        return
+    elif board.is_fifty_moves():
+        send_command(":DRAW EXCEEDED")
+        return
+
 
     event = get_next_event()
     if event:
@@ -89,8 +98,17 @@ def process_online_game_events():
         print(board, "\n")
         if board.is_checkmate():
             print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
-        elif board.is_stalemate():
-            print("Partie nulle par pat.")
+           
+        if board.turn == chess.WHITE:
+            send_command(":WIN 0")# les noirs ont gagné
+        else:
+            send_command(":WIN 1")# les blancs ont gagné
+        return
+    elif board.is_stalemate():
+        send_command(":DRAW STALE")
+        return
+    elif board.is_fifty_moves():
+        send_command(":DRAW EXCEEDED")
         return
 
     if game_state['current_turn'] == 'local':
@@ -121,18 +139,15 @@ def handle_lift_event(square):
     board_container = game_state['container']
     player_color = game_state['player_color']
     
-    # Si un coup illégal est en attente, une pièce doit être déplacée
     if game_state['illegal_move_pending']:
         piece = board.piece_at(game_state['start_square'])
         if square != game_state['start_square']:
             print("Erreur : veuillez replacer la pièce mal jouée avant de soulever une nouvelle pièce.")
-            send_command("LED_ERROR")
             return
     else:
         piece = board.piece_at(square)
         if not piece or piece.color != board.turn:
             print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
-            send_command("LED_ERROR")
             return
 
     game_state['start_square'] = square
@@ -152,7 +167,6 @@ def handle_place_event(square):
     
     if start_square is None:
         print("Erreur : Pièce posée sans en avoir soulevé une au préalable.")
-        send_command("LED_ERROR")
         return
 
     if start_square == dest_square:
@@ -185,7 +199,6 @@ def handle_place_event(square):
             playable_matrix[7-y][x] = "W"
             
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
-            send_command("LED_ERROR")
             draw_chessboard(board_container, board=illegale_board, playable_square=playable_matrix, player_color=player_color)
             
             game_state['illegal_move_pending'] = True
@@ -193,11 +206,9 @@ def handle_place_event(square):
     except ValueError:
         print("Entrée invalide.")
         game_state['start_square'] = None
-        send_command("LED_ERROR")
     except Exception as e:
         print(f"Une erreur s'est produite : {e}")
         game_state['start_square'] = None
-        send_command("LED_ERROR")
 
 def handle_local_move_event():
     """
@@ -223,11 +234,11 @@ def handle_online_move_event():
     
     print("Tentative de récupérer un coup de l'API...")
     
-    if True: # Remplacez par une condition réelle
+    if True: 
         # Simuler un coup de l'adversaire pour le test
         legal_moves = list(board.legal_moves)
         if legal_moves:
-            online_move = legal_moves[0] # Ou choisissez un coup de manière plus intelligente
+            online_move = legal_moves[0] 
 
     if online_move:
         print(f"Coup de l'adversaire reçu : {online_move.uci()}")
