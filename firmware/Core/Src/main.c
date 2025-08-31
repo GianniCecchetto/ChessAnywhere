@@ -132,8 +132,11 @@ uint8_t is_a_piece_lift(uint64_t current, uint64_t old);
 uint8_t is_a_piece_placed(uint64_t current, uint64_t old);
 void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3], uint8_t brightness);
 void leds_clear(uint8_t colors[][3]);
+void led_show_win(uint8_t colors[][3], uint8_t side);
+void led_show_draw(uint8_t colors[][3]);
 void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index);
 uint8_t is_board_at_init_setup(uint64_t board_bitmap);
+
 
 
 /* --- helpers UART --- */
@@ -174,7 +177,6 @@ int main(void)
   cb_cmd_t cmd;
   uint8_t idx;
   uint8_t status;
-  static int hue = 0;
 
   /* USER CODE END 1 */
 
@@ -212,28 +214,7 @@ int main(void)
   {
   	switch(game_state) {
   	  case STARTING_ANIMATION:
-				for(uint8_t j = 0; j < 255; ++j) {
 
-					// Only display when color are everywhere on the colors table
-					if(colors[63][0] != 0 || colors[63][1] != 0 || colors[63][2] != 0) {
-						// Prepare data for DMA
-						rgb_update_buffer(pwm_data, colors);
-						HAL_TIM_PWM_Send_To_DMA(pwm_data);
-						HAL_Delay(50);
-					}
-					// Scroll down the color, row per row
-					for(int i = 7; i > 0; --i) {
-						for(int k = 0; k < 8; ++k) {
-							colors[(i)*8+k][0] = colors[(i-1)*8+k][0];
-							colors[(i)*8+k][1] = colors[(i-1)*8+k][1];
-							colors[(i)*8+k][2] = colors[(i-1)*8+k][2];
-						}
-					}
-					// Generate the new line of rgb
-					hsv_to_rgb(hue, 255, 255, colors, 0);
-					// Change color
-					hue = (hue + 4) % 256;
-				}
 				// End of init animation
 				leds_clear(colors);
   	  	game_state = INIT_BOARD;
@@ -261,9 +242,6 @@ int main(void)
 						led_set(led_index, 255, 0, 0, colors, GLOBAL_BRIGHTNESS);
 					}
 				}
-				// Prepare data for DMA
-				rgb_update_buffer(pwm_data, colors);
-				HAL_TIM_PWM_Send_To_DMA(pwm_data);
 				// TODO enlever
 				game_state = IN_GAME;
   			break;
@@ -287,56 +265,52 @@ int main(void)
 
   			int r = uart_fifo_get_command(&uartFifo, command, sizeof(command));
 				if (r > 0) {
-						// commande complète reçue (cmd contient la commande sans CR/LF)
-					uart_write(command);
+					// commande complète reçue (cmd contient la commande sans CR/LF)
+					// uart_write(command);
 					cb_parse_cmd(command, &cmd);
 					memset(command, 0, 64);
 					switch(cmd.type) {
-						case CB_CMD_PING:      uart_write("OK PING\r\n"); break;
-						case CB_CMD_VER_Q:     uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n"); break;
-						case CB_CMD_TIME_Q:   { char o[48]; int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms()); uart_write_n(o,(size_t)n); } break;
-						case CB_CMD_RST:       NVIC_SystemReset(); break;
-						case CB_CMD_SAVE:      uart_write("OK SAVE\r\n"); break;
-						case CB_CMD_STREAM:    /* cmd.u.stream.on */ uart_write("OK STREAM\r\n"); break;
+						case CB_CMD_PING:      		uart_write("OK PING\r\n"); break;
+						case CB_CMD_VER_Q:     		uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n"); break;
+						case CB_CMD_TIME_Q:
+							char o[48];
+							int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms());
+							uart_write_n(o,(size_t)n);
+							break;
 
-						/* READ */
-						case CB_CMD_READ_ALL:  uart_write("OK READ ALL 0x0000000000000000\r\n"); break;
-						case CB_CMD_READ_SQ:  { char sq[3]; cb_sq_to_str(cmd.u.read_sq.idx,sq);
-																		char o[32]; int n=snprintf(o,sizeof o,"OK READ SQ %s 0\r\n",sq); uart_write_n(o,(size_t)n); } break;
+						case CB_CMD_RST:       		NVIC_SystemReset(); break;
+						case CB_CMD_SAVE:      		uart_write("OK SAVE\r\n"); break;
 						/* LED */
-						case CB_CMD_LED_SET:       led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors, GLOBAL_BRIGHTNESS); uart_write("OK\r\n"); break;
-					//	case CB_CMD_LED_OFF_ALL:   led_off_all(); uart_write("OK\r\n"); break;
-					//	case CB_CMD_LED_FILL:      led_fill(cmd.u.led_fill.r, cmd.u.led_fill.g, cmd.u.led_fill.b); uart_write("OK\r\n"); break;
-					//	case CB_CMD_LED_BITBOARD:  led_bitboard(cmd.u.led_bitboard.bits); uart_write("OK\r\n"); break;
-						case CB_CMD_LED_MAP_HEX:   /* cmd.u.led_map_hex.hex192 */ uart_write("OK\r\n"); break;
-						case CB_CMD_LED_MOVES:     uart_write("OK\r\n"); break;
-						case CB_CMD_LED_OK:        uart_write("OK\r\n"); break;
-						case CB_CMD_LED_FAIL:      uart_write("OK\r\n"); break;
+						case CB_CMD_LED_SET:      led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors, GLOBAL_BRIGHTNESS);
+																			uart_write("OK\r\n"); break;
+					  case CB_CMD_LED_OFF_ALL:  leds_clear(colors); uart_write("OK\r\n"); break;
 
-						/* MOVE */
-						case CB_CMD_MOVE_ACK:      uart_write("OK\r\n"); break;
-						case CB_CMD_MOVE_NACK:     uart_write("OK\r\n"); break;
+					  /* WIN and DRAW */
+					  case CB_CMD_WIN:					led_show_win(colors, cmd.u.led_set.idx); uart_write("OK\r\n"); game_state = GAME_END; break;
+					  case CB_CMD_DRAW:					led_show_draw(colors); uart_write("OK\r\n"); game_state = GAME_END; break;
 
 						/* CFG */
-						case CB_CMD_CFG_Q:         uart_write("OK CFG\r\n"); break;
-						case CB_CMD_CFG_GET:       uart_write("OK CFG VAL\r\n"); break;
-						//case CB_CMD_CFG_SET_KV:    for(int i=0;i<cmd.u.cfg_set_kv.n_pairs;i++) cfg_set_kv(cmd.u.cfg_set_kv.pairs[i]); uart_write("OK\r\n"); break;
+						//case CB_CMD_CFG_Q:         uart_write("OK CFG\r\n"); break;
+						//case CB_CMD_CFG_GET:       uart_write("OK CFG VAL\r\n"); break;
 
 						default: uart_write("ERR CMD\r\n"); break;
 					}
-					rgb_update_buffer(pwm_data, colors);
-					HAL_TIM_PWM_Send_To_DMA(pwm_data);
 				} else if (r == -1) {
 						// commande reçue mais tronquée dans buffer 'cmd'
 						// handle_truncated_command(command);
-						uart_write(command);
+						uart_write("ERR CMD\r\n");;
 				}
   			break;
+  		case GAME_END:
+  			// Display WIN or DRAW for 3 seconds
+  			HAL_Delay(5000);
+  			leds_clear(colors);
+
+  			game_state = STARTING_ANIMATION;
   	}
 
-  	// Exemple : traiter des commandes reçues
-
-
+  	rgb_update_buffer(pwm_data, colors);
+		HAL_TIM_PWM_Send_To_DMA(pwm_data);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -610,39 +584,6 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
-/*
- * Chroma
- */
-// Fonction de conversion HSV → RGB
-void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index) {
-  float hh = h / 255.0 * 360;
-  float ss = s / 255.0;
-  float vv = v / 255.0;
-
-  int i = (int)(hh / 60) % 6;
-  float f = (hh / 60) - i;
-  float p = vv * (1 - ss);
-  float q = vv * (1 - f * ss);
-  float t = vv * (1 - (1 - f) * ss);
-
-  float rf, gf, bf;
-  switch (i) {
-    case 0: rf = vv; gf = t; bf = p; break;
-    case 1: rf = q; gf = vv; bf = p; break;
-    case 2: rf = p; gf = vv; bf = t; break;
-    case 3: rf = p; gf = q; bf = vv; break;
-    case 4: rf = t; gf = p; bf = vv; break;
-    default: rf = vv; gf = p; bf = q; break;
-  }
-
-  for(uint8_t i = from_index; i < from_index + 8; ++i) {
-  	int r = (uint8_t)(rf*255);
-  	int g = (uint8_t)(gf*255);
-  	int b = (uint8_t)(bf*255);
-  	led_set(i, r, g, b, colors, GLOBAL_BRIGHTNESS);
-  }
-}
-
 /* USER CODE BEGIN 4 */
 /*
  * Start sending data
@@ -856,6 +797,38 @@ void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3]
 	colors[index][0] = (uint8_t)(r * brightness / 255);
 	colors[index][1] = (uint8_t)(g * brightness / 255);
 	colors[index][2] = (uint8_t)(b * brightness / 255);
+}
+
+
+void led_show_win(uint8_t colors[][3], uint8_t side) {
+
+	// side = 0 => black win
+	// side = 1 => white win
+	uint8_t white_color_red   = side 		  ? 0   : 255;
+	uint8_t white_color_green = side 		  ? 255 : 0;
+	uint8_t black_color_red   = (side == 0) ? 0   : 255;
+	uint8_t black_color_green = (side == 0) ? 255 : 0;
+
+	for(uint8_t index = 0; index < 32; ++index) {
+		led_set(index, white_color_red, white_color_green, 0, colors, GLOBAL_BRIGHTNESS);
+	}
+
+	for(uint8_t index = 32; index < 64; ++index) {
+		led_set(index, black_color_red, black_color_green, 0, colors, GLOBAL_BRIGHTNESS);
+	}
+}
+
+void led_show_draw(uint8_t colors[][3]) {
+
+	leds_clear(colors);
+
+	for(uint8_t index = 16; index < 24; ++index) {
+		led_set(index, 255, 255, 255, colors, GLOBAL_BRIGHTNESS);
+	}
+
+	for(uint8_t index = 32; index < 40; ++index) {
+		led_set(index, 255, 255, 255, colors, GLOBAL_BRIGHTNESS);
+	}
 }
 
 /* USER CODE END 4 */

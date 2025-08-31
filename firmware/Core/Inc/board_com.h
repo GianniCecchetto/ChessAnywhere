@@ -16,9 +16,10 @@ extern "C" {
 #endif
 
 // -------- Constants --------
-#define CB_MAX_LINE        32   // max single line (without CRLF)
+#define CB_MAX_LINE         32   // max single line (without CRLF)
 #define CB_MAX_TOKENS       24
 #define CB_MAX_STR          26
+#define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
 
 // -------- Square helpers --------
 // Index mapping: 0..63 with bit0=A1, bit63=H8
@@ -50,7 +51,7 @@ bool cb_sq_from_str(const char* s, uint8_t* out_idx);
  */
 static inline void cb_sq_to_str(uint8_t idx, char out[3]){
     uint8_t f,r; cb_idx_to_coords(idx,&f,&r);
-    out[0] = (char)('A'+f); out[1]=(char)('1'+r); out[2]='\0';
+    out[0] = (char)('H'-f); out[1]=(char)('1'+r); out[2]='\0';
 }
 
 // -------- Parser côté PCB (App -> PCB) --------
@@ -67,6 +68,9 @@ typedef enum {
     CB_CMD_READ_SQ,          // idx
     CB_CMD_READ_MASK_SET,    // mask64
     CB_CMD_READ_MASK_Q,
+
+		CB_CMD_WIN,
+		CB_CMD_DRAW,
 
     CB_CMD_LED_SET,          // idx, r,g,b
     CB_CMD_LED_OFF_SQ,       // idx
