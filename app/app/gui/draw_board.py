@@ -18,12 +18,6 @@ import board_com_ctypes as cb
 
 
 OUTLINE_WIDTH = 0
-PIECES_PATH = "assets/" 
-
-PIECES_MAP = {
-    'p': 'bP', 'n': 'bN', 'b': 'bB', 'r': 'bR', 'q': 'bQ', 'k': 'bK',
-    'P': 'wP', 'N': 'wN', 'B': 'wB', 'R': 'wR', 'Q': 'wQ', 'K': 'wK'
-}
 
 # Mapping des symboles vers couleurs LED (R, G, B)
 LED_COLORS = {
@@ -38,6 +32,9 @@ def square_to_idx(row: int, col: int) -> int:
     return row * 8 + col
 
 def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=None, player_color=True):
+    app = parent.winfo_toplevel()  # gets the root window (your chess_anywhere_app)
+    preloaded_pieces = getattr(app, "PRELOADED_PIECES", {})
+
     canvas = tk.Canvas(parent, 
                        width=size * square_size, 
                        height=size * square_size, 
@@ -108,19 +105,10 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                     y_coord = (row) * square_size
                     x_coord = (7-col) * square_size
 
-                piece_name = PIECES_MAP[piece.symbol()]
-                image_path = f"{PIECES_PATH}{piece_name}.png"
-
-                try:
-                    img = Image.open(image_path)
-                    img = img.resize((square_size, square_size), Image.LANCZOS)
-                    piece_images[square] = ImageTk.PhotoImage(img)
-                    
-                    canvas.create_image(x_coord + square_size // 2, y_coord + square_size // 2, 
-                                        image=piece_images[square])
-                except FileNotFoundError:
-                    print(f"Erreur : le fichier image {image_path} n'a pas été trouvé.")
+                piece_name = piece.symbol()
+                if piece_name in preloaded_pieces:
+                    img = preloaded_pieces[piece_name]
+                    canvas.create_image(x_coord + square_size // 2, y_coord + square_size // 2, image=img)
 
     canvas.create_rectangle(0, 0, size * square_size, size * square_size, 
                             outline=c.DARK_BTN_BG, width=3)
-    canvas.piece_images = piece_images

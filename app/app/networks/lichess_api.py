@@ -29,8 +29,8 @@ def load_token() -> str | None:
 def fetch_game(board_container, client: berserk.Client, game_id):
     try:
         game_info = client.games.export(game_id)
-        if game_info.get('status') != 'started':
-            raise berserk.exceptions.ResponseError("Game not started yet")
+        if game_info.get('status') == 'created':
+             raise RuntimeError("Game not started yet")
         return game_info
     except berserk.exceptions.ResponseError as e:
         board_container.after(1000, lambda: fetch_game(board_container, client, game_id))
@@ -45,6 +45,9 @@ def refresh_games(parent, games_list_frame, board_container):
     except Exception as e:
         print("Error fetching games:", e)
         games = ["❌ Error fetching data"]
+        # Re-run this function every 5s
+        parent.after(5000, lambda: refresh_games(parent, games_list_frame, board_container))
+        return
 
     # Clear old buttons
     for widget in games_list_frame.winfo_children():

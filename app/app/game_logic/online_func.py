@@ -68,8 +68,8 @@ def wait_for_uart_confirmation(game_state):
     if event:
         handle_online_event(event)
 
-        # ✅ After handling event, check if full move confirmed
-        if game_state.get("end_square") == game_state["online_move"]:
+        # After handling event, check if full move confirmed
+        if game_state("end_square") == game_state["online_move"]:
             print("Coup confirmé par l'échiquier.")
             board.push(move)  # Apply the move officially
             game_state['online_move'] = None
@@ -78,15 +78,19 @@ def wait_for_uart_confirmation(game_state):
             return True
 
     # Try again later (non-blocking)
-    container.after(100, lambda: wait_for_uart_confirmation(game_state))
+    container.after(500, lambda: wait_for_uart_confirmation(game_state))
     return False
 
 def start_polling(game_state):
     """Boucle indépendante qui lit l'API Lichess"""
     client = game_state['client']
     game_id = game_state['game_id']
+    container = game_state['container']
+
+    last_handled_move = game_state['online_move']
 
     def poll_stream():
+        nonlocal last_handled_move
         while True:
             try:
                 stream = client.board.stream_game_state(game_id)
@@ -99,8 +103,15 @@ def start_polling(game_state):
 
                     if moves:
                         moves_list = moves.split()
-                        game_state['online_move'] = moves_list[-1] if moves_list else None
+                        if moves_list:
+                            newest_move = moves_list[-1]
+                            if newest_move != last_handled_move:
+                                game_state['online_move'] = newest_move
+                                last_handled_move = newest_move
+                                print(f"New move from opponent: {newest_move}")
 
+                                # Schedule GUI update in main thread
+                                container.after(0, lambda: wait_for_uart_confirmation(game_state))
             except Exception as e:
                 print(f"Stream interrompu: {e}, reconnexion dans 3s...")
                 time.sleep(3)
