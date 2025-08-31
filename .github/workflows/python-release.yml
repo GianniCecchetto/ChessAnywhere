@@ -78,12 +78,32 @@ jobs:
           name: linux-app
           path: app/dist-release/linux-app-*
 
-  release:
+  linux-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-    needs: [build-windows-app, build-linux-app]
+    needs: build-linux-app
+
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-app
+
+      - name: Create Linux GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: linux-app-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  window-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    needs: build-windows-app
 
     steps:
       - name: Download Windows artifact
@@ -91,16 +111,9 @@ jobs:
         with:
           name: windows-app
 
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-app
-
-      - name: Create GitHub Release
+      - name: Create Windows GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            *.exe
-            linux-app-*
+          files: *.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
