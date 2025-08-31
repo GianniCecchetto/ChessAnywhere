@@ -1,1 +1,3 @@
-../Core/Src/rgb_led.c:33:6:rgb_update_buffer	4
+../Core/Src/rgb_led.c:6:6:led_update_buffer	4
+../Core/Src/rgb_led.c:32:6:leds_clear	2
+../Core/Src/rgb_led.c:41:6:led_set	1

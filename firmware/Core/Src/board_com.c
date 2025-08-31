@@ -60,15 +60,12 @@ void cb_linebuf_feed(cb_linebuf_t* lb, const uint8_t* data, size_t n, cb_on_line
 
 // ---- Parser ----
 // ===== Parser App->PCB (commandes commencant par ':') =======================
-static bool is_hex64(const char* s){ if(!s) return false; size_t n=strlen(s);
-    if(n<3) return false; if(!(s[0]=='0' && (s[1]=='x'||s[1]=='X'))) return false;
-    for(size_t i=2;i<n;i++){ char c=s[i];
-        if(!((c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F'))) return false; }
-    return true; }
 
 static bool parse_u8(const char* t, uint8_t* v){ if(!t||!v) return false;
     char* e=NULL; unsigned long x=strtoul(t,&e,10); if(e==t||*e) return false;
-    if(x>255UL) return false; *v=(uint8_t)x; return true; }
+    if(x>255UL) return false;
+    *v=(uint8_t)x; return true;
+}
 
 static int split_tokens_ro(char* line, char* out[], int max_out){
     // Reprend split_tokens() mais en local (version ligne mutable).
@@ -160,6 +157,10 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             }
             return false;
         }
+        if(strcmp(tok[1],"BRIGHT")==0 && nt==3){
+						uint8_t br; if(!parse_u8(tok[2], &br)) return false;
+						out->type=CB_CMD_LED_BRIGHT; out->u.led_bright.bright=br; return true;
+				}
         if(strcmp(tok[1],"OK")==0 && nt==4){
             uint8_t a,b; if(!cb_sq_from_str(tok[2],&a)||!cb_sq_from_str(tok[3],&b)) return false;
             out->type=CB_CMD_LED_OK; out->u.led_ok.from_idx=a; out->u.led_ok.to_idx=b; return true;
@@ -168,7 +169,6 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
     }
 
     // --- COLOR ---
-    /*
     if(strcmp(T0,"COLOR")==0 && nt>=2){
         if(strcmp(tok[1],"SET")==0 && nt==6){
             uint8_t r,g,b;
@@ -177,17 +177,8 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             strncpy(out->u.color_set.name, tok[2], CB_MAX_STR-1);
             out->u.color_set.r=r; out->u.color_set.g=g; out->u.color_set.b=b; return true;
         }
-        if(strcmp(tok[1],"GET")==0 && nt==3){
-            out->type=CB_CMD_COLOR_GET;
-            strncpy(out->u.color_get.name, tok[2], CB_MAX_STR-1);
-            return true;
-        }
-        if(strcmp(tok[1],"?")==0 && nt==2){
-            out->type=CB_CMD_COLOR_LIST_Q; return true;
-        }
         return false;
     }
-    */
 
     // --- CFG ---
     /*

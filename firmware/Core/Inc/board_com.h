@@ -111,6 +111,7 @@ typedef struct {
         struct { uint8_t idx; } led_off_sq;
         struct { uint8_t r,g,b; } led_fill;
         struct { uint8_t from_idx, to_idx, r,g,b; } led_rect;
+        struct { uint8_t bright; } led_bright;
         struct { uint64_t bits; } led_bitboard;
 
         struct { char name[CB_MAX_STR]; uint8_t r,g,b; } color_set;

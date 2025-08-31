@@ -3,6 +3,7 @@
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
+  * @author					: Thomas Stäheli
   ******************************************************************************
   * @attention
   *
@@ -32,28 +33,23 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-// ENUM qui permet de sélectionner le PORT correct correspondant à la ligne ou colonne
-typedef enum {
-	NO, NE, SO, SE
-} Direction;
-
-typedef struct {
-	Direction dir;
-	uint8_t index;
-} Led_Index;
-
+// Handle all the pins from schematics (same name in the schematic)
 typedef enum {
 	ROW0, ROW1, ROW2, COL0, COL1, COL2, READ, BUTTON
 } Pins;
 
+// Game states
 typedef enum {
-	STARTING_ANIMATION, INIT_BOARD, IN_GAME, GAME_END
+	STARTING_ANIMATION,  	// INIT
+	INIT_BOARD, 				 	// Wait until the board is init (32 pieces placed)
+	IN_GAME, 						 	// Reading UART port for app command
+	GAME_END						 	// Handle the restart of a new game
 } States;
 
-// Permettra de faire un tableau pour savoir quel pin est associé à quel port et numéro de GPIO
+// Store the differents pins name and port
 typedef struct {
-    GPIO_TypeDef *port;   // pointeur vers le bloc GPIO (GPIOA, GPIOB…)
-    uint16_t pin;         // Numéro pin
+	GPIO_TypeDef *port;   // Pointer to the GPIO Block (GPIOA, GPIOB…)
+	uint16_t pin;         // Pin number
 } GPIO_pin;
 
 typedef struct {
@@ -61,25 +57,30 @@ typedef struct {
 	uint8_t line;
 } Square;
 
-// Put this define here, so I can use it in the structure
-#define UART_BUFFER_CAPACITY		32
-
 typedef struct {
-	uint8_t data[UART_BUFFER_CAPACITY]; // capacity
-	uint8_t size;
-	uint8_t capacity;
-} Array;
+	uint8_t grid_brightness;
+	uint8_t possible_move_brightness;
+	Color   board_theme;
+} Settings;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 // DEFINE
-#define BOARD_WIDTH							8
-#define BOARD_HEIGHT						8
-#define PIN_NUMBER_FOR_COLUMN 	3
-#define PIN_NUMBER_FOR_LINE	 		3
-#define NO_INDEX_FOUND					255
-#define GLOBAL_BRIGHTNESS				8
+#define BOARD_WIDTH									8
+#define BOARD_HEIGHT								8
+#define BOARD_MIDDLE								BOARD_WIDTH * BOARD_HEIGHT / 2
+#define BOARD_IS_NOT_READY					0
+#define BOARD_IS_READY							1
+#define BOARD_DEFAULT_GRID_BRIGHT		8
+#define BOARD_DEFAULT_MOVE_BRIGHT   255
+
+#define PIN_NUMBER_FOR_COLUMN 			3
+#define PIN_NUMBER_FOR_LINE	 				3
+#define NO_INDEX_FOUND							255
+
+#define COLOR_PANNEL_SIZE						256
+#define MAX_COMMAND_SIZE						64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,8 +89,6 @@ typedef struct {
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-I2C_HandleTypeDef hi2c1;
-
 TIM_HandleTypeDef htim17;
 DMA_HandleTypeDef hdma_tim17_ch1;
 
@@ -97,25 +96,34 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 // PRIVATE VARIABLE
-// LED RGB control variable
-
+// Pinout
 static const GPIO_pin gpio_pins[] = {
-		{GPIOA, GPIO_PIN_4},  // ROW0
-		{GPIOA, GPIO_PIN_5},  // ROW1
-		{GPIOA, GPIO_PIN_6},  // ROW2
-		{GPIOC, GPIO_PIN_15}, // COL0
-		{GPIOA, GPIO_PIN_11}, // COL1
-		{GPIOA, GPIO_PIN_12}, // COL2
-		{GPIOB, GPIO_PIN_0},  // READ
-		{GPIOB, GPIO_PIN_7}   // BUTTON
-}; // ROW0
+	{GPIOA, GPIO_PIN_4},  // ROW0
+	{GPIOA, GPIO_PIN_5},  // ROW1
+	{GPIOA, GPIO_PIN_6},  // ROW2
+	{GPIOC, GPIO_PIN_15}, // COL0
+	{GPIOA, GPIO_PIN_11}, // COL1
+	{GPIOA, GPIO_PIN_12}, // COL2
+	{GPIOB, GPIO_PIN_0},  // READ
+	{GPIOB, GPIO_PIN_7}   // BUTTON
+};
+
+// To generate the animation
+Color color_pannel[COLOR_PANNEL_SIZE];
+
+static uint8_t 		 	rx_data;     			// To store the received uart byte
+static uart_fifo_t 	uart_fifo;   			// UART FIFO
+static Settings 		settings = { 			// User settings
+		.grid_brightness = BOARD_DEFAULT_GRID_BRIGHT,							// Grid brightness
+		.possible_move_brightness = BOARD_DEFAULT_MOVE_BRIGHT,		// Possibles moves brightness
+		.board_theme = {0, 0, 0}					// Grid color
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
@@ -126,18 +134,14 @@ void set_gpio_column(uint8_t column);
 void set_gpio_line(uint8_t line);
 uint8_t read_reed_value(Square square);
 void read_full_board(uint64_t *board_bitmap);
-uint8_t convert_reed_index_to_led_index(uint8_t reed_index);
-uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b);
 uint8_t is_a_piece_lift(uint64_t current, uint64_t old);
 uint8_t is_a_piece_placed(uint64_t current, uint64_t old);
-void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3], uint8_t brightness);
-void leds_clear(uint8_t colors[][3]);
-void led_show_win(uint8_t colors[][3], uint8_t side);
-void led_show_draw(uint8_t colors[][3]);
-void hsv_to_rgb(int h, int s, int v, uint8_t colors[][3], int from_index);
+void generate_frame(uint8_t frame, Color colors[]);
+void init_palette();
+void led_show_grid(Color colors[]);
+void led_show_win(Color colors[], uint8_t side);
+void led_show_draw(Color colors[]);
 uint8_t is_board_at_init_setup(uint64_t board_bitmap);
-
-
 
 /* --- helpers UART --- */
 static inline uint32_t t_ms(void){ return HAL_GetTick(); }
@@ -151,9 +155,7 @@ static void uart_write_n(const char *s, size_t n){ HAL_UART_Transmit(&huart2,(ui
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// GLOBAL VARIABLE
-static uint8_t rx_data;                  // Octet reçu
-uart_fifo_t uartFifo;
+
 /* USER CODE END 0 */
 
 /**
@@ -167,15 +169,17 @@ int main(void)
 	// State machine variable
 	States 		game_state = STARTING_ANIMATION;
 	uint16_t  pwm_data[LED_BUFFER_SIZE] = {0};
-	uint8_t   colors[LED_NUMBER][3] = {0};
-	// Save the board state for led
+	Color     colors[LED_NUMBER] = {0};
+	// Save the board state to detect piece lift or place
   uint64_t  old_board_bitmap = 0;
   uint64_t  board_bitmap = 0;
-
-  char msg[64] = {0};
-  char command[128];
-  cb_cmd_t cmd;
-  uint8_t idx;
+  // UART TX buffer to send command
+  char uart_tx_buffer[MAX_COMMAND_SIZE] = {0};
+  // To decode UART command
+  char string_command[MAX_COMMAND_SIZE];
+  cb_cmd_t decoded_command;
+  // Reed variable
+  uint8_t lift_or_place_index;
   uint8_t status;
 
   /* USER CODE END 1 */
@@ -198,14 +202,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   // UART_Flush(&huart2);
   // Lancer la réception du premier octet en interruption
   HAL_UART_Receive_IT(&huart2, &rx_data, 1);
-  uart_fifo_init(&uartFifo);
+  uart_fifo_init(&uart_fifo);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -214,7 +217,13 @@ int main(void)
   {
   	switch(game_state) {
   	  case STARTING_ANIMATION:
-
+  	  	init_palette();
+  	  	for(uint8_t frame = 0; frame < 255; ++frame) {
+  	  		generate_frame(frame, colors);
+  	  		led_update_buffer(pwm_data, colors);
+					HAL_TIM_PWM_Send_To_DMA(pwm_data);
+  	  		HAL_Delay(20);
+  	  	}
 				// End of init animation
 				leds_clear(colors);
   	  	game_state = INIT_BOARD;
@@ -224,11 +233,12 @@ int main(void)
   			// Reading the state of every reed sensors
 				read_full_board(&board_bitmap);
 				status = is_board_at_init_setup(board_bitmap);
-				if(status == 1) {
-					/* cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
-					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY); */
+				if(status == BOARD_IS_READY) {
+					// Send board init to app ?
+					// HAL_UART_Transmit(&huart2, (uint8_t*)uart_tx_buffer, strlen(uart_tx_buffer), HAL_MAX_DELAY);
 					game_state = IN_GAME;
 				}
+
 				// For all the LED's
 				for(uint8_t i = 0; i < LED_NUMBER; ++i){
 					// Convert the reed index to the led index, because they aren't not connected the same way (see schematic)
@@ -236,13 +246,15 @@ int main(void)
 					// Take the bitmap value from the current index
 					if(bitmap_get_bit(board_bitmap, i)) {
 						// if the sensor is closed, led will be green
-						led_set(led_index, 0, 255, 0, colors, GLOBAL_BRIGHTNESS);
+						Color new_color = {0, 255, 0};
+						led_set(led_index, new_color, colors, settings.grid_brightness);
 					} else {
 						// If the sensor is open, led will be red
-						led_set(led_index, 255, 0, 0, colors, GLOBAL_BRIGHTNESS);
+						Color new_color = {255, 0, 0};
+						led_set(led_index, new_color, colors, settings.grid_brightness);
 					}
 				}
-				// TODO enlever
+				// TODO DEBUG PURPOSE
 				game_state = IN_GAME;
   			break;
   		case IN_GAME:
@@ -250,67 +262,101 @@ int main(void)
   			old_board_bitmap = board_bitmap;
 				// Reading the state of every reed sensors
 				read_full_board(&board_bitmap);
-				idx = is_a_piece_lift(board_bitmap, old_board_bitmap);
-				if(idx != NO_INDEX_FOUND) {
-					cb_fmt_evt_lift(msg, 64, idx, HAL_GetTick());
-					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				lift_or_place_index = is_a_piece_lift(board_bitmap, old_board_bitmap);
+				if(lift_or_place_index != NO_INDEX_FOUND) {
+					cb_fmt_evt_lift(uart_tx_buffer, 64, lift_or_place_index, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)uart_tx_buffer, strlen(uart_tx_buffer), HAL_MAX_DELAY);
 				}
 
-				idx = is_a_piece_placed(board_bitmap, old_board_bitmap);
-				if(idx != NO_INDEX_FOUND) {
-					leds_clear(colors);
-					cb_fmt_evt_place(msg, 64, idx, HAL_GetTick());
-					HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+				lift_or_place_index = is_a_piece_placed(board_bitmap, old_board_bitmap);
+				if(lift_or_place_index != NO_INDEX_FOUND) {
+					led_show_grid(colors);
+					cb_fmt_evt_place(uart_tx_buffer, 64, lift_or_place_index, HAL_GetTick());
+					HAL_UART_Transmit(&huart2, (uint8_t*)uart_tx_buffer, strlen(uart_tx_buffer), HAL_MAX_DELAY);
 				}
 
-  			int r = uart_fifo_get_command(&uartFifo, command, sizeof(command));
+				// See if there is a command waiting in the uart_fifo
+  			int r = uart_fifo_get_command(&uart_fifo, string_command, sizeof(string_command));
 				if (r > 0) {
-					// commande complète reçue (cmd contient la commande sans CR/LF)
-					// uart_write(command);
-					cb_parse_cmd(command, &cmd);
-					memset(command, 0, 64);
-					switch(cmd.type) {
-						case CB_CMD_PING:      		uart_write("OK PING\r\n"); break;
-						case CB_CMD_VER_Q:     		uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n"); break;
+					// Parse the string to get the command and get the command data
+					cb_parse_cmd(string_command, &decoded_command);
+					// After parse, execute the command
+					switch(decoded_command.type) {
+					  // General command
+						case CB_CMD_PING:
+							uart_write("OK PING\r\n");
+							break;
+						case CB_CMD_VER_Q:
+							uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n");
+							break;
 						case CB_CMD_TIME_Q:
 							char o[48];
 							int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms());
 							uart_write_n(o,(size_t)n);
 							break;
+						case CB_CMD_RST:
+							NVIC_SystemReset();
+							break;
+						case CB_CMD_SAVE:
+							uart_write("OK SAVE\r\n");
+							break;
+						// LED
+						case CB_CMD_LED_SET:
+							Color new_color = {decoded_command.u.led_set.r, decoded_command.u.led_set.g, decoded_command.u.led_set.b};
+							led_set(decoded_command.u.led_set.idx, new_color, colors, settings.possible_move_brightness);
+							uart_write("OK\r\n");
+							break;
+					  case CB_CMD_LED_OFF_ALL:
+					  	leds_clear(colors);
+					  	uart_write("OK\r\n");
+					  	break;
 
-						case CB_CMD_RST:       		NVIC_SystemReset(); break;
-						case CB_CMD_SAVE:      		uart_write("OK SAVE\r\n"); break;
-						/* LED */
-						case CB_CMD_LED_SET:      led_set(cmd.u.led_set.idx, cmd.u.led_set.r, cmd.u.led_set.g, cmd.u.led_set.b, colors, GLOBAL_BRIGHTNESS);
-																			uart_write("OK\r\n"); break;
-					  case CB_CMD_LED_OFF_ALL:  leds_clear(colors); uart_write("OK\r\n"); break;
-
-					  /* WIN and DRAW */
-					  case CB_CMD_WIN:					led_show_win(colors, cmd.u.led_set.idx); uart_write("OK\r\n"); game_state = GAME_END; break;
-					  case CB_CMD_DRAW:					led_show_draw(colors); uart_write("OK\r\n"); game_state = GAME_END; break;
-
-						/* CFG */
-						//case CB_CMD_CFG_Q:         uart_write("OK CFG\r\n"); break;
-						//case CB_CMD_CFG_GET:       uart_write("OK CFG VAL\r\n"); break;
-
-						default: uart_write("ERR CMD\r\n"); break;
+					  // WIN
+					  case CB_CMD_WIN:
+					  	led_show_win(colors, decoded_command.u.led_set.idx);
+					  	uart_write("OK\r\n");
+					  	game_state = GAME_END;
+					  	break;
+					  // DRAW
+					  case CB_CMD_DRAW:
+					  	led_show_draw(colors);
+					  	uart_write("OK\r\n");
+					  	game_state = GAME_END;
+					  	break;
+					  // BRIGHTNESS
+					  case CB_CMD_LED_BRIGHT:
+					  	settings.grid_brightness = decoded_command.u.led_bright.bright;
+					  	uart_write("OK\r\n");
+					  	break;
+					  case CB_CMD_COLOR_SET:
+					  	settings.board_theme.r = decoded_command.u.color_set.r;
+					  	settings.board_theme.g = decoded_command.u.color_set.g;
+					  	settings.board_theme.b = decoded_command.u.color_set.b;
+					  	uart_write("OK\r\n");
+					  	break;
+					  // Unknown command
+						default:
+							uart_write("ERR CMD\r\n");
+							break;
 					}
 				} else if (r == -1) {
-						// commande reçue mais tronquée dans buffer 'cmd'
-						// handle_truncated_command(command);
+						// Trunked command
 						uart_write("ERR CMD\r\n");;
 				}
   			break;
   		case GAME_END:
   			// Display WIN or DRAW for 3 seconds
   			HAL_Delay(5000);
-  			leds_clear(colors);
-
-  			game_state = STARTING_ANIMATION;
+  			led_show_grid(colors);
+  			// Back to init board
+  			game_state = INIT_BOARD;
+  			break;
   	}
 
-  	rgb_update_buffer(pwm_data, colors);
+  	// Updating LED throw DMA
+  	led_update_buffer(pwm_data, colors);
 		HAL_TIM_PWM_Send_To_DMA(pwm_data);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -361,54 +407,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00B07CB4;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
 }
 
 /**
@@ -609,17 +607,16 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 }
 
 /*
- *
+ * UART Callback
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART2)
     {
-        // Stocke l'octet reçu dans le FIFO RX
-    		// putCharInFifo(&usartFifoRx, rx_data);
-    		uart_fifo_push_isr(&uartFifo, rx_data);
+        // Store the received caracter in the UART fifo
+    		uart_fifo_push_isr(&uart_fifo, rx_data);
 
-        // Relance la réception du prochain octet
+        // Rearm the UART interrupt
         HAL_UART_Receive_IT(&huart2, &rx_data, 1);
     }
 }
@@ -643,31 +640,34 @@ void UART_Flush(UART_HandleTypeDef *huart)
 
 }
 
+/*
+ * Check if the board is a the init setup (32 pieces placed a the correct spot)
+ */
 uint8_t is_board_at_init_setup(uint64_t board_bitmap) {
 
 	// Verify the white side
 	for(uint8_t index = 0; index < 16; ++index) {
 		if(bitmap_get_bit(board_bitmap, index) == 0) {
-				return 0;
+				return BOARD_IS_NOT_READY;
 		}
 	}
 
 	// Verify the black side
-	for(uint8_t index = 48; index < 64; ++index) {
+	for(uint8_t index = 48; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
 		if(bitmap_get_bit(board_bitmap, index) == 0) {
-				return 0;
+				return BOARD_IS_NOT_READY;
 		}
 	}
 
-	return 1;
+	return BOARD_IS_READY;
 }
 
 /*
- *
+ * Check if a piece has been lifted
  */
 uint8_t is_a_piece_lift(uint64_t current, uint64_t old) {
 
-	for(uint8_t index = 0; index < 64; ++index) {
+	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
 
 		// Old state was activ and new state is open
 		if(bitmap_get_bit(old, index) == 1 && bitmap_get_bit(current, index) == 0) {
@@ -679,31 +679,17 @@ uint8_t is_a_piece_lift(uint64_t current, uint64_t old) {
 }
 
 /*
- *
+ * Check if a piece has been placed
  */
 uint8_t is_a_piece_placed(uint64_t current, uint64_t old) {
 
-	for(uint8_t index = 0; index < 64; ++index) {
+	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
 
 		if(bitmap_get_bit(old, index) == 0 && bitmap_get_bit(current, index) == 1) {
 				return index;
 		}
 	}
 
-
-	return NO_INDEX_FOUND;
-}
-
-/*
- * Compare the two bitmaps
- */
-uint8_t are_bitamps_the_same(uint64_t bitmap_a, uint64_t bitmap_b) {
-
-	for(uint8_t index = 0; index < 64; ++index) {
-		if(bitmap_get_bit(bitmap_a, index) != bitmap_get_bit(bitmap_b, index)) {
-			return index;
-		}
-	}
 
 	return NO_INDEX_FOUND;
 }
@@ -774,60 +760,98 @@ void read_full_board(uint64_t *board_bitmap) {
 				// If the reed sensor is open, the bit is clear
 				bitmap_clear_bit(board_bitmap, line * BOARD_WIDTH + column);
 			}
-
 		}
 	}
 }
 
 /*
- * Clear Led
+ * Init the color pannel for the starting animation
  */
-void leds_clear(uint8_t colors[][3]) {
-	for(uint8_t index = 0; index < LED_NUMBER; ++index) {
-		colors[index][0] = 0;
-		colors[index][1] = 0;
-		colors[index][2] = 0;
+void init_palette() {
+  for (int i = 0; i < COLOR_PANNEL_SIZE; i++) {
+    if (i < 85) {
+      color_pannel[i].r = i * 3;
+      color_pannel[i].g = 255 - i * 3;
+      color_pannel[i].b = 0;
+    } else if (i < 170) {
+      int j = i - 85;
+      color_pannel[i].r = 255 - j * 3;
+      color_pannel[i].g = 0;
+      color_pannel[i].b = j * 3;
+    } else {
+      int j = i - 170;
+      color_pannel[i].r = 0;
+      color_pannel[i].g = j * 3;
+      color_pannel[i].b = 255 - j * 3;
+    }
+  }
+}
+
+/*
+ * Generate a frame on the led matrix
+ */
+void generate_frame(uint8_t frame, Color colors[]) {
+
+	uint8_t color_index;
+
+	for (uint8_t y = 0; y < BOARD_WIDTH; ++y) {
+    for (uint8_t x = 0; x < BOARD_HEIGHT; ++x) {
+      color_index = (x * x + y * y + frame * BOARD_WIDTH) & 0xFF;
+      Color color = {color_pannel[color_index].r, color_pannel[color_index].g, color_pannel[color_index].b};
+      led_set(convert_reed_index_to_led_index(y * BOARD_WIDTH + x), color, colors, settings.grid_brightness);
+    }
+  }
+}
+
+/*
+ * Function that display the grid
+ */
+void led_show_grid(Color colors[]) {
+
+	Color white  = {255, 255, 255};
+
+	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; index+=2) {
+		led_set(index, white, colors, settings.grid_brightness);
+	}
+
+	for(uint8_t index = 1; index < BOARD_WIDTH * BOARD_HEIGHT; index+=2) {
+		led_set(index, settings.board_theme, colors, settings.grid_brightness);
 	}
 }
 
 /*
- * set_led
+ * Function that display the draw game state
  */
-void led_set(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t colors[][3], uint8_t brightness) {
-	colors[index][0] = (uint8_t)(r * brightness / 255);
-	colors[index][1] = (uint8_t)(g * brightness / 255);
-	colors[index][2] = (uint8_t)(b * brightness / 255);
-}
+void led_show_win(Color colors[], uint8_t side) {
 
+	// side = 0 => black win || side = 1 => white win
+	Color white_side_color = {side ? 0 : 255, side ? 255 : 0, 0};
+	Color black_side_color = {side == 0 ? 0 : 255, side == 0? 255 : 0, 0};
 
-void led_show_win(uint8_t colors[][3], uint8_t side) {
-
-	// side = 0 => black win
-	// side = 1 => white win
-	uint8_t white_color_red   = side 		  ? 0   : 255;
-	uint8_t white_color_green = side 		  ? 255 : 0;
-	uint8_t black_color_red   = (side == 0) ? 0   : 255;
-	uint8_t black_color_green = (side == 0) ? 255 : 0;
-
-	for(uint8_t index = 0; index < 32; ++index) {
-		led_set(index, white_color_red, white_color_green, 0, colors, GLOBAL_BRIGHTNESS);
+	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT / 2; ++index) {
+		led_set(index, white_side_color, colors, settings.grid_brightness);
 	}
 
-	for(uint8_t index = 32; index < 64; ++index) {
-		led_set(index, black_color_red, black_color_green, 0, colors, GLOBAL_BRIGHTNESS);
+	for(uint8_t index = BOARD_WIDTH * BOARD_HEIGHT / 2; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
+		led_set(index, black_side_color, colors, settings.grid_brightness);
 	}
 }
 
-void led_show_draw(uint8_t colors[][3]) {
+/*
+ * Function that display the draw game state
+ */
+void led_show_draw(Color colors[]) {
+
+	Color white = {255, 255, 255};
 
 	leds_clear(colors);
 
 	for(uint8_t index = 16; index < 24; ++index) {
-		led_set(index, 255, 255, 255, colors, GLOBAL_BRIGHTNESS);
+		led_set(index, white, colors, settings.grid_brightness);
 	}
 
-	for(uint8_t index = 32; index < 40; ++index) {
-		led_set(index, 255, 255, 255, colors, GLOBAL_BRIGHTNESS);
+	for(uint8_t index = 40; index < 48; ++index) {
+		led_set(index, white, colors, settings.grid_brightness);
 	}
 }
 
