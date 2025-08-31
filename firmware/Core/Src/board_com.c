@@ -7,6 +7,10 @@
 #include <ctype.h>
 #include <stdarg.h>   // va_list, va_start, va_end
 #include <stdlib.h>   // strtoul
+<<<<<<< HEAD
+#include <math.h>
+=======
+>>>>>>> main
 
 // ---- Internal helpers ----
 static size_t s_write(char* out, size_t cap, const char* fmt, ...){
@@ -22,6 +26,8 @@ static size_t s_write(char* out, size_t cap, const char* fmt, ...){
     return (size_t)n;
 }
 
+<<<<<<< HEAD
+=======
 static uint32_t parse_t_ms(const char* tok){
     if(!tok) return 0;
     if(strncmp(tok,"t=",2)==0){ return (uint32_t)strtoul(tok+2, NULL, 10); }
@@ -36,6 +42,7 @@ static const char* kv_find(const char* const* toks, int ntok, const char* key){
     return NULL;
 }
 
+>>>>>>> main
 /* Convert reed index to led index
  * Return the led index corresponding to the reed triggered
  */
@@ -71,6 +78,16 @@ void cb_linebuf_feed(cb_linebuf_t* lb, const uint8_t* data, size_t n, cb_on_line
     }
 }
 
+<<<<<<< HEAD
+// ---- Parser ----
+// ===== Parser App->PCB (commandes commencant par ':') =======================
+
+static bool parse_u8(const char* t, uint8_t* v){ if(!t||!v) return false;
+    char* e=NULL; unsigned long x=strtoul(t,&e,10); if(e==t||*e) return false;
+    if(x>255UL) return false;
+    *v=(uint8_t)x; return true;
+}
+=======
 // ---- Tokenizer ----
 static int split_tokens(char* line, char* out[], int max_out){
     int n=0; char* p=line;
@@ -115,6 +132,7 @@ static bool parse_bool_onoff(const char* t, bool* v){
     if(strcmp(t,"ON")==0){*v=true; return true;}
     if(strcmp(t,"OFF")==0){*v=false; return true;}
     return false; }
+>>>>>>> main
 
 static int split_tokens_ro(char* line, char* out[], int max_out){
     // Reprend split_tokens() mais en local (version ligne mutable).
@@ -136,6 +154,18 @@ static int split_tokens_ro(char* line, char* out[], int max_out){
  *  @return true si parsing réussi, false sinon.
  */
 bool cb_sq_from_str(const char* s, uint8_t* out_idx){
+<<<<<<< HEAD
+	    if(!s || !out_idx) return false;
+	    char c0 = s[0]; char c1 = s[1];
+	    if(!c0 || !c1 || s[2]) return false; // exactly 2 chars like 'E2'
+	    if(c0>='a'&&c0<='h') c0 = (char)(c0 - 'a' + 'A');
+	    if(!(c0>='A'&&c0<='H') || !(c1>='1'&&c1<='8')) return false;
+	    uint8_t file = (uint8_t)('H' - c0);
+	    uint8_t rank = (uint8_t)(c1 - '1');
+	    *out_idx = cb_coords_to_idx(file, rank);
+	    *out_idx = convert_reed_index_to_led_index(*out_idx);
+			return true;
+=======
     if(!s || !out_idx) return false;
     char c0 = s[0]; char c1 = s[1];
     if(!c0 || !c1 || s[2]) return false; // exactly 2 chars like 'E2'
@@ -146,6 +176,7 @@ bool cb_sq_from_str(const char* s, uint8_t* out_idx){
     *out_idx = cb_coords_to_idx(file, rank);
     *out_idx = convert_reed_index_to_led_index(*out_idx);
     return true;
+>>>>>>> main
 }
 
 bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
@@ -176,6 +207,20 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
     if(strcmp(T0,"RST")==0 && nt==1){ out->type=CB_CMD_RST; return true; }
     if(strcmp(T0,"SAVE")==0 && nt==1){ out->type=CB_CMD_SAVE; return true; }
 
+<<<<<<< HEAD
+    if(strcmp(T0,"WIN")==0 && nt==2){
+    	out->type=CB_CMD_WIN;
+    	// 0 = black / 1 = white
+    	uint8_t victory;
+    	parse_u8(tok[1], &victory);
+    	out->u.led_set.idx = victory;
+    	return true;
+    }
+
+    if(strcmp(T0,"DRAW")==0 && nt==2){
+    	out->type=CB_CMD_DRAW;
+    	return true;
+=======
     // :STREAM ON|OFF
     if(strcmp(T0,"STREAM")==0 && nt==2){
         bool on=false; if(!parse_bool_onoff(tok[1], &on)) return false;
@@ -190,6 +235,7 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             out->type=CB_CMD_READ_SQ; out->u.read_sq.idx=idx; return true;
         }
         return false;
+>>>>>>> main
     }
 
     // --- LED ---
@@ -208,6 +254,12 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             }
             return false;
         }
+<<<<<<< HEAD
+        if(strcmp(tok[1],"BRIGHT")==0 && nt==3){
+						uint8_t br; if(!parse_u8(tok[2], &br)) return false;
+						out->type=CB_CMD_LED_BRIGHT; out->u.led_bright.bright=br; return true;
+				}
+=======
         if(strcmp(tok[1],"FILL")==0 && nt==5){
             uint8_t r,g,b; if(!parse_u8(tok[2],&r)||!parse_u8(tok[3],&g)||!parse_u8(tok[4],&b)) return false;
             out->type=CB_CMD_LED_FILL; out->u.led_fill.r=r; out->u.led_fill.g=g; out->u.led_fill.b=b; return true;
@@ -234,14 +286,18 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             }
             return true;
         }
+>>>>>>> main
         if(strcmp(tok[1],"OK")==0 && nt==4){
             uint8_t a,b; if(!cb_sq_from_str(tok[2],&a)||!cb_sq_from_str(tok[3],&b)) return false;
             out->type=CB_CMD_LED_OK; out->u.led_ok.from_idx=a; out->u.led_ok.to_idx=b; return true;
         }
+<<<<<<< HEAD
+=======
         if(strcmp(tok[1],"FAIL")==0 && nt==4){
             uint8_t a,b; if(!cb_sq_from_str(tok[2],&a)||!cb_sq_from_str(tok[3],&b)) return false;
             out->type=CB_CMD_LED_FAIL; out->u.led_fail.from_idx=a; out->u.led_fail.to_idx=b; return true;
         }
+>>>>>>> main
         return false;
     }
 
@@ -254,6 +310,8 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
             strncpy(out->u.color_set.name, tok[2], CB_MAX_STR-1);
             out->u.color_set.r=r; out->u.color_set.g=g; out->u.color_set.b=b; return true;
         }
+<<<<<<< HEAD
+=======
         if(strcmp(tok[1],"GET")==0 && nt==3){
             out->type=CB_CMD_COLOR_GET;
             strncpy(out->u.color_get.name, tok[2], CB_MAX_STR-1);
@@ -262,10 +320,15 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
         if(strcmp(tok[1],"?")==0 && nt==2){
             out->type=CB_CMD_COLOR_LIST_Q; return true;
         }
+>>>>>>> main
         return false;
     }
 
     // --- CFG ---
+<<<<<<< HEAD
+    /*
+=======
+>>>>>>> main
     if(strcmp(T0,"CFG?")==0 && nt==1){ out->type=CB_CMD_CFG_Q; return true; }
     if(strcmp(T0,"CFG")==0 && nt>=3 && strcmp(tok[1],"GET")==0 && nt==3){
         out->type=CB_CMD_CFG_GET; strncpy(out->u.cfg_get.key, tok[2], CB_MAX_STR-1); return true;
@@ -280,6 +343,10 @@ bool cb_parse_cmd(const char* line_in, cb_cmd_t* out){
         out->u.cfg_set_kv.n_pairs = cnt;
         return cnt>0;
     }
+<<<<<<< HEAD
+    */
+=======
+>>>>>>> main
 
     return false;
 }

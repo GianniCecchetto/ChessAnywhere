@@ -58,9 +58,13 @@
 extern DMA_HandleTypeDef hdma_tim17_ch1;
 extern TIM_HandleTypeDef htim17;
 <<<<<<< HEAD
+extern UART_HandleTypeDef huart2;
+=======
+<<<<<<< HEAD
 =======
 extern UART_HandleTypeDef huart2;
 >>>>>>> 53-création-de-la-gui
+>>>>>>> main
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -175,6 +179,9 @@ void TIM17_IRQHandler(void)
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> main
 /**
   * @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.
   */
@@ -189,7 +196,10 @@ void USART2_IRQHandler(void)
   /* USER CODE END USART2_IRQn 1 */
 }
 
+<<<<<<< HEAD
+=======
 >>>>>>> 53-création-de-la-gui
+>>>>>>> main
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

@@ -1,3 +1,21 @@
+<<<<<<< HEAD
+../Core/Inc/board_com.h:52:20:cb_sq_to_str	1
+../Core/Src/board_com.c:64:13:parse_u8	5
+../Core/Src/board_com.c:13:15:s_write	4
+../Core/Src/board_com.c:29:9:convert_reed_index_to_led_index	2
+../Core/Src/board_com.c:39:6:cb_linebuf_init	1
+../Core/Src/board_com.c:41:6:cb_linebuf_feed	7
+../Core/Src/board_com.c:89:6:cb_sq_from_str	9
+../Core/Src/board_com.c:102:6:cb_parse_cmd	54
+../Core/Src/board_com.c:205:8:cb_fmt_evt_boot	6
+../Core/Src/board_com.c:213:8:cb_fmt_evt_lift	1
+../Core/Src/board_com.c:218:8:cb_fmt_evt_place	1
+../Core/Src/board_com.c:223:8:cb_fmt_evt_move	1
+../Core/Src/board_com.c:228:8:cb_fmt_evt_lift_cancel	1
+../Core/Src/board_com.c:233:8:cb_fmt_evt_btn	1
+../Core/Src/board_com.c:237:8:cb_fmt_evt_timeout	3
+../Core/Src/board_com.c:242:8:cb_fmt_evt_error	6
+=======
 ../Core/Inc/board_com.h:51:20:cb_sq_to_str	1
 ../Core/Src/board_com.c:98:13:parse_u8	5
 ../Core/Src/board_com.c:12:15:s_write	4
@@ -14,3 +32,4 @@
 ../Core/Src/board_com.c:316:8:cb_fmt_evt_btn	1
 ../Core/Src/board_com.c:320:8:cb_fmt_evt_timeout	3
 ../Core/Src/board_com.c:325:8:cb_fmt_evt_error	6
+>>>>>>> main

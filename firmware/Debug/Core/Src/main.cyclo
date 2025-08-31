@@ -1,4 +1,26 @@
 <<<<<<< HEAD
+../Core/Src/main.c:148:13:uart_write	1
+../Core/Src/main.c:371:6:SystemClock_Config	3
+../Core/Src/main.c:589:6:HAL_TIM_PWM_Send_To_DMA	2
+../Core/Src/main.c:600:6:HAL_TIM_PWM_PulseFinishedCallback	2
+../Core/Src/main.c:612:6:HAL_UART_RxCpltCallback	2
+../Core/Src/main.c:627:6:UART_Flush	2
+../Core/Src/main.c:646:9:is_board_at_init_setup	5
+../Core/Src/main.c:668:9:is_a_piece_lift	4
+../Core/Src/main.c:684:9:is_a_piece_placed	4
+../Core/Src/main.c:700:6:set_gpio_column	3
+../Core/Src/main.c:717:6:set_gpio_line	3
+../Core/Src/main.c:734:9:read_reed_value	1
+../Core/Src/main.c:747:6:read_full_board	4
+../Core/Src/main.c:770:6:init_palette	4
+../Core/Src/main.c:793:6:generate_frame	3
+../Core/Src/main.c:809:6:led_show_grid	3
+../Core/Src/main.c:825:6:led_show_win	5
+../Core/Src/main.c:843:6:led_show_draw	3
+../Core/Src/main.c:165:5:main	29
+../Core/Src/main.c:864:6:Error_Handler	1
+=======
+<<<<<<< HEAD
 ../Core/Src/main.c:113:5:main	3
 ../Core/Src/main.c:183:6:SystemClock_Config	3
 ../Core/Src/main.c:229:13:MX_I2C1_Init	4
@@ -34,3 +56,4 @@
 ../Core/Src/main.c:759:6:led_set	1
 ../Core/Src/main.c:771:6:Error_Handler	1
 >>>>>>> 53-création-de-la-gui
+>>>>>>> main
