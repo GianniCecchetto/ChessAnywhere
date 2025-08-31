@@ -1,6 +1,6 @@
 import requests
 
-SERVER_URL = "http://localhost:7000"
+SERVER_URL = "https://chess-anywhere-server-cwhed8f0d7fsdba5.westeurope-01.azurewebsites.net"
 
 def fetch_data(server_url: str, resource: str) -> dict:
     response = requests.get(f"{server_url}/{resource}", timeout=5)

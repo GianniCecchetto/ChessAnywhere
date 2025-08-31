@@ -64,7 +64,7 @@ def join_online_game(board_container,game_id):
         )
     else:
         print("Game not found yet.")
-        board_container.after(500, lambda: join_online_game(board_container, game_id))
+        board_container.after(5000, lambda: join_online_game(board_container, game_id))
         return
 
     board = chess.Board()
