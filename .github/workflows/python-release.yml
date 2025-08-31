@@ -29,7 +29,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --onefile app/main.py
+          pyinstaller --onefile --add-data "../lib/uart_fmt/python_doc;lib/uart_fmt/python_doc" app/main.py
 
       - name: Archive executable
         run: |
@@ -65,7 +65,7 @@ jobs:
 
       - name: Build Linux executable with PyInstaller
         run: |
-          pyinstaller --onefile app/main.py
+          pyinstaller --onefile --add-data "../lib/uart_fmt/python_doc;lib/uart_fmt/python_doc" app/main.py
 
       - name: Archive executable
         run: |
