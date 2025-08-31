@@ -3,8 +3,8 @@ import tkinter as tk
 from . import app_color as c    
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
-from .join_game import join_online_game, create_online_game, create_local_game
-from networks.lichess_api import refresh_games
+from .join_game import create_online_game, create_local_game
+from networks.lichess_api import refresh_games, save_token
 
 def create_widgets(app):
         """
@@ -96,7 +96,8 @@ def create_widgets(app):
         token_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
         
         save_btn = ctk.CTkButton(token_frame, text="💾 Save", corner_radius=15,
-                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER)
+                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
+                                 command= lambda: save_token(token_entry.get()))
         save_btn.grid(row=0, column=1)
 
         # ==== PANNEAU DE DROITE (Échiquier) ====

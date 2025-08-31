@@ -33,3 +33,12 @@ def get_matrix_of_legal_move(board: chess.Board, square: chess.Square):
 
     return matrix
 
+def get_matrix_from_squares(squares: list):
+    matrix = [["." for _ in range(8)] for _ in range(8)]
+
+    #print(legal_moves)
+    for square in squares:
+        row, col = divmod(square, 8)
+        matrix[7 - row][col] = "M"
+
+    return matrix

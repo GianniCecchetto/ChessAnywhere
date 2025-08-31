@@ -17,9 +17,7 @@ def process_game_events(game_state):
         # Gérer d'autres fins de partie si nécessaire
         return
 
-    event = get_next_event()
-    if event:
-        handle_event(event)
+    handle_local_move_event()
 
     board_container.after(50, lambda: process_game_events(game_state))
 

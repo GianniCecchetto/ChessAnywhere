@@ -3,6 +3,9 @@ import chess
 import berserk
 from uart.uart_com import get_next_event, send_command
 from .local_func import handle_local_move_event
+from .gen_move import get_matrix_from_squares
+import time
+import threading
 
 def process_online_game_events(game_state):
     """
@@ -11,6 +14,8 @@ def process_online_game_events(game_state):
     board = game_state['board']
     board_container = game_state['container']
     player_color = game_state['player_color']
+    client = game_state['client']
+    game_id = game_state['game_id']
     
     # Vérification de la fin de partie
     if board.is_checkmate() or board.is_stalemate():
@@ -30,49 +35,74 @@ def process_online_game_events(game_state):
     elif game_state['current_turn'] == 'online':
         print("C'est au tour de l'adversaire en ligne. Récupération du coup via l'API.")
         handle_online_move_event(game_state)
-
-    board_container.after(50, lambda: process_online_game_events(game_state))
+        
+    board_container.after(500, lambda: process_online_game_events(game_state))
 
 def handle_online_move_event(game_state):
-    """
-    Simule la récupération d'un coup d'un adversaire en ligne et l'applique au plateau.
-    """
+    board = game_state['board']
+    online_move = game_state['online_move']
+
+    if not online_move:
+        print("Pas de coup de l'adversaire disponible. Attente du prochain tour.")
+        return
+
+    print(f"Coup de l'adversaire reçu : {online_move}")
+
+    wait_for_uart_confirmation(game_state)
+
+def wait_for_uart_confirmation(game_state):
+    """Boucle non bloquante comme process_game_events, mais dédiée à l’attente UART."""
+    container = game_state['container']
     board = game_state['board']
     board_container = game_state['container']
     player_color = game_state['player_color']
+
+    move = chess.Move.from_uci(game_state['online_move'])
+    squares = [move.from_square, move.to_square]
     
-    print("Tentative de récupérer un coup de l'API...")
+    move_matrix = get_matrix_from_squares(squares)
+    draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
 
-    poll_game_state(game_state, game_state['client'].board.stream_game_state(game_state['game_id']))
+    # Check if UART has sent an event
+    event = get_next_event()
+    if event:
+        handle_online_event(event)
 
-    online_move = game_state['online_move']
-
-    if online_move:
-        print(f"Coup de l'adversaire reçu : {online_move}")
-        
-        try:
-            move = chess.Move.from_uci(online_move)
-            board.push(move)
-            print(f"Coup légal joué par l'adversaire : {online_move}")
+        # ✅ After handling event, check if full move confirmed
+        if game_state.get("end_square") == game_state["online_move"]:
+            print("Coup confirmé par l'échiquier.")
+            board.push(move)  # Apply the move officially
+            game_state['online_move'] = None
+            game_state["current_turn"] = "local"
             draw_chessboard(board_container, board=board, player_color=player_color)
-            game_state['current_turn'] = 'local' # Passer le tour au joueur local
-            print("C'est à votre tour de jouer.")
-        except Exception as e:
-            print(f"Erreur lors de l'application du coup de l'adversaire : {e}")
-            # Gérer le cas où le coup de l'adversaire est invalide
-            game_state['current_turn'] = 'online' # Revenir au tour du joueur local pour correction
-    else:
-        print("Pas de coup de l'adversaire disponible. Attente du prochain tour.")
+            return True
 
-def poll_game_state(game_state, game_stream):
-    try:
-        online_game_state = next(game_stream)  # get next update
-        # process the game_state here
-        game_state['online_move'] = online_game_state.get("state", "").get("moves", "")
-        print("Moves:", game_state['online_move'])
-    except StopIteration:
-        print("Game stream ended")
-        return
+    # Try again later (non-blocking)
+    container.after(100, lambda: wait_for_uart_confirmation(game_state))
+    return False
 
-    # Schedule next poll in 1 second
-    game_state['container'].after(1000, lambda: poll_game_state(game_state, game_stream))
+def start_polling(game_state):
+    """Boucle indépendante qui lit l'API Lichess"""
+    client = game_state['client']
+    game_id = game_state['game_id']
+
+    def poll_stream():
+        while True:
+            try:
+                stream = client.board.stream_game_state(game_id)
+                for event in stream:
+                    moves = None
+                    if event.get("type") == "gameState":
+                        moves = event.get("moves", "")
+                    elif event.get("type") == "gameFull":
+                        moves = event.get("state", {}).get("moves", "")
+
+                    if moves:
+                        moves_list = moves.split()
+                        game_state['online_move'] = moves_list[-1] if moves_list else None
+
+            except Exception as e:
+                print(f"Stream interrompu: {e}, reconnexion dans 3s...")
+                time.sleep(3)
+
+    threading.Thread(target=poll_stream, daemon=True).start()

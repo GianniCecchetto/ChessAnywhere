@@ -5,7 +5,8 @@ from game_logic.game_loop import local_game_loop
 from game_logic.game_loop import online_game_loop
 import berserk
 import time
-from networks.lichess_api import fetch_game
+from networks.lichess_api import fetch_game, load_token
+from networks.chess_anywhere_api import create_game
 
 #mylib = ctypes.CDLL("./libc/test.so")
 #mylib.get_msg.restype = ctypes.c_char_p
@@ -14,9 +15,10 @@ from networks.lichess_api import fetch_game
 
 def join_online_game(board_container,game_id):
  #   test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
-    session = berserk.TokenSession("lip_Y2gBhf5qbnqLQrDInoHN")
+    token = load_token()
+    session = berserk.TokenSession(token)
     client = berserk.Client(session=session)
-
+    
     try:
         client.challenges.accept(game_id)
 
@@ -44,8 +46,6 @@ def join_online_game(board_container,game_id):
         print("Game ID:", game_info['id'])
         player_id = client.account.get()['id']      
         players = game_info['players']
-        print(players)
-        print(player_id)
 
         if 'user' in players['white'] and players['white']['user']['id'] == player_id:
             player_color = chess.WHITE
@@ -68,10 +68,10 @@ def create_online_game(board_container):
     messagebox.showinfo(
         "Créer une partie en ligne",
     )
-    # recuperer la couleur, par défaut BLACK
-    player_color = chess.BLACK
-    board = chess.Board()
-    online_game_loop(board_container,board,player_color)
+
+    game_id = create_game()
+
+    join_online_game(board_container, game_id)
 
 def create_local_game(board_container):
     player_color = chess.WHITE

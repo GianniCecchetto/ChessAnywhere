@@ -129,7 +129,7 @@ public class LichessClient {
                     })
                     .thenAccept(game -> {
                         System.out.println("Stored game " + game.id + " in hashmap");
-                        ctx.status(201).result(game.url); // return URL as plain text
+                        ctx.status(201).result(game.id); // return URL as plain text
                     })
                     .exceptionally(e -> {
                         ctx.status(500).result("Failed to create game: " + e.getMessage());

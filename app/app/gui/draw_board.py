@@ -31,6 +31,7 @@ LED_COLORS = {
     "O": (0, 0, 255),      # bleu
     "P": (0, 255, 255),    # cyan
     "W": (255, 174, 0),    # orange
+    "M": (0, 182, 0)
 }
 
 def square_to_idx(row: int, col: int) -> int:
@@ -59,7 +60,7 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
 
             square_color = colors[(row + col) % 2]
             fill_color = square_color
-
+            
             if playable_square:
                 symbol = playable_square[row_index][col_index]
                 if symbol in LED_COLORS:
@@ -79,6 +80,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                         fill_color = "#00FBFF"
                     elif symbol == "W":
                         fill_color = "#FFAE00"
+                    elif symbol == "M":
+                        fill_color = "#00B600"
 
             x1 = col * square_size
             y1 = row * square_size
