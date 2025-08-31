@@ -31,6 +31,7 @@ uart_queue = queue.Queue()
 # Thread de lecture UART
 def uart_reader():
     if not ser:
+        print("[UART] No serial port configured!")
         return
     while True:
         try:
@@ -38,8 +39,10 @@ def uart_reader():
                 line = ser.readline()
                 if line:
                     line = line.decode("ascii", errors="ignore").strip()
+                    print(f"[UART RAW] {line}")
                     parsed = cb.parse_line(line)
                     if parsed:
+                        print(f"[UART PARSED] {parsed}") 
                         uart_queue.put(parsed)
         except Exception as e:
             print(f"Erreur de lecture UART: {e}")

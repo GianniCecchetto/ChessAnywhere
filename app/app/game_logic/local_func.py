@@ -25,6 +25,7 @@ def handle_local_move_event():
     """
     Gère la logique de lecture des événements UART pour un coup local.
     """
+    from game_logic.game_loop import handle_event
     event = get_next_event()
     if event:
         handle_event(event)

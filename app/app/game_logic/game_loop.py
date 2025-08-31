@@ -28,19 +28,30 @@ game_state = {
     'current_turn': None,
     'client': None,
     'game_id': None,
-    'online_move': None
+    'online_move': None,
+    'last_move': None
 }
 
-def online_game_loop(board_container, board, player_color, client, game_id):
+def online_game_loop(board_container, board: chess.Board, player_color, client, game_id):
     print("===== starting online game =====")
 
     game_state['board'] = board
     game_state['container'] = board_container
     game_state['player_color'] = player_color
     game_state['start_square'] = None
-    game_state['current_turn'] = 'local' if player_color == chess.WHITE else 'online'
     game_state['client'] = client
     game_state['game_id'] = game_id
+
+    stream = client.board.stream_game_state(game_id)
+    for event in stream:
+        moves = event.get('state', {}).get('moves', '')
+        if moves:
+            for uci in moves.split():
+                board.push_uci(uci)
+                game_state['last_move'] = uci
+        break
+
+    game_state['current_turn'] = 'local' if board.turn == player_color else 'online'
     
     draw_chessboard(board_container, board=board, player_color=player_color)
 
@@ -134,9 +145,12 @@ def handle_online_event(event):
     event_type = event.get('type')
     square = event.get('idx')
 
+    print(event_type)
     if event_type == cb.CB_EVT_LIFT:
+        print("LEVER")
         handle_online_lift_event(square)
     elif event_type == cb.CB_EVT_PLACE:
+        print("POSER")
         handle_online_place_event(square)
 
 def handle_online_lift_event(square):
@@ -145,6 +159,8 @@ def handle_online_lift_event(square):
     player_color = game_state['player_color']
     
     piece = board.piece_at(square)
+    print(piece)
+    print(board.turn)
     if not piece or piece.color != board.turn:
         print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
         send_command("LED_ERROR")
@@ -177,7 +193,7 @@ def handle_online_place_event(square):
     try:
         move = chess.Move(start_square, dest_square)
         
-        if move.uci() == game_state['online_move']:
+        if move.to_square == chess.Move.from_uci(game_state['online_move']).to_square:
             board.push(move)
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)

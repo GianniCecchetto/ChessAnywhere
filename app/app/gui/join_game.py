@@ -48,9 +48,12 @@ def join_online_game(board_container,game_id):
         players = game_info['players']
         print(players)
 
-        if players['white']['user']['id'] == player_id:
+        white_id = players.get('white', {}).get('user', {}).get('id')
+        black_id = players.get('black', {}).get('user', {}).get('id')
+
+        if white_id == player_id:
             player_color = chess.WHITE
-        elif players['black']['user']['id'] == player_id:
+        elif black_id == player_id:
             player_color = chess.BLACK
         else:
             player_color = None  # maybe you are not in the game
