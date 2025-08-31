@@ -29,7 +29,7 @@ LED_COLORS = {
 }
 
 def square_to_idx(row: int, col: int) -> int:
-    return row * 8 + col
+    return row * 8 + (7-col)
 
 def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=None, player_color=True):
     app = parent.winfo_toplevel()  # gets the root window (your chess_anywhere_app)
@@ -65,7 +65,7 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                     idx = square_to_idx(row_index, col_index)
 
                     # === UART : envoyer commande LED ===
-                    cmd = cb.fmt_led_set(idx, r, g, b)
+                    cmd = cb.fmt_led_set(63-idx, r, g, b)
                     send_command(cmd)
 
                     # === Graphique : colorier la case ===

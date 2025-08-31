@@ -1,0 +1,35 @@
+<<<<<<< HEAD
+../Core/Inc/board_com.h:52:20:cb_sq_to_str	0	static
+../Core/Src/board_com.c:64:13:parse_u8	24	static
+../Core/Src/board_com.c:13:15:s_write	24	static
+../Core/Src/board_com.c:29:9:convert_reed_index_to_led_index	0	static
+../Core/Src/board_com.c:39:6:cb_linebuf_init	0	static
+../Core/Src/board_com.c:41:6:cb_linebuf_feed	24	static
+../Core/Src/board_com.c:89:6:cb_sq_from_str	16	static
+../Core/Src/board_com.c:102:6:cb_parse_cmd	128	static
+../Core/Src/board_com.c:205:8:cb_fmt_evt_boot	32	static
+../Core/Src/board_com.c:213:8:cb_fmt_evt_lift	32	static
+../Core/Src/board_com.c:218:8:cb_fmt_evt_place	32	static
+../Core/Src/board_com.c:223:8:cb_fmt_evt_move	40	static
+../Core/Src/board_com.c:228:8:cb_fmt_evt_lift_cancel	32	static
+../Core/Src/board_com.c:233:8:cb_fmt_evt_btn	8	static
+../Core/Src/board_com.c:237:8:cb_fmt_evt_timeout	16	static
+../Core/Src/board_com.c:242:8:cb_fmt_evt_error	24	static
+=======
+../Core/Inc/board_com.h:51:20:cb_sq_to_str	0	static
+../Core/Src/board_com.c:98:13:parse_u8	24	static
+../Core/Src/board_com.c:12:15:s_write	24	static
+../Core/Src/board_com.c:42:9:convert_reed_index_to_led_index	0	static
+../Core/Src/board_com.c:52:6:cb_linebuf_init	0	static
+../Core/Src/board_com.c:54:6:cb_linebuf_feed	24	static
+../Core/Src/board_com.c:138:6:cb_sq_from_str	16	static
+../Core/Src/board_com.c:151:6:cb_parse_cmd	136	static
+../Core/Src/board_com.c:288:8:cb_fmt_evt_boot	32	static
+../Core/Src/board_com.c:296:8:cb_fmt_evt_lift	32	static
+../Core/Src/board_com.c:301:8:cb_fmt_evt_place	32	static
+../Core/Src/board_com.c:306:8:cb_fmt_evt_move	40	static
+../Core/Src/board_com.c:311:8:cb_fmt_evt_lift_cancel	32	static
+../Core/Src/board_com.c:316:8:cb_fmt_evt_btn	8	static
+../Core/Src/board_com.c:320:8:cb_fmt_evt_timeout	16	static
+../Core/Src/board_com.c:325:8:cb_fmt_evt_error	24	static
+>>>>>>> main

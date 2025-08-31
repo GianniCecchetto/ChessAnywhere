@@ -29,7 +29,9 @@ game_state = {
     'client': None,
     'game_id': None,
     'online_move': None,
-    'last_move': None
+    'last_move': None,
+    'illegal_move_pending': False, 
+    'legal_moves_matrix': None,   
 }
 
 def online_game_loop(board_container, board: chess.Board, player_color, client, game_id):
@@ -66,12 +68,49 @@ def local_game_loop(board_container, board, player_color):
     game_state['container'] = board_container
     game_state['player_color'] = player_color
     game_state['start_square'] = None
+    game_state['illegal_move_pending'] = False
+    game_state['legal_moves_matrix'] = None
     
     draw_chessboard(board_container, board=board, player_color=player_color)
     
     process_game_events(game_state)
 
-def handle_event(event):    
+def process_game_events():
+    board = game_state['board']
+    board_container = game_state['container']
+    player_color = game_state['player_color']
+    
+    if board.is_checkmate() or board.is_stalemate():
+        print("Partie terminée.")
+        print(board, "\n")
+        if board.is_checkmate():
+            print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
+        
+        if board.turn == chess.WHITE:
+            send_command(":WIN 0")# les noirs ont gagné
+        else:
+            send_command(":WIN 1")# les blancs ont gagné
+        return
+    elif board.is_stalemate():
+        send_command(":DRAW STALE")
+        return
+    elif board.is_fifty_moves():
+        send_command(":DRAW EXCEEDED")
+        return
+
+
+    event = get_next_event()
+    if event:
+        handle_event(event)
+
+    board_container.after(50, process_game_events)
+
+def handle_event(event):
+    board = game_state['board']
+    board_container = game_state['container']
+    player_color = game_state['player_color']
+    start_square = game_state['start_square']
+    
     event_type = event.get('type')
     square = event.get('idx')
 
@@ -85,16 +124,22 @@ def handle_lift_event(square):
     board_container = game_state['container']
     player_color = game_state['player_color']
     
-    piece = board.piece_at(square)
-    if not piece or piece.color != board.turn:
-        print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
-        send_command("LED_ERROR")
-        return
-        
+    if game_state['illegal_move_pending']:
+        piece = board.piece_at(game_state['start_square'])
+        if square != game_state['start_square']:
+            print("Erreur : veuillez replacer la pièce mal jouée avant de soulever une nouvelle pièce.")
+            return
+    else:
+        piece = board.piece_at(square)
+        if not piece or piece.color != board.turn:
+            print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
+            return
+
     game_state['start_square'] = square
     game_state['end_square'] = None
     
     playable_matrix = get_matrix_of_legal_move(board, square)
+    game_state['legal_moves_matrix'] = playable_matrix # Stocker la matrice pour une utilisation ultérieure
     draw_chessboard(board_container, board=board, playable_square=playable_matrix, player_color=player_color)
     print("Pièce soulevée, en attente de la destination.")
 
@@ -108,13 +153,14 @@ def handle_place_event(square):
     
     if start_square is None:
         print("Erreur : Pièce posée sans en avoir soulevé une au préalable.")
-        send_command("LED_ERROR")
         return
 
     if start_square == dest_square:
         print("Coup annulé. Pièce reposée à la même place.")
         draw_chessboard(board_container, board=board, player_color=player_color)
         game_state['start_square'] = None
+        game_state['illegal_move_pending'] = False
+        game_state['legal_moves_matrix'] = None
         return
 
     try:
@@ -125,21 +171,31 @@ def handle_place_event(square):
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)
             game_state['end_square'] = move.uci()
+            game_state['start_square'] = None
+            game_state['illegal_move_pending'] = False
+            game_state['legal_moves_matrix'] = None
         else:
+            illegale_board = board.copy()
+            illegale_board.push(move)
+            
+            playable_matrix = game_state['legal_moves_matrix']
+            if playable_matrix is None:
+                playable_matrix = [["." for _ in range(8)] for _ in range(8)]
+            
+            y, x = divmod(square, 8)
+            playable_matrix[7-y][x] = "W"
+            
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
-            send_command("LED_ERROR")
-            draw_chessboard(board_container, board=board, player_color=player_color) # Redessiner le plateau pour effacer les indicateurs
-        
-        game_state['start_square'] = None
+            draw_chessboard(board_container, board=illegale_board, playable_square=playable_matrix, player_color=player_color)
+            
+            game_state['illegal_move_pending'] = True
             
     except ValueError:
         print("Entrée invalide.")
         game_state['start_square'] = None
-        send_command("LED_ERROR")
     except Exception as e:
         print(f"Une erreur s'est produite : {e}")
         game_state['start_square'] = None
-        send_command("LED_ERROR")
 
 def handle_online_event(event):    
     event_type = event.get('type')

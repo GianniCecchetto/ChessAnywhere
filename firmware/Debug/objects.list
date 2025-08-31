@@ -1,4 +1,14 @@
 "./Core/Src/bitmap.o"
+<<<<<<< HEAD
+"./Core/Src/board_com.o"
+"./Core/Src/fifo.o"
+=======
+<<<<<<< HEAD
+=======
+"./Core/Src/board_com.o"
+"./Core/Src/fifo.o"
+>>>>>>> 53-création-de-la-gui
+>>>>>>> main
 "./Core/Src/main.o"
 "./Core/Src/rgb_led.o"
 "./Core/Src/stm32g0xx_hal_msp.o"
@@ -15,8 +25,6 @@
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_flash.o"
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_flash_ex.o"
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_gpio.o"
-"./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c.o"
-"./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c_ex.o"
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr.o"
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr_ex.o"
 "./Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_rcc.o"

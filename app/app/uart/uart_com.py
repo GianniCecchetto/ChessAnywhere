@@ -1,4 +1,5 @@
 import serial
+import serial.tools.list_ports
 import sys
 import os
 import threading
@@ -11,31 +12,20 @@ sys.path.append(UART_PATH)
 
 import board_com_ctypes as cb
 
-# --- Configuration du port COM ---
-try:
-    ser = serial.Serial(
-        port="COM5",
-        baudrate=115200,
-        bytesize=serial.EIGHTBITS,
-        parity=serial.PARITY_NONE,
-        stopbits=serial.STOPBITS_ONE,
-        timeout=0.1
-    )
-except serial.SerialException as e:
-    print(f"Erreur de connexion au port série: {e}. Le programme continuera sans UART.")
-    ser = None
+# Variables de l'état de la connexion série
+ser = None
+uart_reader_thread = None
+stop_thread_event = threading.Event()
 
 # Queue pour stocker les événements reçus
 uart_queue = queue.Queue()
 
 # Thread de lecture UART
 def uart_reader():
-    if not ser:
-        print("[UART] No serial port configured!")
-        return
-    while True:
-        try:
-            if ser.is_open:
+    global ser
+    while not stop_thread_event.is_set():
+        if ser and ser.is_open:
+            try:
                 line = ser.readline()
                 if line:
                     line = line.decode("ascii", errors="ignore").strip()
@@ -44,11 +34,56 @@ def uart_reader():
                     if parsed:
                         print(f"[UART PARSED] {parsed}") 
                         uart_queue.put(parsed)
-        except Exception as e:
-            print(f"Erreur de lecture UART: {e}")
+            except serial.SerialException as e:
+                print(f"Erreur de lecture UART: {e}")
+                ser = None
+            except Exception as e:
+                print(f"Erreur inattendue dans le thread de lecture: {e}")
         time.sleep(0.01)
 
-threading.Thread(target=uart_reader, daemon=True).start()
+def set_serial_port(port_name):
+    global ser, uart_reader_thread
+    
+    # Arrêter le thread précédent s'il existe
+    if uart_reader_thread and uart_reader_thread.is_alive():
+        stop_thread_event.set()
+        uart_reader_thread.join()
+        stop_thread_event.clear()
+        
+    # Fermer le port précédent s'il est ouvert
+    if ser and ser.is_open:
+        ser.close()
+        print(f"Closed previous port.")
+
+    if port_name:
+        try:
+            ser = serial.Serial(
+                port=port_name,
+                baudrate=115200,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                timeout=0.1
+            )
+            print(f"Port {port_name} is now open.")
+            
+            # Démarrer un nouveau thread de lecture
+            uart_reader_thread = threading.Thread(target=uart_reader, daemon=True)
+            uart_reader_thread.start()
+        except serial.SerialException as e:
+            print(f"Failed to open port {port_name}: {e}")
+            ser = None
+        except Exception as e:
+            print(f"Failed to set serial port: {e}")
+            ser = None
+    else:
+        ser = None
+        print("No port selected.")
+
+# Fonction pour obtenir les ports disponibles
+def get_available_ports():
+    ports = serial.tools.list_ports.comports()
+    return [str(p) for p in ports]
 
 # Envoi de commande
 def send_command(cmd: str):
@@ -56,8 +91,11 @@ def send_command(cmd: str):
     if ser and ser.is_open:
         try:
             ser.write((cmd + "\n").encode("ascii"))
-        except Exception as e:
+        except serial.SerialException as e:
             print(f"Erreur d'écriture UART: {e}")
+            set_serial_port(None) # Déconnecter en cas d'erreur
+        except Exception as e:
+            print(f"Erreur d'écriture inattendue: {e}")
     else:
         print("Port série non ouvert ou déconnecté. Commande non envoyée.")
 

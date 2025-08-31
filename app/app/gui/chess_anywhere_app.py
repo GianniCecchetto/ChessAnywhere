@@ -5,7 +5,7 @@ from . import app_color as c
 from  .widgets_app import create_widgets
 from  .settings_menu import create_settings_menu
 
-PIECES_PATH = "assets/" 
+PIECES_PATH = "assets/pieces/" 
 
 PIECES_MAP = {
     'p': 'bP', 'n': 'bN', 'b': 'bB', 'r': 'bR', 'q': 'bQ', 'k': 'bK',
@@ -21,7 +21,7 @@ class chess_anywhere_app(ctk.CTk):
         super().__init__()
 
         self.title("Chess Anywhere")
-        self.geometry("1000x710")
+        self.geometry("1000x750")
         self.resizable(True, True)
     
         # Configure le fond de la fenêtre principale en blanc pour le padding.
