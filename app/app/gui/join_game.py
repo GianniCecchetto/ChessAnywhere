@@ -46,10 +46,11 @@ def join_online_game(board_container,game_id):
         print("Game ID:", game_info['id'])
         player_id = client.account.get()['id']      
         players = game_info['players']
+        print(players)
 
-        if 'user' in players['white'] and players['white']['user']['id'] == player_id:
+        if players['white']['user']['id'] == player_id:
             player_color = chess.WHITE
-        elif 'user' in players['black'] and players['black']['user']['id'] == player_id:
+        elif players['black']['user']['id'] == player_id:
             player_color = chess.BLACK
         else:
             player_color = None  # maybe you are not in the game
@@ -60,6 +61,8 @@ def join_online_game(board_container,game_id):
         )
     else:
         print("Game not found yet.")
+        board_container.after(500, lambda: join_online_game(board_container, game_id))
+        return
 
     board = chess.Board()
     online_game_loop(board_container,board, player_color, client, game_id)
