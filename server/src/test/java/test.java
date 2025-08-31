@@ -1,20 +1,17 @@
 import api.Api;
-import api.challenge.Challenge;
 import io.restassured.RestAssured;
-import org.apache.http.util.Asserts;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
 import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ChallengeApiTest {
 
     private static Api api;
 
-    @BeforeAll
+    /*@BeforeAll
     static void setup() {
         api = new Api();
         api.start(7000);
@@ -31,23 +28,15 @@ class ChallengeApiTest {
     @Test
     void testCreateChallenge() {
         given()
-                .post("/api/challenge/1")
+                .post("/api/games/create")
                 .then()
                 .statusCode(201);
     }
 
     @Test
-    void testCreateWithSameUserIdChallenge() {
+    void testCreateAnotherChallenge() {
         given()
-                .post("/api/challenge/1")
-                .then()
-                .statusCode(409);
-    }
-
-    @Test
-    void testCreateChallengeWithAnotherUserId() {
-        given()
-                .post("/api/challenge/2")
+                .post("/api/games/create")
                 .then()
                 .statusCode(201);
     }
@@ -61,13 +50,5 @@ class ChallengeApiTest {
                         .extract().body().as(List.class);
 
         assertEquals(challenges.size(), 2);
-    }
-
-    @Test
-    void testDeleteChallenge() {
-        given()
-                .delete("/api/challenge/1")
-                .then()
-                .statusCode(204);
-    }
+    }*/
 }

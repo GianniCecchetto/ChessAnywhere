@@ -16,10 +16,16 @@ extern "C" {
 #endif
 
 // -------- Constants --------
+<<<<<<< HEAD
 #define CB_MAX_LINE         32   // max single line (without CRLF)
 #define CB_MAX_TOKENS       24
 #define CB_MAX_STR          26
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
+=======
+#define CB_MAX_LINE        32   // max single line (without CRLF)
+#define CB_MAX_TOKENS       24
+#define CB_MAX_STR          26
+>>>>>>> main
 
 // -------- Square helpers --------
 // Index mapping: 0..63 with bit0=A1, bit63=H8
@@ -51,7 +57,11 @@ bool cb_sq_from_str(const char* s, uint8_t* out_idx);
  */
 static inline void cb_sq_to_str(uint8_t idx, char out[3]){
     uint8_t f,r; cb_idx_to_coords(idx,&f,&r);
+<<<<<<< HEAD
     out[0] = (char)('H'-f); out[1]=(char)('1'+r); out[2]='\0';
+=======
+    out[0] = (char)('A'+f); out[1]=(char)('1'+r); out[2]='\0';
+>>>>>>> main
 }
 
 // -------- Parser côté PCB (App -> PCB) --------
@@ -69,9 +79,12 @@ typedef enum {
     CB_CMD_READ_MASK_SET,    // mask64
     CB_CMD_READ_MASK_Q,
 
+<<<<<<< HEAD
 		CB_CMD_WIN,
 		CB_CMD_DRAW,
 
+=======
+>>>>>>> main
     CB_CMD_LED_SET,          // idx, r,g,b
     CB_CMD_LED_OFF_SQ,       // idx
     CB_CMD_LED_OFF_ALL,
@@ -111,7 +124,10 @@ typedef struct {
         struct { uint8_t idx; } led_off_sq;
         struct { uint8_t r,g,b; } led_fill;
         struct { uint8_t from_idx, to_idx, r,g,b; } led_rect;
+<<<<<<< HEAD
         struct { uint8_t bright; } led_bright;
+=======
+>>>>>>> main
         struct { uint64_t bits; } led_bitboard;
 
         struct { char name[CB_MAX_STR]; uint8_t r,g,b; } color_set;

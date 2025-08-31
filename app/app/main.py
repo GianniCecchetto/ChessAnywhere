@@ -1,12 +1,5 @@
-import tkinter as tk
-from app.gui import MainWindow
-
-def main():
-    root = tk.Tk()
-    app = MainWindow(root)
-    app.pack(fill="both", expand=True)
-    root.mainloop()
+from gui.chess_anywhere_app import chess_anywhere_app
 
 if __name__ == "__main__":
-    main()
-
+    app = chess_anywhere_app()
+    app.mainloop()

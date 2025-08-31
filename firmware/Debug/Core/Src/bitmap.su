@@ -1,4 +1,17 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+../Core/Src/bitmap.c:8:9:is_index_out_of_bound	16	static
+../Core/Src/bitmap.c:16:6:bitmap_set_bit	40	static
+../Core/Src/bitmap.c:24:6:bitmap_clear_bit	48	static
+../Core/Src/bitmap.c:32:5:bitmap_get_bit	32	static
+=======
+>>>>>>> main
 ../Core/Src/bitmap.c:8:9:is_index_out_of_bound	0	static
 ../Core/Src/bitmap.c:16:6:bitmap_set_bit	8	static
 ../Core/Src/bitmap.c:24:6:bitmap_clear_bit	8	static
 ../Core/Src/bitmap.c:32:5:bitmap_get_bit	8	static
+<<<<<<< HEAD
+=======
+>>>>>>> 53-création-de-la-gui
+>>>>>>> main
