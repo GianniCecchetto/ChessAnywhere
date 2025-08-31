@@ -94,7 +94,7 @@ jobs:
       - name: Create Linux GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: linux-app-*
+          files: "linux-app-*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -114,6 +114,6 @@ jobs:
       - name: Create Windows GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: *.exe
+          files: "*.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
