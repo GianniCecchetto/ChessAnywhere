@@ -24,6 +24,8 @@ def set_brightness(value):
     send_command(command)
     print(f"Commande de luminosité envoyée : {command}")
 
+
+
 def create_settings_menu(app):
     """
     Crée le menu des paramètres qui glisse depuis la droite.
@@ -76,7 +78,7 @@ def create_settings_menu(app):
 
     backlight_btn = ctk.CTkButton(backlight_frame, text="🔆 ON", fg_color=c.LEFT_PANEL_BG,
                                   text_color="black", hover_color=c.DARK_BTN_HOVER,
-                                  command=toggle_backlight)
+                                  command=lambda: toggle_backlight(backlight_btn))
     backlight_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     backlight_label = ctk.CTkLabel(backlight_frame, text="Backlight", text_color="white")
     backlight_label.grid(row=0, column=1, sticky="w", padx=(5, 0))

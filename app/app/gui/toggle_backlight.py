@@ -1,11 +1,12 @@
-def toggle_backlight(self):
+from uart.uart_com  import send_command
+
+def toggle_backlight(button):
     """
-    activation/désactivation du rétroéclairage.
+    Active ou désactive le rétroéclairage et met à jour le texte du bouton.
     """
-    backlight_btn = self.settings_menu.children.get("!ctkframe!ctkbutton")
-    if backlight_btn:
-        current_text = backlight_btn.cget("text")
-        if "ON" in current_text:
-            backlight_btn.configure(text="🔆 OFF")
-        else:
-            backlight_btn.configure(text="🔆 ON")
+    if "ON" in button.cget("text"):
+        button.configure(text="🔆 OFF")
+        send_command(":BACKLIGHT 0")
+    else:
+        button.configure(text="🔆 ON")
+        send_command(":BACKLIGHT 1")
