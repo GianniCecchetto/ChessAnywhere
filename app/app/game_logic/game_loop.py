@@ -256,9 +256,16 @@ def handle_online_place_event(square):
             draw_chessboard(board_container, board=board, player_color=player_color)
             game_state['end_square'] = move.uci()
         else:
+            illegale_board = board.copy()
+            illegale_board.push(move)
+            
+            squares = [start_square, dest_square]
+            
+            for square in squares:
+                square = "M"
+            
             print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
-            send_command("LED_ERROR")
-            draw_chessboard(board_container, board=board, player_color=player_color) # Redessiner le plateau pour effacer les indicateurs
+            draw_chessboard(board_container, board=illegale_board, playable_square=squares, player_color=player_color)
         
         game_state['start_square'] = None
             
