@@ -2,6 +2,27 @@ import customtkinter as ctk
 import tkinter as tk
 from . import app_color as c 
 from .toggle_backlight import toggle_backlight
+from uart.uart_com  import send_command
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+print(BASE_DIR)
+UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+print(UART_PATH)
+sys.path.append(UART_PATH)
+
+import board_com_ctypes as cb
+
+def set_brightness(value):
+    """
+    Envoie la valeur de luminosité à l'UART.
+    La valeur est convertie en un entier.
+    """
+    brightness_value = int(value)
+    command = cb.fmt_led_bright(brightness_value)
+    send_command(command)
+    print(f"Commande de luminosité envoyée : {command}")
 
 def create_settings_menu(app):
     """
@@ -59,6 +80,17 @@ def create_settings_menu(app):
     backlight_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     backlight_label = ctk.CTkLabel(backlight_frame, text="Backlight", text_color="white")
     backlight_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
+
+    # Slider de luminosité
+    brightness_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
+    brightness_frame.pack(fill="x", pady=10)
+    brightness_frame.columnconfigure(0, weight=1)
+    brightness_frame.columnconfigure(1, weight=1)
+    
+    brightness_slider = ctk.CTkSlider(brightness_frame, from_=0, to=100, command=set_brightness)
+    brightness_slider.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+    brightness_label = ctk.CTkLabel(brightness_frame, text="Brightness", text_color="white")
+    brightness_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
 
 def toggle_settings_menu(app):
     """
