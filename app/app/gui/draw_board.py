@@ -3,19 +3,16 @@ import tkinter as tk
 from PIL import Image, ImageTk 
 import chess
 from . import app_color as c 
-from uart.uart_com  import send_command
+from ..uart.uart_com  import send_command
 import os
 import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
-UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
-sys.path.append(UART_PATH)
+#BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+#UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+#sys.path.append(UART_PATH)
 
-import board_com_ctypes as cb
-
-
+#import board_com_ctypes as cb
+from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 OUTLINE_WIDTH = 0
 

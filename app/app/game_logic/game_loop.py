@@ -2,19 +2,20 @@ import chess
 from .gen_move import get_legal_moves_for_piece
 from .gen_move import get_matrix_of_legal_move, get_matrix_from_squares
 from .gen_move import get_legal_squares_for_piece
-from gui.draw_board import draw_chessboard
-from uart.uart_com import get_next_event, send_command
-from game_logic.local_func import process_game_events
-from game_logic.online_func import process_online_game_events, start_polling
+from ..gui.draw_board import draw_chessboard
+from ..uart.uart_com import get_next_event, send_command
+from .local_func import process_game_events
+from .online_func import process_online_game_events, start_polling
 import berserk
 import os
 import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
-UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
-sys.path.append(UART_PATH)
+#BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+#UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+#sys.path.append(UART_PATH)
+
+#import board_com_ctypes as cb
+from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 import board_com_ctypes as cb
 
@@ -73,7 +74,7 @@ def local_game_loop(board_container, board, player_color):
     
     draw_chessboard(board_container, board=board, player_color=player_color)
     
-    process_game_events(game_state)
+    process_game_events()
 
 def process_game_events():
     board = game_state['board']

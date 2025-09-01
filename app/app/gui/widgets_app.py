@@ -5,10 +5,13 @@ from PIL import Image
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
-from uart import uart_com
+from ..networks.lichess_api import save_token
+from ..uart import uart_com
 import threading
+import os
 
-LOGO_PATH = "assets/logo/Logo_ChessAnywhere_cropped.png" 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOGO_PATH = os.path.join(BASE_DIR, "assets", "logo", "Logo_ChessAnywhere_cropped.png")
 
 def create_widgets(app):
     """
@@ -122,7 +125,8 @@ def create_widgets(app):
     token_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     
     save_btn = ctk.CTkButton(token_frame, text="💾 Save", corner_radius=15,
-                             fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER)
+                             fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
+                             command=lambda: save_token(token_entry.get()))
     save_btn.grid(row=0, column=1)
 
     # ==== PANNEAU DE DROITE (Échiquier) ====
@@ -167,11 +171,11 @@ def create_widgets(app):
     draw_chessboard(board_container)
 
     def scan_and_update_games():
-        """Start a background thread to fetch games."""
+        """Démarre un thread pour fetch les games/challengs en cours."""
         threading.Thread(target=_fetch_games_and_update, daemon=True).start()
 
     def _fetch_games_and_update():
-        from networks.chess_anywhere_api import fetch_games
+        from ..networks.chess_anywhere_api import fetch_games
         try:
             games: dict = fetch_games()
         except Exception as e:
@@ -182,19 +186,32 @@ def create_widgets(app):
         app.after(0, lambda: update_game_buttons(games))
 
     def update_game_buttons(games):
-        """Update the Tkinter UI with new game buttons."""
+        """Met à jour l'UI avec les boutons de parties."""
         # Clear old buttons
-        for widget in games_list_frame.winfo_children():
-            widget.destroy()
+        for btn in online_game_buttons:
+            btn.destroy()
 
         if len(games) > 0:
             for game in games:
                 if not isinstance(game, dict):
                     print("Réponse inattendue:", game)
                     continue
+
+                challenger = game.get('challenger', {})
+                if challenger is None:
+                    challenger_name = "Unknown"
+                else:
+                    challenger_name = challenger.get('name', "Unknown")
+                
+                dest_user = game.get('destUser', {})
+                if dest_user is None:
+                    dest_user_name = "Unknown"
+                else:
+                    dest_user_name = dest_user.get('name', "Unknown")
+
                 btn = ctk.CTkButton(
                     games_list_frame,
-                    text=f"▶️ {game['id']} 📶",
+                    text=f"▶️ {game['id']} {challenger_name} vs {dest_user_name}",
                     corner_radius=15,
                     height=40,
                     fg_color="#333333",   # replace with c.GAME_LIST_BTN
@@ -204,6 +221,7 @@ def create_widgets(app):
                     command=lambda game_id=game['id']: join_online_game(board_container, game_id)
                 )
                 btn.pack(fill="x", pady=5)
+                online_game_buttons.append(btn)
 
         # Reschedule the next scan
         app.after(1000, scan_and_update_games)

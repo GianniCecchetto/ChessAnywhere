@@ -1,6 +1,6 @@
-from game_logic.game_loop import *
+from .game_loop import *
 import chess
-from uart.uart_com import get_next_event, send_command
+from ..uart.uart_com import get_next_event, send_command
 
 def process_game_events(game_state):
     board = game_state['board']
@@ -25,7 +25,7 @@ def handle_local_move_event():
     """
     Gère la logique de lecture des événements UART pour un coup local.
     """
-    from game_logic.game_loop import handle_event
+    from .game_loop import handle_event
     event = get_next_event()
     if event:
         handle_event(event)

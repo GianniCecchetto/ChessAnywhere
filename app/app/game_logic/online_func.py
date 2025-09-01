@@ -1,7 +1,7 @@
 from .game_loop import *
 import chess
 import berserk
-from uart.uart_com import get_next_event, send_command
+from ..uart.uart_com import get_next_event, send_command
 from .local_func import handle_local_move_event
 from .gen_move import get_matrix_from_squares
 import time
