@@ -87,7 +87,7 @@ def create_settings_menu(app):
     brightness_frame.columnconfigure(0, weight=1)
     brightness_frame.columnconfigure(1, weight=1)
     
-    brightness_slider = ctk.CTkSlider(brightness_frame, from_=0, to=100, command=set_brightness)
+    brightness_slider = ctk.CTkSlider(brightness_frame, from_=0, to=255, command=set_brightness)
     brightness_slider.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     brightness_label = ctk.CTkLabel(brightness_frame, text="Brightness", text_color="white")
     brightness_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
