@@ -3,6 +3,8 @@ package api.game;
 import io.javalin.http.Context;
 import lichess.LichessClient;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,8 +18,8 @@ public class GameController {
         lichessClient = new LichessClient(this);
     }
 
-    public Set<String> getGames() {
-        return activeGames.keySet();
+    public List<Game> getGames() {
+        return new ArrayList<>(activeGames.values());
     }
 
     public void addGame(Game game) {

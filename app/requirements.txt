@@ -1,6 +1,10 @@
 # Core app dependencies
-requests>=2.31.0    # for HTTP calls to your server
-berserk>=0.12.0    # Python client for Lichess API
+requests
+pyserial
+Pillow
+customtkinter
+python-chess
+berserk
 
 # Testing
 pytest>=7.4.0       # testing framework

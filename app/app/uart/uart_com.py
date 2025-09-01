@@ -29,8 +29,10 @@ def uart_reader():
                 line = ser.readline()
                 if line:
                     line = line.decode("ascii", errors="ignore").strip()
+                    print(f"[UART RAW] {line}")
                     parsed = cb.parse_line(line)
                     if parsed:
+                        print(f"[UART PARSED] {parsed}") 
                         uart_queue.put(parsed)
             except serial.SerialException as e:
                 print(f"Erreur de lecture UART: {e}")

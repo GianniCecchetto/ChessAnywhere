@@ -6,6 +6,7 @@ from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
 from uart import uart_com
+import threading
 
 LOGO_PATH = "assets/logo/Logo_ChessAnywhere_cropped.png" 
 
@@ -163,24 +164,51 @@ def create_widgets(app):
     board_container.grid_rowconfigure(0, weight=1)
     board_container.grid_columnconfigure(0, weight=1)
     
-    # ==== Liste des parties en ligne ====
-    games = ["Ali's game", "Nathan's game", "Gianni's game", "Thomas's game"]
-    for i, game in enumerate(games):
-        btn = ctk.CTkButton(games_list_frame, 
-                             text=f"▶️ {game} 📶", 
-                             corner_radius=15, 
-                             height=40, 
-                             fg_color=c.GAME_LIST_BTN, 
-                             text_color="white", 
-                             hover_color=c.DARK_BTN_HOVER,
-                             anchor="w",
-                             command=lambda g=game: join_online_game(g,board_container),
-                             state="disabled") 
-        btn.pack(fill="x", pady=5)
-        online_game_buttons.append(btn)
-
-
     draw_chessboard(board_container)
+
+    def scan_and_update_games():
+        """Start a background thread to fetch games."""
+        threading.Thread(target=_fetch_games_and_update, daemon=True).start()
+
+    def _fetch_games_and_update():
+        from networks.chess_anywhere_api import fetch_games
+        try:
+            games: dict = fetch_games()
+        except Exception as e:
+            print("Error fetching games:", e)
+            games = []
+
+        # Schedule the UI update back on the Tkinter main thread
+        app.after(0, lambda: update_game_buttons(games))
+
+    def update_game_buttons(games):
+        """Update the Tkinter UI with new game buttons."""
+        # Clear old buttons
+        for widget in games_list_frame.winfo_children():
+            widget.destroy()
+
+        if len(games) > 0:
+            for game in games:
+                if not isinstance(game, dict):
+                    print("Réponse inattendue:", game)
+                    continue
+                btn = ctk.CTkButton(
+                    games_list_frame,
+                    text=f"▶️ {game['id']} 📶",
+                    corner_radius=15,
+                    height=40,
+                    fg_color="#333333",   # replace with c.GAME_LIST_BTN
+                    text_color="white",
+                    hover_color="#555555", # replace with c.DARK_BTN_HOVER
+                    anchor="w",
+                    command=lambda game_id=game['id']: join_online_game(board_container, game_id)
+                )
+                btn.pack(fill="x", pady=5)
+
+        # Reschedule the next scan
+        app.after(1000, scan_and_update_games)
+    
+    scan_and_update_games()
 
     def update_connection_status(is_connected):
         """Met à jour l'état de la connexion et l'état des boutons."""
