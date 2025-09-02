@@ -35,21 +35,8 @@ def process_online_game_events(game_state):
                 client.board.make_move(game_id, game_state['end_square'])
             except berserk.exceptions.ResponseError as e:
                 print("Move rejected by Lichess:", e)
-    else:
-        print("C'est au tour de l'adversaire en ligne. Récupération du coup via l'API.")
-        handle_online_move_event(game_state)
         
     board_container.after(500, lambda: process_online_game_events(game_state))
-
-def handle_online_move_event(game_state):
-    board = game_state['board']
-    online_move = game_state['online_move']
-
-    if not online_move:
-        print("Pas de coup de l'adversaire disponible. Attente du prochain tour.")
-        return
-
-    print(f"Coup de l'adversaire reçu : {online_move}")
 
 def show_online_move(game_state):
     """Boucle non bloquante comme process_game_events, mais dédiée à l’attente UART."""

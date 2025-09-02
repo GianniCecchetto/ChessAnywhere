@@ -145,6 +145,9 @@ def _fmt_wrapper(fmt_fn, *args) -> str:
 def fmt_led_set(idx: int, r: int, g: int, b: int) -> str:
     return _fmt_wrapper(cb_fmt_led_set, c_uint8(idx), c_uint8(r), c_uint8(g), c_uint8(b))
 
+def fmt_led_bright(bright: int) -> str:
+    return _fmt_wrapper(cb_fmt_led_bright, c_uint8(bright))
+
 def fmt_ping() -> str:
     return _fmt_wrapper(cb_fmt_ping)
 
