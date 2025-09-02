@@ -2,6 +2,141 @@ import customtkinter as ctk
 import tkinter as tk
 from . import app_color as c 
 from .toggle_backlight import toggle_backlight
+from uart.uart_com  import send_command
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+print(BASE_DIR)
+UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
+print(UART_PATH)
+sys.path.append(UART_PATH)
+
+import board_com_ctypes as cb
+
+def set_brightness(value):
+    """
+    Envoie la valeur de luminosité à l'UART.
+    La valeur est convertie en un entier.
+    """
+    brightness_value = int(value)
+    command = cb.fmt_led_bright(brightness_value)
+    send_command(command)
+    print(f"Commande de luminosité envoyée : {command}")
+
+def update_game_list_button_colors(app, selected_colors):
+    """
+    Met à jour les couleurs des boutons dans la liste des jeux.
+    """
+    if hasattr(app, 'games_list_frame'):
+        for widget in app.games_list_frame.winfo_children():
+            if isinstance(widget, ctk.CTkButton):
+                widget.configure(
+                    fg_color=selected_colors["game_list_btn"], 
+                    text_color=selected_colors["button_text"],
+                    hover_color=selected_colors["dark_btn_hover"]
+                )
+
+def change_app_theme(app, new_theme):
+    """
+    Modifie le thème de l'application et les couleurs de l'UI.
+    """
+    ctk.set_appearance_mode(new_theme)
+
+    color_schemes = {
+        "Light": {
+            "main_bg": "#ffffff",
+            "text": "#000000",
+            "settings_bg": "#505050",
+            "button_fg": "#e5e5e5",
+            "button_text": "#000000",
+            "user_entry": "#FFFFFF",
+            "dark_btn_fg": "#656565",
+            "dark_btn_hover": "#848484",
+            "header_bg": "#c0c0c0",
+            "right_panel_bg": "#ffffff",
+            "left_panel_bg": "#e5e5e5",
+            "game_list_fg": "#b4b4b4",
+            "game_list_btn": "#0C6AA4",
+            "settings_logo":"#FFFFFF"
+        },
+        "Dark": {
+            "main_bg": "#353535",
+            "text": "#ffffff",
+            "settings_bg": "#505050",
+            "button_fg": "#505050",
+            "button_text": "#ffffff",
+            "user_entry": "#818181",
+            "dark_btn_fg": "#0e2433",
+            "dark_btn_hover": "#8A8787",
+            "header_bg": "#1a1a1a",
+            "right_panel_bg": "#353535",
+            "left_panel_bg": "#636161",
+            "game_list_fg": "#333333",
+            "game_list_btn": "#1B435C",
+            "settings_logo":"#ffffff"
+        },
+        "Blue": {
+            "main_bg": "#ffffff",
+            "text": "#000000",
+            "settings_bg": "#505050",
+            "button_fg": "#e5e5e5",
+            "button_text": "#FFFFFF",
+            "user_entry": "#FFFFFF",
+            "dark_btn_fg": "#0e2433",
+            "dark_btn_hover": "#505050",
+            "header_bg": "#0e2433",
+            "right_panel_bg": "#ffffff",
+            "left_panel_bg": "#e5e5e5",
+            "game_list_fg": "#d0d0d0",
+            "game_list_btn": "#628092",
+            "settings_logo":"#ffffff"
+        }
+    }
+    
+    selected_colors = color_schemes.get(new_theme, color_schemes["Blue"])
+    
+    app.settings_menu.configure(fg_color=selected_colors["settings_bg"])
+    
+    for widget in app.settings_menu.winfo_children():
+        if isinstance(widget, ctk.CTkFrame):
+            for child in widget.winfo_children():
+                if isinstance(child, ctk.CTkLabel):
+                    child.configure(text_color=selected_colors["text"])
+                elif isinstance(child, ctk.CTkButton):
+                    child.configure(fg_color=selected_colors["button_fg"], text_color=selected_colors["button_text"])
+                elif isinstance(child, ctk.CTkOptionMenu):
+                    child.configure(fg_color=selected_colors["button_fg"], text_color=selected_colors["button_text"])
+
+    try:
+        app.configure(fg_color=selected_colors["main_bg"])
+        app.header.configure(fg_color=selected_colors["header_bg"])
+        app.settings_btn.configure(fg_color=selected_colors["settings_bg"])
+        app.main_content_frame.configure(fg_color=selected_colors["main_bg"])
+        app.left_panel.configure(fg_color=selected_colors["left_panel_bg"])
+        app.right_panel.configure(fg_color=selected_colors["right_panel_bg"])
+        app.local_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.host_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.clear_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.connect_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.save_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.com_connect_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.games_list_frame.configure(fg_color=selected_colors["left_panel_bg"])
+        #app.connection_state_frame.configure(fg_color=selected_colors["right_panel_bg"])
+        app.link_entry.configure(text_color=selected_colors["text"])
+        app.connect_label.configure(text_color=selected_colors["text"])
+        app.status_label.configure(text_color=selected_colors["text"])
+        app.com_connect_btn.configure(fg_color=selected_colors["dark_btn_fg"])
+        app.link_entry.configure(fg_color=selected_colors["user_entry"])
+        app.arrow_label.configure(text_color=selected_colors["text"])
+        app.token_entry.configure(fg_color=selected_colors["user_entry"])
+        app.settings_icon_label.configure(text_color=selected_colors["settings_logo"])
+        update_game_list_button_colors(app, selected_colors)
+    except AttributeError as e:
+        print(f"Erreur lors de la mise à jour des couleurs de l'UI : {e}")
+        print("Assurez-vous que les widgets sont définis comme des attributs de l'objet 'app' dans la fonction 'create_widgets' pour que les changements de thème fonctionnent correctement.")
+
+    print(f"Thème de l'application changé en : {new_theme}")
 
 def create_settings_menu(app):
     """
@@ -20,8 +155,8 @@ def create_settings_menu(app):
     menu_content_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         
     # Bouton Paramètres (en haut, grande icône)
-    settings_icon_label = ctk.CTkLabel(menu_content_frame, text="⚙️", font=("Arial", 50, "bold"), text_color="white")
-    settings_icon_label.pack(pady=(0, 20))
+    app.settings_icon_label = ctk.CTkLabel(menu_content_frame, text="⚙️", font=("Arial", 50, "bold"), text_color="white")
+    app.settings_icon_label.pack(pady=(0, 20))
 
     # Thème de l'application
     app_theme_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
@@ -30,7 +165,8 @@ def create_settings_menu(app):
     app_theme_frame.columnconfigure(1, weight=1)
 
     app_theme_option = ctk.CTkOptionMenu(app_theme_frame, values=["Blue", "Dark", "Light"], 
-                                             fg_color=c.LEFT_PANEL_BG, text_color="black")
+                                             fg_color=c.LEFT_PANEL_BG, text_color="black",
+                                             command=lambda new_theme: change_app_theme(app, new_theme))
     app_theme_option.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     app_theme_label = ctk.CTkLabel(app_theme_frame, text="App Theme", text_color="white")
     app_theme_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
@@ -55,10 +191,21 @@ def create_settings_menu(app):
 
     backlight_btn = ctk.CTkButton(backlight_frame, text="🔆 ON", fg_color=c.LEFT_PANEL_BG,
                                   text_color="black", hover_color=c.DARK_BTN_HOVER,
-                                  command=toggle_backlight)
+                                  command=lambda: toggle_backlight(backlight_btn))
     backlight_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     backlight_label = ctk.CTkLabel(backlight_frame, text="Backlight", text_color="white")
     backlight_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
+
+    # Slider de luminosité
+    brightness_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
+    brightness_frame.pack(fill="x", pady=10)
+    brightness_frame.columnconfigure(0, weight=1)
+    brightness_frame.columnconfigure(1, weight=1)
+    
+    brightness_slider = ctk.CTkSlider(brightness_frame, from_=0, to=255, command=set_brightness)
+    brightness_slider.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+    brightness_label = ctk.CTkLabel(brightness_frame, text="Brightness", text_color="white")
+    brightness_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
 
 def toggle_settings_menu(app):
     """
