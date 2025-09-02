@@ -17,8 +17,6 @@ import sys
 #import board_com_ctypes as cb
 from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
-import board_com_ctypes as cb
-
 # État de jeu partagé
 game_state = {
     'board': None,
