@@ -47,16 +47,18 @@ def change_app_theme(app, new_theme):
         "Light": {
             "main_bg": "#ffffff",
             "text": "#000000",
-            "settings_bg": "#f0f0f0",
+            "settings_bg": "#505050",
             "button_fg": "#e5e5e5",
             "button_text": "#000000",
-            "dark_btn_fg": "#e5e5e5",
-            "dark_btn_hover": "#c0c0c0",
+            "user_entry": "#FFFFFF",
+            "dark_btn_fg": "#656565",
+            "dark_btn_hover": "#848484",
             "header_bg": "#c0c0c0",
             "right_panel_bg": "#ffffff",
             "left_panel_bg": "#e5e5e5",
-            "game_list_fg": "#d0d0d0",
-            "game_list_btn": "#628092"
+            "game_list_fg": "#b4b4b4",
+            "game_list_btn": "#0C6AA4",
+            "settings_logo":"#FFFFFF"
         },
         "Dark": {
             "main_bg": "#353535",
@@ -64,13 +66,15 @@ def change_app_theme(app, new_theme):
             "settings_bg": "#505050",
             "button_fg": "#505050",
             "button_text": "#ffffff",
+            "user_entry": "#818181",
             "dark_btn_fg": "#0e2433",
             "dark_btn_hover": "#8A8787",
             "header_bg": "#1a1a1a",
             "right_panel_bg": "#353535",
             "left_panel_bg": "#636161",
             "game_list_fg": "#333333",
-            "game_list_btn": "#1B435C"
+            "game_list_btn": "#1B435C",
+            "settings_logo":"#ffffff"
         },
         "Blue": {
             "main_bg": "#ffffff",
@@ -78,13 +82,15 @@ def change_app_theme(app, new_theme):
             "settings_bg": "#505050",
             "button_fg": "#e5e5e5",
             "button_text": "#FFFFFF",
+            "user_entry": "#FFFFFF",
             "dark_btn_fg": "#0e2433",
             "dark_btn_hover": "#505050",
             "header_bg": "#0e2433",
             "right_panel_bg": "#ffffff",
             "left_panel_bg": "#e5e5e5",
             "game_list_fg": "#d0d0d0",
-            "game_list_btn": "#628092"
+            "game_list_btn": "#628092",
+            "settings_logo":"#ffffff"
         }
     }
     
@@ -121,8 +127,10 @@ def change_app_theme(app, new_theme):
         app.connect_label.configure(text_color=selected_colors["text"])
         app.status_label.configure(text_color=selected_colors["text"])
         app.com_connect_btn.configure(fg_color=selected_colors["dark_btn_fg"])
-        app.link_entry.configure(fg_color=selected_colors["button_fg"])
-
+        app.link_entry.configure(fg_color=selected_colors["user_entry"])
+        app.arrow_label.configure(text_color=selected_colors["text"])
+        app.token_entry.configure(fg_color=selected_colors["user_entry"])
+        app.settings_icon_label.configure(text_color=selected_colors["settings_logo"])
         update_game_list_button_colors(app, selected_colors)
     except AttributeError as e:
         print(f"Erreur lors de la mise à jour des couleurs de l'UI : {e}")
@@ -147,8 +155,8 @@ def create_settings_menu(app):
     menu_content_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         
     # Bouton Paramètres (en haut, grande icône)
-    settings_icon_label = ctk.CTkLabel(menu_content_frame, text="⚙️", font=("Arial", 50, "bold"), text_color="white")
-    settings_icon_label.pack(pady=(0, 20))
+    app.settings_icon_label = ctk.CTkLabel(menu_content_frame, text="⚙️", font=("Arial", 50, "bold"), text_color="white")
+    app.settings_icon_label.pack(pady=(0, 20))
 
     # Thème de l'application
     app_theme_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")

@@ -59,8 +59,8 @@ def create_widgets(app):
     connect_label_frame.columnconfigure(0, weight=0)
     connect_label_frame.columnconfigure(1, weight=1)
     
-    arrow_label = ctk.CTkLabel(connect_label_frame, text="➔", font=("Arial", 20, "bold"))
-    arrow_label.grid(row=0, column=0, padx=(0, 5))
+    app.arrow_label = ctk.CTkLabel(connect_label_frame, text="➔", font=("Arial", 20, "bold"))
+    app.arrow_label.grid(row=0, column=0, padx=(0, 5))
     
     app.connect_label = ctk.CTkLabel(connect_label_frame, text="Connecting via Lichess Link", 
                                  font=("Arial", 14, "bold"), justify="left", anchor="w")
@@ -118,8 +118,8 @@ def create_widgets(app):
     token_frame.columnconfigure(0, weight=1)
     token_frame.columnconfigure(1, weight=0)
 
-    token_entry = ctk.CTkEntry(token_frame, placeholder_text="Token", corner_radius=15)
-    token_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+    app.token_entry = ctk.CTkEntry(token_frame, placeholder_text="Token", corner_radius=15)
+    app.token_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     
     app.save_btn = ctk.CTkButton(token_frame, text="💾 Save", corner_radius=15,
                                  fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER)
