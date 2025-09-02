@@ -1,14 +1,6 @@
 "./Core/Src/bitmap.o"
-<<<<<<< HEAD
 "./Core/Src/board_com.o"
 "./Core/Src/fifo.o"
-=======
-<<<<<<< HEAD
-=======
-"./Core/Src/board_com.o"
-"./Core/Src/fifo.o"
->>>>>>> 53-création-de-la-gui
->>>>>>> main
 "./Core/Src/main.o"
 "./Core/Src/rgb_led.o"
 "./Core/Src/stm32g0xx_hal_msp.o"
