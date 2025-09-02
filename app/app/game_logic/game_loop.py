@@ -6,15 +6,7 @@ from ..gui.draw_board import draw_chessboard
 from ..uart.uart_com import get_next_event, send_command
 from .local_func import process_game_events
 from .online_func import process_online_game_events, start_polling
-import berserk
-import os
-import sys
 
-#BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-#UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-#sys.path.append(UART_PATH)
-
-#import board_com_ctypes as cb
 from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 # État de jeu partagé
@@ -210,8 +202,6 @@ def handle_online_event(event):
 
 def handle_online_lift_event(square):
     board = game_state['board']
-    board_container = game_state['container']
-    player_color = game_state['player_color']
     
     piece = board.piece_at(square)
     print(piece)
@@ -241,14 +231,21 @@ def handle_online_place_event(square):
 
     if start_square == dest_square:
         print("Coup annulé. Pièce reposée à la même place.")
-        draw_chessboard(board_container, board=board, player_color=player_color)
+        squares = chess.Move.from_uci(game_state['online_move']).to_square
+        
+        for square in squares:
+            square = "M"
+
+        led_matrix = get_matrix_from_squares(squares)
+        draw_chessboard(board_container, board=board, playable_square=led_matrix, player_color=player_color)
         game_state['start_square'] = None
         return
 
     try:
         move = chess.Move(start_square, dest_square)
+        online_move = chess.Move.from_uci(game_state['online_move'])
         
-        if move.to_square == chess.Move.from_uci(game_state['online_move']).to_square:
+        if move.to_square == online_move.to_square:
             board.push(move)
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)

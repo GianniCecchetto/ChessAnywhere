@@ -86,6 +86,7 @@ def start_polling(game_state):
     def poll_stream():
         while True:
             if board.turn == player_color:
+                print("A")
                 time.sleep(3)
                 continue
             try:
