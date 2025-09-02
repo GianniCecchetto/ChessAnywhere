@@ -24,7 +24,111 @@ def set_brightness(value):
     send_command(command)
     print(f"Commande de luminosité envoyée : {command}")
 
+def update_game_list_button_colors(app, selected_colors):
+    """
+    Met à jour les couleurs des boutons dans la liste des jeux.
+    """
+    if hasattr(app, 'games_list_frame'):
+        for widget in app.games_list_frame.winfo_children():
+            if isinstance(widget, ctk.CTkButton):
+                widget.configure(
+                    fg_color=selected_colors["game_list_btn"], 
+                    text_color=selected_colors["button_text"],
+                    hover_color=selected_colors["dark_btn_hover"]
+                )
 
+def change_app_theme(app, new_theme):
+    """
+    Modifie le thème de l'application et les couleurs de l'UI.
+    """
+    ctk.set_appearance_mode(new_theme)
+
+    color_schemes = {
+        "Light": {
+            "main_bg": "#ffffff",
+            "text": "#000000",
+            "settings_bg": "#f0f0f0",
+            "button_fg": "#e5e5e5",
+            "button_text": "#000000",
+            "dark_btn_fg": "#e5e5e5",
+            "dark_btn_hover": "#c0c0c0",
+            "header_bg": "#c0c0c0",
+            "right_panel_bg": "#ffffff",
+            "left_panel_bg": "#e5e5e5",
+            "game_list_fg": "#d0d0d0",
+            "game_list_btn": "#628092"
+        },
+        "Dark": {
+            "main_bg": "#353535",
+            "text": "#ffffff",
+            "settings_bg": "#505050",
+            "button_fg": "#505050",
+            "button_text": "#ffffff",
+            "dark_btn_fg": "#0e2433",
+            "dark_btn_hover": "#8A8787",
+            "header_bg": "#1a1a1a",
+            "right_panel_bg": "#353535",
+            "left_panel_bg": "#636161",
+            "game_list_fg": "#333333",
+            "game_list_btn": "#1B435C"
+        },
+        "Blue": {
+            "main_bg": "#ffffff",
+            "text": "#000000",
+            "settings_bg": "#505050",
+            "button_fg": "#e5e5e5",
+            "button_text": "#FFFFFF",
+            "dark_btn_fg": "#0e2433",
+            "dark_btn_hover": "#505050",
+            "header_bg": "#0e2433",
+            "right_panel_bg": "#ffffff",
+            "left_panel_bg": "#e5e5e5",
+            "game_list_fg": "#d0d0d0",
+            "game_list_btn": "#628092"
+        }
+    }
+    
+    selected_colors = color_schemes.get(new_theme, color_schemes["Blue"])
+    
+    app.settings_menu.configure(fg_color=selected_colors["settings_bg"])
+    
+    for widget in app.settings_menu.winfo_children():
+        if isinstance(widget, ctk.CTkFrame):
+            for child in widget.winfo_children():
+                if isinstance(child, ctk.CTkLabel):
+                    child.configure(text_color=selected_colors["text"])
+                elif isinstance(child, ctk.CTkButton):
+                    child.configure(fg_color=selected_colors["button_fg"], text_color=selected_colors["button_text"])
+                elif isinstance(child, ctk.CTkOptionMenu):
+                    child.configure(fg_color=selected_colors["button_fg"], text_color=selected_colors["button_text"])
+
+    try:
+        app.configure(fg_color=selected_colors["main_bg"])
+        app.header.configure(fg_color=selected_colors["header_bg"])
+        app.settings_btn.configure(fg_color=selected_colors["settings_bg"])
+        app.main_content_frame.configure(fg_color=selected_colors["main_bg"])
+        app.left_panel.configure(fg_color=selected_colors["left_panel_bg"])
+        app.right_panel.configure(fg_color=selected_colors["right_panel_bg"])
+        app.local_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.host_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.clear_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.connect_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.save_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.com_connect_btn.configure(fg_color=selected_colors["dark_btn_fg"], hover_color=selected_colors["dark_btn_hover"], text_color=selected_colors["button_text"])
+        app.games_list_frame.configure(fg_color=selected_colors["left_panel_bg"])
+        #app.connection_state_frame.configure(fg_color=selected_colors["right_panel_bg"])
+        app.link_entry.configure(text_color=selected_colors["text"])
+        app.connect_label.configure(text_color=selected_colors["text"])
+        app.status_label.configure(text_color=selected_colors["text"])
+        app.com_connect_btn.configure(fg_color=selected_colors["dark_btn_fg"])
+        app.link_entry.configure(fg_color=selected_colors["button_fg"])
+
+        update_game_list_button_colors(app, selected_colors)
+    except AttributeError as e:
+        print(f"Erreur lors de la mise à jour des couleurs de l'UI : {e}")
+        print("Assurez-vous que les widgets sont définis comme des attributs de l'objet 'app' dans la fonction 'create_widgets' pour que les changements de thème fonctionnent correctement.")
+
+    print(f"Thème de l'application changé en : {new_theme}")
 
 def create_settings_menu(app):
     """
@@ -53,7 +157,8 @@ def create_settings_menu(app):
     app_theme_frame.columnconfigure(1, weight=1)
 
     app_theme_option = ctk.CTkOptionMenu(app_theme_frame, values=["Blue", "Dark", "Light"], 
-                                             fg_color=c.LEFT_PANEL_BG, text_color="black")
+                                             fg_color=c.LEFT_PANEL_BG, text_color="black",
+                                             command=lambda new_theme: change_app_theme(app, new_theme))
     app_theme_option.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     app_theme_label = ctk.CTkLabel(app_theme_frame, text="App Theme", text_color="white")
     app_theme_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
