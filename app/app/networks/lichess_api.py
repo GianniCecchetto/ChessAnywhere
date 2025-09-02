@@ -35,11 +35,10 @@ def verify_token(token: str) -> bool:
         return True
     return False
 
-def fetch_game(board_container, client: berserk.Client, game_id):
+def fetch_game(client: berserk.Client, game_id):
     try:
         game_info = client.games.export(game_id)
-        if game_info.get('status') == 'created':
-            raise RuntimeError("Game not started yet")
-        return game_info
+        if game_info:
+            return game_info
     except berserk.exceptions.ResponseError as e:
-        return {}
+        return None
