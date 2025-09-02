@@ -22,9 +22,84 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 ## Structure de fichier
 
 - [.github/workflows](.github/workflows) : Test d'intégration continu
-- [server](server) : Code et API du serveur
-- [docs](docs) : Toute la documentation du projet
-- [livrable_sem_1](livrable_sem_1) : Contient tous les fichiers à livrer pour la semaine 1
-- [hardware](hardware) : Schéma et PCB
-- [app](app) : Application graphique en python
-- [firmware](firmware) : Firmware STM32 pour le board
+- [app](app) : Application Python
+- [docs](docs) : Documentation générale du projet
+- [firmware](firmware) : Firmware du microcontrôleur STM32
+- [hardware](hardware) : Schéma et PCB du board
+- [lib](lib) : Librairie créer pour le projet
+- [livrable_sem_1](livrable_sem_1) : Rendu de la semaine 1
+- [server](server) : Serveur Azure
+
+# Mise en place du déploiement automatique
+
+Afin de ne pas surcharger ce `README.md`, nous avons séparer la documentation du pipeline de déploiement en différentes sections :
+
+- [/docs/stm32_self_deployment](/docs/stm32_self_deployment) : Pipeline Firmware
+- [/docs/app_self_deployement](/docs/app_self_deployement) : Pipeline Application *(TODO)*
+- [/docs/server_self_deployement](/docs/server_self_deployement) : Pipeline Serveur *(TODO)*
+
+# Mise en place du projet 
+
+Voici la démarche à suivre, étape par étape, afin de pouvoir reproduire ce projet :
+
+## 1 - Plateau Board
+
+Dans cette section, nous allons voir comment mettre en place le plateau, soit l'échiquier
+
+### 1.1 - PCB
+
+- Monter les PCB
+- Indiquer l'endroit de la BOM
+- Commande de composants
+- Tests effectués
+- Spécifications par rapport au schéma
+- Modification apportée pour le bon fonctionnement (diode)
+- Alimentation (tension + courant)
+- Montage des reeds
+- ATTENTION les reeds sont fragiles
+
+### 1.2 - Firmware
+
+Une fois que la carte est montée et 
+
+- Code
+- IDE
+- Optimisation de compilation
+- Fichier .ioc
+- Flasher
+
+### 1.3 - Mécanique
+
+- Grille 3D
+- Impression des pièces 3D
+- Montage des puèces 3D avec les aimants
+
+## 2 - Application python
+
+Gianni Nathan
+
+- Packages
+- Commandes Pythons
+- Fonctionnement
+- Fonctionnalités
+- Lancement de l'appli
+
+## 3 - Serveur
+
+Gianni
+
+- Packages
+- Commandes
+- Fonctionnement
+- Fonctionnalités
+
+## 4 - Tests de bon fonctionnements
+
+
+
+# Authors
+
+- Gianni Cecchetto - [Github](https://github.com/GianniCecchetto)
+- Nathan Tschantz - [Github](https://github.com/TschantzN)
+- Ali Zoubir - [Github](https://github.com/Ali-Z0)
+- Thomas Stäheli - [Github](https://github.com/thomasstaheli)
