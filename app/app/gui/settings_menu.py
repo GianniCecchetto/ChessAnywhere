@@ -176,19 +176,6 @@ def create_settings_menu(app):
     board_theme_label = ctk.CTkLabel(board_theme_frame, text="Board Theme", text_color="white")
     board_theme_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
 
-    # Bouton Rétroéclairage
-    backlight_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
-    backlight_frame.pack(fill="x", pady=10)
-    backlight_frame.columnconfigure(0, weight=1)
-    backlight_frame.columnconfigure(1, weight=1)
-
-    backlight_btn = ctk.CTkButton(backlight_frame, text="🔆 ON", fg_color=c.LEFT_PANEL_BG,
-                                  text_color="black", hover_color=c.DARK_BTN_HOVER,
-                                  command=lambda: toggle_backlight(backlight_btn))
-    backlight_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
-    backlight_label = ctk.CTkLabel(backlight_frame, text="Backlight", text_color="white")
-    backlight_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
-
     # Slider de luminosité
     brightness_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
     brightness_frame.pack(fill="x", pady=10)
