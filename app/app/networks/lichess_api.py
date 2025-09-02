@@ -30,7 +30,7 @@ def verify_token(token: str) -> bool:
     headers = {
         "Authorization": f"Bearer {token}"
     }
-    token_info = fetch_data("http://lichess.org", "/api/account", headers=headers)
+    token_info = fetch_data("https://lichess.org", "/api/account", headers=headers)
     if token_info.get('id', {}):
         return True
     return False
@@ -42,4 +42,4 @@ def fetch_game(board_container, client: berserk.Client, game_id):
             raise RuntimeError("Game not started yet")
         return game_info
     except berserk.exceptions.ResponseError as e:
-        board_container.after(1000, lambda: fetch_game(board_container, client, game_id))
+        return {}

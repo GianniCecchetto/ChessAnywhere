@@ -30,15 +30,20 @@ def get_matrix_of_legal_move(board: chess.Board, square: chess.Square):
             matrix[7 - row][col] = "X"
         else:
             matrix[7 - row][col] = "P"
-
+    
     return matrix
 
-def get_matrix_from_squares(squares: list):
+def get_matrix_from_squares(board: chess.Board, current_piece: chess.Piece, squares: list):
     matrix = [["." for _ in range(8)] for _ in range(8)]
 
     #print(legal_moves)
     for square in squares:
         row, col = divmod(square, 8)
-        matrix[7 - row][col] = "M"
+        if board.piece_at(square) == None:
+            matrix[7 - row][col] = "M"
+        elif board.piece_at(square) != current_piece:
+            matrix[7 - row][col] = "X"
+        else:
+            matrix[7 - row][col] = "M"
 
     return matrix
