@@ -9,6 +9,7 @@ from ..networks.lichess_api import save_token
 from ..uart import uart_com
 import threading
 import os
+import time
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGO_PATH = os.path.join(BASE_DIR, "assets", "logo", "Logo_ChessAnywhere_cropped.png")
@@ -176,12 +177,15 @@ def create_widgets(app):
 
     def _fetch_games_and_update():
         from ..networks.chess_anywhere_api import fetch_games
-        try:
-            games: dict = fetch_games()
-        except Exception as e:
-            print("Error fetching games:", e)
-            games = []
-        app.after(0, lambda: update_game_buttons(games))
+        while True:
+            try:
+                games: dict = fetch_games()
+            except Exception as e:
+                games = {}
+                print("Error fetching games")
+            
+            app.after(0, lambda: update_game_buttons(games))
+            time.sleep(1)
 
     def update_game_buttons(games):
         """Met à jour l'UI avec les boutons de parties."""
@@ -221,8 +225,6 @@ def create_widgets(app):
                 app.btn.pack(fill="x", pady=5)
                 app.online_game_buttons.append(app.btn)
 
-        app.after(1000, scan_and_update_games)
-    
     scan_and_update_games()
 
     def update_connection_status(is_connected):
