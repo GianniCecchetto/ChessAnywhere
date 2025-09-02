@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define UART_FIFO_SIZE 512  // ajuste si besoin
+#define UART_FIFO_SIZE 256  // ajuste si besoin
 
 typedef struct {
     uint8_t buf[UART_FIFO_SIZE];
