@@ -96,7 +96,7 @@ def create_widgets(app):
     app.games_list_frame.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 10))
     
     # Liste pour stocker les boutons de jeux en ligne
-    app.online_game_buttons = []
+    app.online_game_buttons = {}
 
     # ==== ZONE DES BOUTONS DE JEU EN BAS ====
     game_buttons_frame = ctk.CTkFrame(app.main_content_frame, fg_color="transparent")
@@ -189,41 +189,45 @@ def create_widgets(app):
 
     def update_game_buttons(games):
         """Met à jour l'UI avec les boutons de parties."""
+        current_game_ids = [game['id'] for game in games if isinstance(game, dict)]
+        
+        if getattr(app, "last_game_ids", None) == current_game_ids:
+            # No change, do nothing
+            return
+        
+        # Store new list for next comparison
+        app.last_game_ids = current_game_ids
+
         # Clear old buttons
-        for btn in app.online_game_buttons:
+        for btn in getattr(app, "online_game_buttons", []):
             btn.destroy()
+        app.online_game_buttons = []
 
-        if len(games) > 0:
-            for game in games:
-                if not isinstance(game, dict):
-                    print("Réponse inattendue:", game)
-                    continue
+        # Create new buttons
+        for game in games:
+            if not isinstance(game, dict):
+                print("Réponse inattendue:", game)
+                continue
 
-                challenger = game.get('challenger', {})
-                if challenger is None:
-                    challenger_name = "Unknown"
-                else:
-                    challenger_name = challenger.get('name', "Unknown")
-                
-                dest_user = game.get('destUser', {})
-                if dest_user is None:
-                    dest_user_name = "Unknown"
-                else:
-                    dest_user_name = dest_user.get('name', "Unknown")
+            challenger = game.get('challenger') or {}
+            challenger_name = challenger.get('name', 'Unknown')
 
-                app.btn = ctk.CTkButton(
-                    app.games_list_frame,
-                    text=f"▶️ {game['id']} {challenger_name} vs {dest_user_name}",
-                    corner_radius=15,
-                    height=40,
-                    fg_color="#628092",
-                    text_color="white",
-                    hover_color="#555555",
-                    anchor="w",
-                    command=lambda game_id=game['id']: join_online_game(board_container, game_id)
-                )
-                app.btn.pack(fill="x", pady=5)
-                app.online_game_buttons.append(app.btn)
+            dest_user = game.get('destUser') or {}
+            dest_user_name = dest_user.get('name', 'Unknown')
+
+            btn = ctk.CTkButton(
+                app.games_list_frame,
+                text=f"▶️ {game['id']} {challenger_name} vs {dest_user_name}",
+                corner_radius=15,
+                height=40,
+                fg_color="#628092",
+                text_color="white",
+                hover_color="#555555",
+                anchor="w",
+                command=lambda game_id=game['id']: join_online_game(board_container, game_id)
+            )
+            btn.pack(fill="x", pady=5)
+            app.online_game_buttons.append(btn)
 
     scan_and_update_games()
 
