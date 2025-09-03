@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest.mock import patch
-from ..app.networks.chess_anywhere_api import fetch_data, send_data
+from app.networks.chess_anywhere_api import fetch_data, send_data
 
 def test_fetch_data_success():
     mock_response = {"message": "Hello Client"}
