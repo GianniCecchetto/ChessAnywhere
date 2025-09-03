@@ -46,12 +46,12 @@ Voici la démarche à suivre, étape par étape, afin de pouvoir reproduire ce p
 
 Dans cette section, nous allons voir comment mettre en place le plateau, soit l'échiquier
 
-### 1.0 - Schéma
+### 1.1 - Schéma
 
 Une documentation détaillant les choix d’implémentation et expliquant le schéma est disponible dans le README [/docs/pcb/README.md](/docs/pcb/README.md).
 
 
-### 1.1 - PCB
+### 1.2 - PCB
 
 1. Commander les composants indiqués dans la **BOM (Bill of Materials)** [/docs/pcb/bom.pdf](/docs/pcb/BOM.PDF), correspondant aux éléments nécessaires au montage de la carte.
 
@@ -77,13 +77,18 @@ Une documentation détaillant les choix d’implémentation et expliquant le sch
    Se référer au schéma : [/docs/pcb/Schematic_Prints.PDF](/docs/pcb/Schematic_Prints.PDF).
 
 
-### 1.2 - Firmware
+### 1.3 - Firmware
+
+Une documentation approndie existe dans le `README.md` du le répertoire [/firmware](/firmware). Dans ce dossier vous aurez toutes les indications pour :
+- Compiler / Flasher le firmware
+- Modifier le code du firmware
+- Modifier l'architecture du microcontrôleur
 
 Une fois la carte montée et testée électriquement, il est possible de passer à la programmation du microcontrôleur.
 
-- **Code source** : fourni dans le dépôt.  
+- **Code source** : fourni dans le répo, dans [/firmware](/firmware).  
 - **IDE recommandé** : STM32CubeIDE (intégrant CubeMX pour la configuration et la génération de code).  
-- **Optimisations de compilation** : adaptées au microcontrôleur STM32G030F6P6 ayant peu de mémoire flah (32KB), configurées dans le projet.  
+- **Optimisations de compilation** : adaptées au microcontrôleur STM32G030F6P6 ayant peu de mémoire flah (32KB), configurées dans le projet (indication dans [/firmware](/firmware).  
 - **Fichier `.ioc`** : inclus pour permettre la reconfiguration matérielle via STM32CubeMX.
 
 ---
@@ -108,14 +113,21 @@ Le programmateur doit être connecté au connecteur **P8** avec le pinout suivan
 
 **Remarque importante** :  
 - Vérifier que la carte est alimentée correctement (3,3 V stables).  
-- Éviter toute inversion de câblage, au risque d’endommager le microcontrôleur ou le programmateur.  
+- Éviter toute inversion de câblage (aucune protection à été mise en place sur la carte), au risque d’endommager le microcontrôleur ou le programmateur.
+- Aucun composant anti-static se trouve sur la carte, veillez à manipulez la carte avec un bracelet ESD.
 
 
-### 1.3 - Mécanique
+### 1.4 - Mécanique
 
-- Grille 3D
-- Impression des pièces 3D
-- Montage des puèces 3D avec les aimants
+Matériel nécessaire :
+
+- 8x Colonettes M3 15mm
+- 4x Vis M3
+- 1x Plexiglace (4 trous de perçage à effectuer)
+- 1x Grille 3D (modèle disponible [/docs/board_design/ChessAnywhereBoard.stl](/docs/board_design/ChessAnywhereBoard.stl) )
+- 1x Papier filtre avec les mêmes dimensions que la grille 3D
+
+
 
 ## 2 - Application python
 
