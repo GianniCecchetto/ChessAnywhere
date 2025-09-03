@@ -30,7 +30,7 @@ public class GameController {
     }
 
     public void getAll(Context ctx) {
-        lichessClient.updateGames(ctx, activeGames.keySet());
+        lichessClient.updateGames(ctx);
     }
 
     public void getOne(Context ctx) {
