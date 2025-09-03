@@ -46,10 +46,16 @@ Voici la démarche à suivre, étape par étape, afin de pouvoir reproduire ce p
 
 Dans cette section, nous allons voir comment mettre en place le plateau, soit l'échiquier
 
+### 1.0 - Schéma
+
+Une documentation détaillant les choix d’implémentation et expliquant le schéma est disponible dans le README [/docs/pcb/README.md](/docs/pcb/README.md).
+
 
 ### 1.1 - PCB
 
 1. Commander les composants indiqués dans la **BOM (Bill of Materials)** [/docs/pcb/bom.pdf](/docs/pcb/BOM.PDF), correspondant aux éléments nécessaires au montage de la carte.
+
+2. Commander le PCB avec les fichier GERBER générés via [/hardware/altium/OutJobs.OutJob](/hardware/altium/OutJobs.OutJob), ou zip des gerber disponbile à [/hardware/altium/Outputs/EuroCircuits.zip](/hardware/altium/Outputs/EuroCircuits.zip).
 
 2. Assembler le PCB en respectant la nomenclature des composants. **Attention : les contacts magnétiques REED en verre sont fragiles.**  
    Il est nécéssaire dans cette version d’utiliser des REED avec diode intégrée, ou d’ajouter manuellement des diodes Schottky rapides en série avec chaque REED.  
