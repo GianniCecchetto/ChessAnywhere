@@ -142,7 +142,7 @@ Avant de compiler le projet, il est nécessaire d’activer une optimisation de 
 Pour se faire, il faut activer le paramètre `Optimize for size (-Os)` au chemin suivant : `Project` -> `Properties` -> `v C/C++ Build` -> `Settings` -> `MCU/MPU GCC Compiler` -> `Optimization`
 et dans le champ `Optimization level`, on sélectionne `Optimize for size (-Os)`, puis `Apply and Close`.
 
-Maintenant que le paramètre est bien activé, on lance lance le build dans : `Project` -> `Build All` 
+Maintenant que le paramètre est bien activé, on lance le build dans : `Project` -> `Build All` 
 
 On doit avoir un résultat similaire à celui-ci, dans la console :
 
