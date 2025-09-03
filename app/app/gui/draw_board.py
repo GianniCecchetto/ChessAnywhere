@@ -3,19 +3,10 @@ import tkinter as tk
 from PIL import Image, ImageTk 
 import chess
 from . import app_color as c 
-from uart.uart_com  import send_command
-import os
-import sys
+from ..uart.uart_com  import send_command
+import time
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
-UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
-sys.path.append(UART_PATH)
-
-import board_com_ctypes as cb
-
-
+from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 OUTLINE_WIDTH = 0
 
@@ -67,6 +58,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                     # === UART : envoyer commande LED ===
                     cmd = cb.fmt_led_set(63-idx, r, g, b)
                     send_command(cmd)
+                    time.sleep(0.005)
+                    # METTRE UN THREAD
 
                     # === Graphique : colorier la case ===
                     if symbol == "X":

@@ -1,81 +1,70 @@
 from tkinter import messagebox
-import ctypes
 import chess
-from game_logic.game_loop import local_game_loop
-from game_logic.game_loop import online_game_loop
+from ..game_logic.game_loop import start_local_game, start_online_game
 import berserk
-import time
-from networks.lichess_api import fetch_game, load_token
-from networks.chess_anywhere_api import create_game
+from ..networks.lichess_api import fetch_game, load_token, verify_token
+from ..networks.chess_anywhere_api import create_game
 
-#mylib = ctypes.CDLL("./libc/test.so")
-#mylib.get_msg.restype = ctypes.c_char_p
-
-
-
-def join_online_game(board_container,game_id):
- #   test = mylib.get_msg(game_name.encode("utf-8")).decode("utf-8")
+def join_online_game(board_container, game_id):
+    """
+    Join a Lichess game, whether private or open.
+    Waits for open challenges to start.
+    """
     token = load_token()
-    session = berserk.TokenSession(token)
-    client = berserk.Client(session=session)
-    
-    try:
-        client.challenges.accept(game_id)
-
-    except berserk.exceptions.ResponseError as e:
-        print("Erreur", f"Impossible d'accepter le challenge : {e}")
-
-    data = client.challenges.get_mine()
-
-    # Safely get incoming and outgoing
-    incoming = data.get('in', []) if isinstance(data, dict) else []
-    outgoing = data.get('out', []) if isinstance(data, dict) else []
-
-    for challenge in outgoing:
-        print("Challenge ID:", challenge['id'])
-        print("Variant:", challenge['variant']['name'])
-        print("Status:", challenge['status'])
-        print("Color:", challenge['color'])
-
-    
-    # Export game info
-    game_info = fetch_game(board_container, client, game_id)
-
-    player_color = None
-    if game_info:
-        print("Game ID:", game_info['id'])
-        player_id = client.account.get()['id']      
-        players = game_info['players']
-        print(players)
-
-        white_id = players.get('white', {}).get('user', {}).get('id')
-        black_id = players.get('black', {}).get('user', {}).get('id')
-
-        if white_id == player_id:
-            player_color = chess.WHITE
-        elif black_id == player_id:
-            player_color = chess.BLACK
-        else:
-            player_color = None  # maybe you are not in the game
-        
-        messagebox.showinfo(
-            "Rejoindre une partie en ligne",
-            f"Vous avez rejoint la partie : {game_id}\n"
-        )
-    else:
-        print("Game not found yet.")
-        board_container.after(5000, lambda: join_online_game(board_container, game_id))
+    if not token:
+        print("No token found")
         return
 
+    session = berserk.TokenSession(token)
+    client = berserk.Client(session=session)
+
+    # Private challenge: accept if directed to you
+    if game_id:
+        try:
+            client.challenges.accept(game_id)
+            print(f"Accepted private challenge {game_id}")
+        except berserk.exceptions.ResponseError:
+            print("Challenge cannot be accepted (maybe already started)")
+
+    # Listen for gameStart events
+    print("Waiting for the game to start...")
+
+    game_info = fetch_game(client, game_id)
+
+    if not game_info:
+        print("No game started for this challenge")
+        board_container.after(3000, lambda: join_online_game(board_container, game_id))
+        return
+
+    # Determine player color
+    player_id = client.account.get()['id']
+    players = game_info['players']
+    white_id = players.get('white', {}).get('user', {}).get('id')
+    black_id = players.get('black', {}).get('user', {}).get('id')
+
+    if white_id == player_id:
+        player_color = chess.WHITE
+        print("You are playing as White")
+    elif black_id == player_id:
+        player_color = chess.BLACK
+        print("You are playing as Black")
+    else:
+        print("You are not part of this game")
+        return
+    
+    messagebox.showinfo(
+        "Rejoindre une partie en ligne",
+        f"Vous avez rejoint la partie : {game_id}\n"
+    )
+    print("Rejoint la partie:", game_info['id'])
+    
     board = chess.Board()
-    online_game_loop(board_container,board, player_color, client, game_id)
+    start_online_game(board_container,board, player_color, client, game_id)
 
 def create_online_game(board_container):
-    messagebox.showinfo(
-        "Créer une partie en ligne",
-    )
-
-    game_id = create_game()
+    game_id = create_game().get('response', None)
+    if game_id == None:
+        return
 
     join_online_game(board_container, game_id)
 
@@ -85,6 +74,6 @@ def create_local_game(board_container):
    ##     "Création de la partie local"
    ## )
     board = chess.Board()
-    local_game_loop(board_container,board,player_color)
+    start_local_game(board_container,board,player_color)
 
 

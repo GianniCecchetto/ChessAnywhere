@@ -6,7 +6,6 @@ import lichess.LichessClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GameController {
@@ -31,7 +30,7 @@ public class GameController {
     }
 
     public void getAll(Context ctx) {
-        lichessClient.updateGames(ctx, activeGames.keySet());
+        lichessClient.updateGames(ctx);
     }
 
     public void getOne(Context ctx) {

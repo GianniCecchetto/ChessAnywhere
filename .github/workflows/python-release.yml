@@ -8,9 +8,6 @@ on:
 jobs:
   build-windows-app:
     runs-on: windows-latest   # required for building .exe
-    defaults:
-      run:
-        working-directory: app
 
     steps:
       - name: Checkout code
@@ -29,24 +26,21 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --onefile --add-data "../lib/uart_fmt/python_doc;lib/uart_fmt/python_doc" app/main.py
+          pyinstaller --paths=lib --onefile --add-data "assets/pieces/*.png;assets/logo/*.png" app/app/main.py
 
       - name: Archive executable
         run: |
           mkdir dist-release
-          copy dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
+          copy app\app\dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-app
-          path: app/dist-release/*.exe
+          path: dist-release/*.exe
 
   build-linux-app:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: app
 
     steps:
       - name: Checkout code
@@ -65,18 +59,18 @@ jobs:
 
       - name: Build Linux executable with PyInstaller
         run: |
-          pyinstaller --onefile --add-data "../lib/uart_fmt/python_doc;lib/uart_fmt/python_doc" app/main.py
+          pyinstaller --paths=lib --onefile --add-data "assets/pieces/*.png;assets/logo/*.png" app/app/main.py
 
       - name: Archive executable
         run: |
           mkdir dist-release
-          cp dist/main dist-release/linux-app-${{ github.ref_name }}
+          cp app/app/dist/main dist-release/linux-app-${{ github.ref_name }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-app
-          path: app/dist-release/linux-app-*
+          path: dist-release/linux-app-*
 
   linux-release:
     runs-on: ubuntu-latest
