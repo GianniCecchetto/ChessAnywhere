@@ -32,7 +32,7 @@ jobs:
       - name: Archive executable
         run: |
           mkdir dist-release
-          copy app\app\dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
+          copy dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -68,7 +68,7 @@ jobs:
       - name: Archive executable
         run: |
           mkdir dist-release
-          cp app/app/dist/main dist-release/linux-app-${{ github.ref_name }}
+          cp dist/main dist-release/linux-app-${{ github.ref_name }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
