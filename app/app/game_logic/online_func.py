@@ -49,7 +49,7 @@ def process_online_game_events(game_state):
                 print("Move rejected by Lichess:", e)
 
     if game_state['client']:
-        board_container.after(500, lambda: process_online_game_events(game_state))
+        board_container.after(50, lambda: process_online_game_events(game_state))
 
 def show_online_move(game_state):
     """Boucle non bloquante comme dédiée à l’attente UART."""
@@ -126,6 +126,11 @@ def handle_online_place_event(game_state, square):
     if game_state['local_move'] == game_state['online_move']:
         return
 
+    if start_square == dest_square:
+        print("Coup annulé. Pièce reposée à la même place.")
+        draw_chessboard(board_container, board=board, player_color=player_color)
+        return
+    
     try:
         move = chess.Move(start_square, dest_square)
         online_move = chess.Move.from_uci(game_state['online_move'])

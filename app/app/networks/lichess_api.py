@@ -3,7 +3,7 @@ import berserk
 import customtkinter as ctk
 import json
 
-from .chess_anywhere_api import fetch_games, create_game, fetch_data
+from .chess_anywhere_api import fetch_data
 
 from platformdirs import user_config_dir
 

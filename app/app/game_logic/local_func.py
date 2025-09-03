@@ -96,7 +96,8 @@ def handle_place_event(game_state, square):
         return
 
     try:
-        move = chess.Move(start_square, dest_square)
+        move = board.find_move(start_square, dest_square) # Promote automatically to queen
+        #move = chess.Move(start_square, dest_square)
 
         if move in board.legal_moves:
             board.push(move)
