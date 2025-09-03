@@ -180,4 +180,4 @@ Le programmateur doit être connecté au connecteur **P8** avec le pinout suivan
 
 ![Schéma de connexion du programmateur](../docs/img/pinning_programmer.jpg)
 
-Ensuite, lorsque votre programmeur est connecté, flasher le microcontroleur en appuyant sur `Run firmware`.
+Ensuite, lorsque votre programmeur est connecté, flasher le microcontrôleur en appuyant sur `Run firmware`.
