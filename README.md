@@ -79,7 +79,7 @@ Une documentation détaillant les choix d’implémentation et expliquant le sch
 
 ### 1.3 - Firmware
 
-Une documentation approndie existe dans le `README.md` du le répertoire [/firmware](/firmware). Dans ce dossier vous aurez toutes les indications pour :
+Une documentation approfondie existe dans le `README.md` du le répertoire [/firmware](/firmware). Dans ce dossier vous aurez toutes les indications pour :
 - Compiler / Flasher le firmware
 - Modifier le code du firmware
 - Modifier l'architecture du microcontrôleur
@@ -88,7 +88,7 @@ Une fois la carte montée et testée électriquement, il est possible de passer 
 
 - **Code source** : fourni dans le répo, dans [/firmware](/firmware).  
 - **IDE recommandé** : STM32CubeIDE (intégrant CubeMX pour la configuration et la génération de code).  
-- **Optimisations de compilation** : adaptées au microcontrôleur STM32G030F6P6 ayant peu de mémoire flah (32KB), configurées dans le projet (indication dans [/firmware](/firmware).  
+- **Optimisations de compilation** : adaptées au microcontrôleur STM32G030F6P6 ayant peu de mémoire flah (32KB), configurées dans le projet (indication dans [/firmware](/firmware)).  
 - **Fichier `.ioc`** : inclus pour permettre la reconfiguration matérielle via STM32CubeMX.
 
 ---
@@ -123,7 +123,7 @@ Matériel nécessaire :
 
 - 8x Colonettes M3 15mm
 - 4x Vis M3
-- 1x Plexiglace (4 trous de perçage à effectuer)
+- 1x Plexiglace (4 trous de perçage à effectuer), si possible 4mm d'épaisseur maximum afin de garantir une bonne détéction des reeds
 - 1x Grille 3D (modèle disponible [/docs/board_design/ChessAnywhereBoard.stl](/docs/board_design/ChessAnywhereBoard.stl) )
 - 1x Papier filtre avec les mêmes dimensions que la grille 3D
 
