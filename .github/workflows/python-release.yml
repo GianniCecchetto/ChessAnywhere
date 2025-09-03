@@ -22,20 +22,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
           pip install pyinstaller
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --paths=lib --onefile \
-          --add-data "assets/pieces;assets/pieces" \
-          --add-data "assets/logo;assets/logo" \
-          app/app/main.py
+          pyinstaller --paths=lib --onefile --add-data "app/app/assets/pieces;app/app/assets/pieces" --add-data "app/app/assets/logo;app/app/assets/logo" app/app/main.py
 
       - name: Archive executable
         run: |
           mkdir dist-release
-          copy app\app\dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
+          copy dist\main.exe dist-release\windows-app-${{ github.ref_name }}.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -58,20 +55,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
           pip install pyinstaller
 
       - name: Build Linux executable with PyInstaller
         run: |
           pyinstaller --paths=lib --onefile \
-          --add-data "assets/pieces:assets/pieces" \
-          --add-data "assets/logo:assets/logo" \
+          --add-data "app/app/assets/pieces:app/app/assets/pieces" \
+          --add-data "app/app/assets/logo:app/app/assets/logo" \
           app/app/main.py
 
       - name: Archive executable
         run: |
           mkdir dist-release
-          cp app/app/dist/main dist-release/linux-app-${{ github.ref_name }}
+          cp dist/main dist-release/linux-app-${{ github.ref_name }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
