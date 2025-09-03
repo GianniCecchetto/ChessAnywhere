@@ -126,10 +126,13 @@ def handle_online_place_event(game_state, square):
     if game_state['local_move'] == game_state['online_move']:
         return
 
-    if start_square == dest_square:
-        print("Coup annulé. Pièce reposée à la même place.")
-        draw_chessboard(board_container, board=board, player_color=player_color)
-        return
+    #if start_square == dest_square:
+        #print("Coup annulé. Pièce reposée à la même place.")
+        #squares = [start_square, dest_square]
+    
+        #move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
+        #draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
+        #return
     
     try:
         move = chess.Move(start_square, dest_square)
