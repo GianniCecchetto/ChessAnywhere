@@ -368,7 +368,9 @@ int main(void)
 					  	settings.board_theme.r = decoded_command.u.color_set.r;
 					  	settings.board_theme.g = decoded_command.u.color_set.g;
 					  	settings.board_theme.b = decoded_command.u.color_set.b;
-					  	uart_write("OK\r\n");
+						led_show_grid(colors);
+					  	
+						uart_write("OK\r\n");
 					  	break;
 					  // Unknown command
 						default:
@@ -931,3 +933,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
