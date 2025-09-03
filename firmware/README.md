@@ -19,7 +19,7 @@ Le firmware a été codé pour être flashé sur un microcontrôleur STM32G030F6
 Sur notre prototype, nous avons décidé d'utilisé un STM32G030F6P6, qui est un petit STM avec une capacité de flash assez limitée de 32 kBytes. 
 Puisque notre projet ne demande pas trop de pins, nous avons décidé de prendre la version 20 pins, soit le boitier TSSOP20.
 
-## Ouveture du projet
+## Ouverture du projet
 
 Le fichier `.project` permet d'ouvrir le projet du firmware. 
 
