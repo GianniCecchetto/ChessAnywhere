@@ -59,17 +59,82 @@ Nous utilisons la PLL interne du microcontrôleur pour obtenir une fréquence de
 
 ### Configuration du TIM17_CH1
 
-TODO
+#### Mode
 
-- NVIC Settings
-- DMA
+- Activated
+- Channel1 : PWM Generation CH1
+
+#### Configuration
+
+Dans `Parameter Settings` :
+
+- Counter Settings
+  - Prescaler = 0
+  - Counter Mode = Up
+  - Counter Period = 39 (valeur calculée selon la fréquence SYS_CLOCK qui est à 32 MHz)
+  - Internal Clock Division = No division
+  - RCR = 0
+  - Auto-reload preload = Disable
+- Break And Dead Time management - BRK
+  - Tous par défaut
+- Break And Dead Time management - Output Configuration
+  - Tout disable ou OFF
+- PWM Generation Channel 1
+  - Mode = PWM mode 1
+  - Pulse = 0
+  - Output Compare preload = Enable
+  - Fast Mode = Disable
+  - CH Polarity = High
+  - CH Idle States = Reset
+
+Dans `DMA Settings` :
+
+| DMA Request | Channel | Direction | Priority |
+|---------------------------|-----------|-----|-------|
+| TIM17_CH1   | DMA1 Channel 1 | Memory To Peripheral   | Medium |
+
+- DMA Request Settings
+  - Mode = Normal
+  - Increment Adress : Only Memory
+  - Data Width : Half Word
+
+Tous le reste par défaut   
+
+Dans `NVIC Settings` :
+
+| NVIC Interrupt Table | Enabled | Preemption Priority |
+|---------------------------|-----------|-----|
+| DMA channel 1 interrupt   | Enabled   | 0   |
+| TIM17 global interrupt    | Enabled   | 0   |
 
 ### Configuation de USART2
 
-TODO
+#### Mode
 
-- Baudrate
-- NVIC Settings
+Mode = Asynchronous
+Hardware Flow Control RS232 et RS485 = Disable
+
+#### Configuration 
+
+Dans `Parameter Settings` :
+
+- Basic Parameters
+  - Baud Rate = 115200
+  - Word Length = 8 Bits
+  - Parity = None
+  - Stop Bits = 1
+- Advanced Parameters
+  - Tous par défaut
+- Advanced Features
+  - Overrun : Enabled
+  - DMA on RX Error : Enabled
+  - Le reste disabled
+
+Dans `NVIC Settings` :
+
+| NVIC Interrupt Table | Enabled | Preemption Priority |
+|---------------------------|-----------|-----|
+| USART2 global interrupt / USART2 wake-up interrupt through EXT1 line | Enabled   | 0   |
 
 ## Compilation
 
