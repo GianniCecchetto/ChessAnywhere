@@ -107,7 +107,7 @@ Dans `NVIC Settings` :
 | DMA channel 1 interrupt   | Enabled   | 0   |
 | TIM17 global interrupt    | Enabled   | 0   |
 
-### Configuation de USART2
+### Configuration de USART2
 
 #### Mode
 
