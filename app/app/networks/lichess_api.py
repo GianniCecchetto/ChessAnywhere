@@ -3,7 +3,7 @@ import berserk
 import customtkinter as ctk
 import json
 
-from .chess_anywhere_api import fetch_games, create_game, fetch_data
+from .chess_anywhere_api import fetch_data
 
 from platformdirs import user_config_dir
 
@@ -17,7 +17,17 @@ def save_token(token_data: str):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         json.dump(token_data, f)
-        print("Saved token at {CONFIG_DIR}")
+        print(f"Saved token at {CONFIG_DIR}")
+
+def delete_token():
+    if os.path.exists(TOKEN_FILE):
+        try:
+            os.remove(TOKEN_FILE)
+            print(f"Token deleted from {TOKEN_FILE}")
+        except Exception as e:
+            print(f"Failed to delete token: {e}")
+    else:
+        print("No token found to delete.")
 
 def load_token() -> str:
     if os.path.exists(TOKEN_FILE):

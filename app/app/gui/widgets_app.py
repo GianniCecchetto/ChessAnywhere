@@ -5,7 +5,7 @@ from PIL import Image
 from .draw_board import draw_chessboard
 from .settings_menu import toggle_settings_menu
 from .join_game import join_online_game, create_online_game, create_local_game
-from ..networks.lichess_api import save_token
+from ..networks.lichess_api import save_token, delete_token
 from ..uart import uart_com
 import threading
 import os
@@ -57,37 +57,6 @@ def create_widgets(app):
     app.left_panel.grid_columnconfigure(0, weight=1)
     app.left_panel.pack_propagate(False)
 
-    # Section "Connecting via Lichess Link"
-    connect_label_frame = ctk.CTkFrame(app.left_panel, fg_color="transparent")
-    connect_label_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 5))
-    connect_label_frame.columnconfigure(0, weight=0)
-    connect_label_frame.columnconfigure(1, weight=1)
-    
-    app.arrow_label = ctk.CTkLabel(connect_label_frame, text="➔", font=("Arial", 20, "bold"))
-    app.arrow_label.grid(row=0, column=0, padx=(0, 5))
-    
-    app.connect_label = ctk.CTkLabel(connect_label_frame, text="Connecting via Lichess Link", 
-                                 font=("Arial", 14, "bold"), justify="left", anchor="w")
-    app.connect_label.grid(row=0, column=1, sticky="ew")
-    
-    connect_frame = ctk.CTkFrame(app.left_panel, fg_color="transparent")
-    connect_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(5, 10))
-    connect_frame.columnconfigure(0, weight=1)
-    connect_frame.columnconfigure(1, weight=0)
-    connect_frame.columnconfigure(2, weight=0)
-
-    app.link_entry = ctk.CTkEntry(connect_frame, placeholder_text="Link", corner_radius=15)
-    app.link_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
-    
-    app.clear_btn = ctk.CTkButton(connect_frame, text="X", width=30, height=30, corner_radius=15, 
-                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
-                                 command=lambda: app.link_entry.delete(0, "end"))
-    app.clear_btn.grid(row=0, column=1)
-
-    app.connect_btn = ctk.CTkButton(connect_frame, text="Connect", width=80, corner_radius=15,
-                                     fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER, state="enable")
-    app.connect_btn.grid(row=0, column=2, padx=(5, 0))
-
     # Section "Joinable games"
     app.games_label = ctk.CTkLabel(app.left_panel, text="Joinable games", font=("Arial", 13, "bold"))
     app.games_label.grid(row=2, column=0, sticky="w", padx=20, pady=(5, 5))
@@ -96,7 +65,7 @@ def create_widgets(app):
     app.games_list_frame.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 10))
     
     # Liste pour stocker les boutons de jeux en ligne
-    app.online_game_buttons = []
+    app.online_game_buttons = {}
 
     # ==== ZONE DES BOUTONS DE JEU EN BAS ====
     game_buttons_frame = ctk.CTkFrame(app.main_content_frame, fg_color="transparent")
@@ -121,6 +90,7 @@ def create_widgets(app):
     token_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=(5, 20))
     token_frame.columnconfigure(0, weight=1)
     token_frame.columnconfigure(1, weight=0)
+    token_frame.columnconfigure(2, weight=0)
 
     app.token_entry = ctk.CTkEntry(token_frame, placeholder_text="Token", corner_radius=15)
     app.token_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
@@ -128,7 +98,13 @@ def create_widgets(app):
     app.save_btn = ctk.CTkButton(token_frame, text="💾 Save", corner_radius=15,
                                  fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
                                  command=lambda: save_token(app.token_entry.get()))
-    app.save_btn.grid(row=0, column=1)
+    app.save_btn.grid(row=0, column=1, padx=(0, 5))
+
+    app.clear_btn = ctk.CTkButton(token_frame, text="X", corner_radius=15, 
+                                 fg_color=c.DARK_BTN_BG, text_color="white", hover_color=c.DARK_BTN_HOVER,
+                                 command=lambda: delete_token())
+    
+    app.clear_btn.grid(row=0, column=2)
 
     # ==== PANNEAU DE DROITE (Échiquier) ====
     app.right_panel = ctk.CTkFrame(app.main_content_frame, fg_color=c.BG_COLOR, corner_radius=15)
@@ -189,41 +165,45 @@ def create_widgets(app):
 
     def update_game_buttons(games):
         """Met à jour l'UI avec les boutons de parties."""
+        current_game_ids = [game['id'] for game in games if isinstance(game, dict)]
+        
+        if getattr(app, "last_game_ids", None) == current_game_ids:
+            # No change, do nothing
+            return
+        
+        # Store new list for next comparison
+        app.last_game_ids = current_game_ids
+
         # Clear old buttons
-        for btn in app.online_game_buttons:
+        for btn in getattr(app, "online_game_buttons", []):
             btn.destroy()
+        app.online_game_buttons = []
 
-        if len(games) > 0:
-            for game in games:
-                if not isinstance(game, dict):
-                    print("Réponse inattendue:", game)
-                    continue
+        # Create new buttons
+        for game in games:
+            if not isinstance(game, dict):
+                print("Réponse inattendue:", game)
+                continue
 
-                challenger = game.get('challenger', {})
-                if challenger is None:
-                    challenger_name = "Unknown"
-                else:
-                    challenger_name = challenger.get('name', "Unknown")
-                
-                dest_user = game.get('destUser', {})
-                if dest_user is None:
-                    dest_user_name = "Unknown"
-                else:
-                    dest_user_name = dest_user.get('name', "Unknown")
+            challenger = game.get('challenger') or {}
+            challenger_name = challenger.get('name', 'Unknown')
 
-                app.btn = ctk.CTkButton(
-                    app.games_list_frame,
-                    text=f"▶️ {game['id']} {challenger_name} vs {dest_user_name}",
-                    corner_radius=15,
-                    height=40,
-                    fg_color="#628092",
-                    text_color="white",
-                    hover_color="#555555",
-                    anchor="w",
-                    command=lambda game_id=game['id']: join_online_game(board_container, game_id)
-                )
-                app.btn.pack(fill="x", pady=5)
-                app.online_game_buttons.append(app.btn)
+            dest_user = game.get('destUser') or {}
+            dest_user_name = dest_user.get('name', 'Unknown')
+
+            btn = ctk.CTkButton(
+                app.games_list_frame,
+                text=f"▶️ {game['id']} {challenger_name} vs {dest_user_name}",
+                corner_radius=15,
+                height=40,
+                fg_color="#628092",
+                text_color="white",
+                hover_color="#555555",
+                anchor="w",
+                command=lambda game_id=game['id']: join_online_game(board_container, game_id)
+            )
+            btn.pack(fill="x", pady=5)
+            app.online_game_buttons.append(btn)
 
     scan_and_update_games()
 
@@ -236,7 +216,7 @@ def create_widgets(app):
             app.host_btn.configure(state="normal")
             for btn in app.online_game_buttons:
                 if btn:
-                    btn.configure(state="disabled")
+                    btn.configure(state="normal")
         else:
             app.connection_state.configure(text="Not connected", text_color="red")
             app.connection_state_frame.configure(border_color="red", fg_color="#ffecec")

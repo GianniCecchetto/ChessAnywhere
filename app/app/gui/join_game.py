@@ -62,7 +62,9 @@ def join_online_game(board_container, game_id):
     start_online_game(board_container,board, player_color, client, game_id)
 
 def create_online_game(board_container):
-    game_id = create_game()
+    game_id = create_game().get('response', None)
+    if game_id == None:
+        return
 
     join_online_game(board_container, game_id)
 
