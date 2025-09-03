@@ -42,16 +42,20 @@ Normalement, vous n'aurez pas à modifier le fichier `firmware.ioc`, car celui-c
 ![img](../docs/img/ioc_pinout.png)
 
 On remarque que 4 pins sont libres et peuvent potentiellement être utilisées pour des futurs utilisations. Cependant, ces pins sont routées de la manière suivante sur le PCB :
-- PA0 : USART2_CTS pour le contrôleur USB FT231
-- PA1 : USART2_RTS pour le contrôleur USB FT231
-- PC14 : I2C1_SDA pour utilisation futur (pin relié à un pinheader, donc utilisation libre)
-- PB3 : I2C1_SCL pour utilisation futur (pin relié à un pinheader, donc utilisation libre)
+- **PA0** : USART2_CTS pour le contrôleur USB FT231
+- **PA1** : USART2_RTS pour le contrôleur USB FT231
+- **PC14** : I2C1_SDA pour utilisation futur (pin relié à un pinheader, donc utilisation libre)
+- **PB3** : I2C1_SCL pour utilisation futur (pin relié à un pinheader, donc utilisation libre)
+
+> **Note :**  **PB7** est une entrée prévue pour un bouton, avec une résistance de pull-up intégrée dans le schéma. Ce bouton doit être connecté via le connecteur P9. Il n’a toutefois pas été utilisé dans la version 1 fonctionnelle du projet.
 
 Voici quelques spécifications concernant le setup de l'ioc :
 
 ### Clock configuration
 
 ![](../docs/img/ioc_clock_config.png)
+
+Nous utilisons la PLL interne du microcontrôleur pour obtenir une fréquence de 32 MHz, au lieu de la valeur par défaut de 16 MHz. Cette configuration s’est avérée nécessaire afin de garantir la gestion des LEDs RGB ainsi qu’une lecture stable des capteurs reed.
 
 ### Configuration du TIM17_CH1
 
@@ -69,7 +73,7 @@ TODO
 
 ## Compilation
 
-Avant de compiler le projet, il est nécessaire d'activer une optimisation de compilation pour que le code fit dans la Flash de notre microcontrôleur. 
+Avant de compiler le projet, il est nécessaire d’activer une optimisation de compilation afin que le code tienne dans la mémoire Flash du microcontrôleur.
 Pour se faire, il faut activer le paramètre `Optimize for size (-Os)` au chemin suivant : `Project` -> `Properties` -> `v C/C++ Build` -> `Settings` -> `MCU/MPU GCC Compiler` -> `Optimization`
 et dans le champ `Optimization level`, on sélectionne `Optimize for size (-Os)`, puis `Apply and Close`.
 
