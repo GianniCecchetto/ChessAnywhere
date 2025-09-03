@@ -27,7 +27,7 @@ Le fichier `.project` permet d'ouvrir le projet du firmware.
 - Version utilisée : 1.19.0
 - Développé sur Windows 11
 
-Afin de facilité l'ouverture du projet, il est conseillé de placer le dossier `/firmware`, se trouvant à la racine de ce projet, dans le chemin suivant :
+Afin de faciliter l'ouverture du projet, il est conseillé de placer le dossier `/firmware`, se trouvant à la racine de ce projet, dans le chemin suivant :
 C:\Users\userName\STM32CubeIDE\workspace_1.19.0
 
 Ensuite, pour importer le projet : `Clic droit` dans la zone `Project Explorer` se trouvant à gauche de l'écran -> `Import...` -> `General` 
