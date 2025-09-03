@@ -97,5 +97,18 @@ Finished building: firmware.list
 
 ## Flash
 
-Pour flasher le micrcontrôleur, il est nécessaire d'utiliser un ST-LINK.
+Pour programmer le microcontrôleur *STM32G030F6P6*, il est nécessaire d’utiliser un programmateur **ST-LINK** ou tout autre outil compatible **SWD (Serial Wire Debug)**.  
 
+Le programmateur doit être connecté au connecteur **P8** avec le pinout suivant :
+
+| Broche | Signal | Description                  |
+|--------|---------|------------------------------|
+| 1      | SWCLK   | Horloge du débogueur SWD     |
+| 2      | SWIO    | Données du débogueur SWD     |
+| 3      | 3V3     | Alimentation 3,3 V           |
+| 4      | NRST    | Reset du microcontrôleur     |
+| 5      | GND     | Masse                        |
+
+![Schéma de connexion du programmateur](../docs/img/pinning_programmer.jpg)
+
+Ensuite, lorsque votre programmeur est connecté, flasher le microcontroleur en appuyant sur `Run firmware`.
