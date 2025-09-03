@@ -27,7 +27,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --paths=lib --onefile --add-data "assets/pieces;assets/pieces" --add-data "assets/logo;assets/logo" app/app/main.py
+          pyinstaller --paths=lib --onefile --add-data "app/app/assets/pieces;app/app/assets/pieces" --add-data "app/app/assets/logo;app/app/assets/logo" app/app/main.py
 
       - name: Archive executable
         run: |
@@ -61,8 +61,8 @@ jobs:
       - name: Build Linux executable with PyInstaller
         run: |
           pyinstaller --paths=lib --onefile \
-          --add-data "assets/pieces:assets/pieces" \
-          --add-data "assets/logo:assets/logo" \
+          --add-data "app/app/assets/pieces:app/app/assets/pieces" \
+          --add-data "app/app/assets/logo:app/app/assets/logo" \
           app/app/main.py
 
       - name: Archive executable
