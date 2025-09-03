@@ -102,7 +102,7 @@ Le programmateur doit être connecté au connecteur **P8** avec le pinout suivan
 | 4      | NRST    | Reset du microcontrôleur     |
 | 5      | GND     | Masse                        |
 
-![Schéma de connexion du programmateur](pinning_programmer.jpg)
+![Schéma de connexion du programmateur](docs/img/pinning_programmer.jpg)
 
 ---
 
