@@ -31,7 +31,7 @@ Afin de facilité l'ouverture du projet, il est conseillé de placer le dossier 
 C:\Users\userName\STM32CubeIDE\workspace_1.19.0
 
 Ensuite, pour importer le projet : `Clic droit` dans la zone `Project Explorer` se trouvant à gauche de l'écran -> `Import...` -> `General` 
--> `Existing Projects into Workspace` -> `Next >` -> `Browse...` -> `Sélecionner` le dossier `Firmware` -> `Finish`
+-> `Existing Projects into Workspace` -> `Next >` -> `Browse...` -> `Sélectionner` le dossier `Firmware` -> `Finish`
 
 Le project apparait désormais dans votre zone `Project Explorer`.
 
