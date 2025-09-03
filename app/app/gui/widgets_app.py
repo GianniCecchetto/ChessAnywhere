@@ -216,7 +216,7 @@ def create_widgets(app):
             app.host_btn.configure(state="normal")
             for btn in app.online_game_buttons:
                 if btn:
-                    btn.configure(state="disabled")
+                    btn.configure(state="normal")
         else:
             app.connection_state.configure(text="Not connected", text_color="red")
             app.connection_state_frame.configure(border_color="red", fg_color="#ffecec")

@@ -136,14 +136,20 @@ def change_board_theme(new_theme):
     Modifie le thème de l'application et les couleurs de l'UI.
     """
        
-    if new_theme == "Off":
-        send_command(":COLOR SET OFF 0 0 0")
+    if new_theme == "Black":
+        send_command(":COLOR SET BLACK 0 0 0")
     elif new_theme == "Blue":
         send_command(":COLOR SET BLUE 0 0 100")
     elif new_theme == "Gray":
-        send_command(":COLOR SET GRAY 30 30 30")
+        send_command(":COLOR SET GRAY 10 10 10")
     elif new_theme == "Green":
-        send_command(":COLOR SET GREEN 0 200 0")
+        send_command(":COLOR SET GREEN 0 255 0")
+    elif new_theme == "Yellow":
+        send_command(":COLOR SET YELLOW 255 255 0")
+    elif new_theme == "Red":
+        send_command(":COLOR SET RED 255 0 0")
+    elif new_theme == "Purple":
+        send_command(":COLOR SET PURPLE 150 0 255")
 
     print(f"Thème de l'application changé en : {new_theme}")
 
@@ -186,7 +192,7 @@ def create_settings_menu(app):
     board_theme_frame.columnconfigure(0, weight=1)
     board_theme_frame.columnconfigure(1, weight=1)
         
-    board_theme_option = ctk.CTkOptionMenu(board_theme_frame, values=["Off", "Blue", "Gray", "Green"],
+    board_theme_option = ctk.CTkOptionMenu(board_theme_frame, values=["Black", "Blue", "Gray", "Green", "Yellow", "Red", "Purple"],
                                                fg_color=c.LEFT_PANEL_BG, text_color="black",
                                                command=lambda board_theme: change_board_theme(board_theme))
     board_theme_option.grid(row=0, column=0, sticky="ew", padx=(0, 5))
