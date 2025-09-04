@@ -36,14 +36,14 @@ def load_token() -> str:
             return json.load(f)
     return ""
 
-def verify_token(token: str) -> bool:
+def verify_token(token: str) -> str:
     headers = {
         "Authorization": f"Bearer {token}"
     }
     token_info = fetch_data("https://lichess.org", "/api/account", headers=headers)
-    if token_info.get('id', {}):
-        return True
-    return False
+    
+    id = token_info.get('id', {})
+    return id
 
 def fetch_game(client: berserk.Client, game_id):
     try:

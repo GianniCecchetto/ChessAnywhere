@@ -22,3 +22,5 @@ def fetch_games():
 def create_game():
     return send_data(SERVER_URL, resource="/api/games/create")
     
+def join_game(game_id, user_name):
+    return send_data(SERVER_URL, resource=f"/api/games/join/{game_id}/{user_name}")
