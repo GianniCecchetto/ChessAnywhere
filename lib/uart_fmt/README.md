@@ -101,6 +101,13 @@ Ce document décrit le protocole **ASCII** (lisible au terminal) permettant à u
 | Luminosité | `:LED BRIGHT <0..255>` | `OK` | Dimming global (scale/PWM). |
 | Gamma | `:LED GAMMA <float>` | `OK` | Ex. `2.2` (appliqué à la sortie). |
 
+### 4.3 Victoire et Egalité
+
+| Commande | Syntaxe | Réponse | Rôle |
+|---|---|---|---|
+| Allumer case | `:WIN <SIDE>`   | `OK` | Indique au board une victoire (SIDE = 1, alors victoire des blancs, SIDE = 0, victoire des noirs)|
+| Éteindre case | `:DRAW <TYPE>` | `OK` | Deux types d'égalité existants, soit PAT, soit PAT prédit par calcul |
+
 #### Hex de `:LED MAP`
 - `hex192` = 192 octets hexadécimaux **sans séparateurs** (optionnellement on peut tolérer des espaces `_` à l’implémentation).  
 - Ordre par case : `A1 R,G,B`, `B1 R,G,B`, …, `H1`, puis `A2` … jusqu’à `H8`.
