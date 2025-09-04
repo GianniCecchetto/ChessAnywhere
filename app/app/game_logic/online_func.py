@@ -149,7 +149,7 @@ def handle_online_place_event(game_state, square):
 
         print(move)
         
-        if move.to_square == online_move.to_square and board.is_legal(move):
+        if start_square == online_move.from_square and move.to_square == online_move.to_square and board.is_legal(move):
             board.push(online_move)
             game_state['last_online_move_confirmed'] = game_state['online_move']
             game_state['online_move'] = None
