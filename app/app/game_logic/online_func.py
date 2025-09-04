@@ -117,19 +117,23 @@ def handle_online_lift_event(game_state, square):
     print("Pièce soulevée, en attente de la destination.")
 
 def handle_online_place_event(game_state, square):
-    board = game_state['board']
+    board: chess.Board = game_state['board']
     board_container = game_state['container']
     player_color = game_state['player_color']
     start_square = game_state['start_square']
     
     dest_square = square
     
+    if game_state['online_move'] == None:
+        return
+
     if game_state['local_move'] == game_state['online_move']:
         return
 
+    online_move = chess.Move.from_uci(game_state['online_move'])
+
     if start_square == dest_square:
         print("Coup annulé. Pièce reposée à la même place.")
-        online_move = chess.Move.from_uci(game_state['online_move'])
         squares = [online_move.from_square, online_move.to_square]
     
         move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
@@ -138,9 +142,14 @@ def handle_online_place_event(game_state, square):
     
     try:
         move = chess.Move(start_square, dest_square)
-        online_move = chess.Move.from_uci(game_state['online_move'])
+        try:
+            move = board.find_move(start_square, dest_square) # Promote automatically to queen
+        except:
+            move = chess.Move(start_square, dest_square)
+
+        print(move)
         
-        if move.to_square == online_move.to_square:
+        if move.to_square == online_move.to_square and board.is_legal(move):
             board.push(online_move)
             game_state['last_online_move_confirmed'] = game_state['online_move']
             game_state['online_move'] = None
@@ -148,12 +157,18 @@ def handle_online_place_event(game_state, square):
             print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)        
         else:
-            print("Pas le coup que le joueur adverse a joué")
-            online_move = chess.Move.from_uci(game_state['online_move'])
+            illegale_board = board.copy()
+            illegale_board.push(move)
+            
             squares = [online_move.from_square, online_move.to_square]
         
             move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
-            draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
+            
+            y, x = divmod(square, 8)
+            move_matrix[7-y][x] = "W"
+            
+            print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
+            draw_chessboard(board_container, board=illegale_board, playable_square=move_matrix, player_color=player_color)
             
     except ValueError:
         print("Entrée invalide.")
