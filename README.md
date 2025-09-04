@@ -37,8 +37,8 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 Afin de ne pas surcharger ce `README.md`, nous avons séparer la documentation du pipeline de déploiement en différentes sections :
 
 - [/docs/stm32_self_deployment](/docs/stm32_self_deployment) : Pipeline Firmware
-- [/docs/app_self_deployement](/docs/app_self_deployement) : Pipeline Application *(TODO)*
-- [/docs/server_self_deployement](/docs/server_self_deployement) : Pipeline Serveur *(TODO)*
+- [/docs/app_self_deployement](/docs/app_self_deployment) : Pipeline Application *(TODO)*
+- [/docs/server_self_deployement](/docs/server_self_deployment) : Pipeline Serveur *(TODO)*
 
 # Mise en place du projet 
 
