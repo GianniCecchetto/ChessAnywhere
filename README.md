@@ -2,6 +2,8 @@
 
 # Spécification projet – Échiquier connecté
 
+![Logo](docs/img/board.jpg)
+
 ## Objectif du projet
 
 Permettre à un joueur d’utiliser un vrai plateau d’échecs et de vraies pièces pour jouer des parties connectées.
