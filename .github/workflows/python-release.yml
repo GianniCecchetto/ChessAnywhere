@@ -27,7 +27,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --paths=lib --onefile --add-data "app/app/assets/pieces;app/app/assets/pieces" --add-data "app/app/assets/logo;app/app/assets/logo" run.py
+          pyinstaller --paths=lib --onefile --add-data "app/app/assets/pieces;app/app/assets/pieces" --add-data "app/app/assets/logo;app/app/assets/logo" --add-binary "lib/uart_fmt/src/build/board_com.dll;lib/uart_fmt/src/build" --hidden-import=importlib_metadata --copy-metadata berserk run.py
 
       - name: Archive executable
         run: |
@@ -63,6 +63,9 @@ jobs:
           pyinstaller --paths=lib --onefile \
           --add-data "app/app/assets/pieces:app/app/assets/pieces" \
           --add-data "app/app/assets/logo:app/app/assets/logo" \
+          --add-binary "lib/uart_fmt/src/build/board_com.dll:lib/uart_fmt/src/build" \
+          --hidden-import=importlib_metadata \
+          --copy-metadata berserk \
           run.py
 
       - name: Archive executable
