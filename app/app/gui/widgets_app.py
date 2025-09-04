@@ -166,6 +166,8 @@ def create_widgets(app):
     def update_game_buttons(games):
         """Met à jour l'UI avec les boutons de parties."""
         current_game_ids = [game['id'] for game in games if isinstance(game, dict)]
+        current_game_whites = [game['white'] for game in games if isinstance(game, dict)]
+        current_game_blacks = [game['black'] for game in games if isinstance(game, dict)]
         
         if getattr(app, "last_game_ids", None) == current_game_ids:
             # No change, do nothing
@@ -173,6 +175,8 @@ def create_widgets(app):
         
         # Store new list for next comparison
         app.last_game_ids = current_game_ids
+        app.last_game_whites = current_game_whites
+        app.last_game_blacks = current_game_blacks
 
         # Clear old buttons
         for btn in getattr(app, "online_game_buttons", []):

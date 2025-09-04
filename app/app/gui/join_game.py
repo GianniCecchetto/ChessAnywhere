@@ -3,7 +3,7 @@ import chess
 from ..game_logic.game_loop import start_local_game, start_online_game
 import berserk
 from ..networks.lichess_api import fetch_game, load_token, verify_token
-from ..networks.chess_anywhere_api import create_game
+from ..networks.chess_anywhere_api import create_game, join_game
 
 def join_online_game(board_container, game_id):
     """
@@ -13,6 +13,12 @@ def join_online_game(board_container, game_id):
     token = load_token()
     if not token:
         print("No token found")
+        return
+        
+    user_id = verify_token(token)
+    print(user_id)
+    if not user_id:
+        print("Invalid token")
         return
 
     session = berserk.TokenSession(token)
@@ -25,6 +31,8 @@ def join_online_game(board_container, game_id):
             print(f"Accepted private challenge {game_id}")
         except berserk.exceptions.ResponseError:
             print("Challenge cannot be accepted (maybe already started)")
+    
+    join_game(game_id, user_id)
 
     # Listen for gameStart events
     print("Waiting for the game to start...")
@@ -32,9 +40,10 @@ def join_online_game(board_container, game_id):
     game_info = fetch_game(client, game_id)
 
     if not game_info:
-        print("No game started for this challenge")
-        board_container.after(3000, lambda: join_online_game(board_container, game_id))
+        board_container.after(1000, lambda: join_online_game(board_container, game_id))
         return
+
+    print("Game started")
 
     # Determine player color
     player_id = client.account.get()['id']

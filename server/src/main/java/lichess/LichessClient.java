@@ -187,41 +187,6 @@ public class LichessClient {
     }
 
     /**
-     * Permet de rejoindre une partie existante sur Lichess et de l'ajouter au GameController.
-     * @param ctx Contexte HTTP Javalin
-     * @param gameId ID de la partie à rejoindre
-     */
-    public void joinGame(Context ctx, String gameId) {
-        HttpRequest check = HttpRequest.newBuilder()
-                .uri(URI.create(lichessUrl + "/api/challenge/" + gameId + "/show"))
-                .header("Authorization", "Bearer " + lichessToken)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-
-        ctx.future(() -> client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
-                .thenApply(HttpResponse::body)
-                .thenApply(json -> {
-                    try {
-                        Game game = mapper.readValue(json, Game.class);
-
-                        gameController.addGame(game);
-
-                        System.out.println("Player joined game " + game.url);
-                        ctx.status(200).json(game.url);
-                        return game.url;
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to parse game", e);
-                    }
-                })
-                .exceptionally(e -> {
-                    ctx.status(500).result("Failed to join game: " + e.getMessage());
-                    return null;
-                })
-        );
-    }
-
-    /**
      * Planifie l'annulation d'une partie si elle n'est pas encore jointe après un certain délai.
      * @param gameId ID de la partie
      * @param timeout Durée avant annulation
@@ -236,30 +201,15 @@ public class LichessClient {
      * @param gameId ID de la partie à vérifier
      */
     private void cancelIfUnjoined(String gameId) {
-        HttpRequest check = HttpRequest.newBuilder()
-                .uri(URI.create(lichessUrl + "/api/challenge/" + gameId + "/show"))
-                .header("Authorization", "Bearer " + lichessToken)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
+        Game game = gameController.getGame(gameId);
 
-        client.sendAsync(check, HttpResponse.BodyHandlers.ofString())
-                .thenApply(HttpResponse::body)
-                .thenAccept(json -> {
-                    try {
-                        Game game = mapper.readValue(json, Game.class);
-
-                        if (game.challenger == null && game.destUser == null) {
-                            cancelGame(gameId);
-                            gameController.removeGame(gameId);
-                        } else {
-                            System.out.println("Not cancelling " + gameId +
-                                    " because players are waiting");
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to parse game", e);
-                    }
-                });
+        if (game.challenger == null && game.destUser == null) {
+            cancelGame(gameId);
+            gameController.removeGame(gameId);
+        } else {
+            System.out.println("Not cancelling " + gameId +
+                    " because players are waiting");
+        }
     }
 
     /**

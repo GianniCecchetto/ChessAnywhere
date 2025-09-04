@@ -18,6 +18,7 @@ def process_online_game_events(game_state):
     player_color = game_state['player_color']
     client: berserk.Client = game_state['client']
     game_id = game_state['game_id']
+    game_state['local_move'] = "start"
 
     # Vérification de la fin de partie
     if board.is_checkmate() or board.is_stalemate():
@@ -126,13 +127,14 @@ def handle_online_place_event(game_state, square):
     if game_state['local_move'] == game_state['online_move']:
         return
 
-    #if start_square == dest_square:
-        #print("Coup annulé. Pièce reposée à la même place.")
-        #squares = [start_square, dest_square]
+    if start_square == dest_square:
+        print("Coup annulé. Pièce reposée à la même place.")
+        online_move = chess.Move.from_uci(game_state['online_move'])
+        squares = [online_move.from_square, online_move.to_square]
     
-        #move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
-        #draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
-        #return
+        move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
+        draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
+        return
     
     try:
         move = chess.Move(start_square, dest_square)
@@ -144,22 +146,14 @@ def handle_online_place_event(game_state, square):
             game_state['online_move'] = None
             
             print(f"Coup légal joué : {move.uci()}")
-            draw_chessboard(board_container, board=board, player_color=player_color)
+            draw_chessboard(board_container, board=board, player_color=player_color)        
         else:
-            illegale_board = board.copy()
-            illegale_board.push(move)
-            
-            squares = [start_square, dest_square]
-            
-            led_matrix = get_matrix_from_squares(board, squares, squares)
-            
-            y, x = divmod(square, 8)
-            led_matrix[7-y][x] = "W"
-
-
-            print("Coup illégal. Veuillez jouer le coup de l'adversaire.")
-            draw_chessboard(board_container, board=illegale_board, playable_square=squares, player_color=player_color)
+            print("Pas le coup que le joueur adverse a joué")
+            online_move = chess.Move.from_uci(game_state['online_move'])
+            squares = [online_move.from_square, online_move.to_square]
         
+            move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
+            draw_chessboard(board_container, board=board, playable_square=move_matrix, player_color=player_color)
             
     except ValueError:
         print("Entrée invalide.")
