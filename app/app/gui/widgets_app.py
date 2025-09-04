@@ -169,7 +169,7 @@ def create_widgets(app):
         current_game_whites = [game['white'] for game in games if isinstance(game, dict)]
         current_game_blacks = [game['black'] for game in games if isinstance(game, dict)]
         
-        if getattr(app, "last_game_ids", None) == current_game_ids:
+        if getattr(app, "last_game_ids", None) == current_game_ids and getattr(app, "last_game_whites", None) == current_game_whites and getattr(app, "last_game_blacks", None) == current_game_blacks:
             # No change, do nothing
             return
         
