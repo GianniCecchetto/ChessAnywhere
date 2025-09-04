@@ -29,13 +29,13 @@ def uart_reader():
                 line = ser.readline()
                 if line:
                     line = line.decode("ascii", errors="ignore").strip()
-                    print(f"[UART RAW] {line}")
+                    #print(f"[UART RAW] {line}")
                     parsed = cb.parse_line(line)
                     if parsed:
-                        print(f"[UART PARSED] {parsed}") 
+                        #print(f"[UART PARSED] {parsed}") 
                         uart_queue.put(parsed)
             except serial.SerialException as e:
-                print(f"Erreur de lecture UART: {e}")
+                #print(f"Erreur de lecture UART: {e}")
                 ser = None
             except Exception as e:
                 print(f"Erreur inattendue dans le thread de lecture: {e}")
@@ -53,7 +53,7 @@ def set_serial_port(port_name):
     # Fermer le port précédent s'il est ouvert
     if ser and ser.is_open:
         ser.close()
-        print(f"Closed previous port.")
+        #print(f"Closed previous port.")
 
     if port_name:
         try:
@@ -65,20 +65,20 @@ def set_serial_port(port_name):
                 stopbits=serial.STOPBITS_ONE,
                 timeout=0.1
             )
-            print(f"Port {port_name} is now open.")
+            #print(f"Port {port_name} is now open.")
             
             # Démarrer un nouveau thread de lecture
             uart_reader_thread = threading.Thread(target=uart_reader, daemon=True)
             uart_reader_thread.start()
         except serial.SerialException as e:
-            print(f"Failed to open port {port_name}: {e}")
+            #print(f"Failed to open port {port_name}: {e}")
             ser = None
         except Exception as e:
-            print(f"Failed to set serial port: {e}")
+            #print(f"Failed to set serial port: {e}")
             ser = None
     else:
         ser = None
-        print("No port selected.")
+        #print("No port selected.")
 
 # Fonction pour obtenir les ports disponibles
 def get_available_ports():
@@ -87,12 +87,12 @@ def get_available_ports():
 
 # Envoi de commande
 def send_command(cmd: str):
-    print(f"[TX] {cmd}")
+    #print(f"[TX] {cmd}")
     if ser and ser.is_open:
         try:
             ser.write((cmd + "\n").encode("ascii"))
         except serial.SerialException as e:
-            print(f"Erreur d'écriture UART: {e}")
+            #print(f"Erreur d'écriture UART: {e}")
             set_serial_port(None) # Déconnecter en cas d'erreur
         except Exception as e:
             print(f"Erreur d'écriture inattendue: {e}")
@@ -104,7 +104,7 @@ def get_next_event(event_type=None):
     try:
         while True:
             parsed = uart_queue.get_nowait()
-            print(f"[RX] {parsed}")
+            #print(f"[RX] {parsed}")
             if event_type is None or parsed.get("type") == event_type:
                 return parsed
     except queue.Empty:

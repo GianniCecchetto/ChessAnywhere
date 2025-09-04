@@ -59,4 +59,4 @@ class chess_anywhere_app(ctk.CTk):
                 self.PRELOADED_PIECES[symbol] = ImageTk.PhotoImage(img, master=self)
             except FileNotFoundError:
                 print(f"Erreur : {PIECES_PATH}{name}.png non trouvé")
-        print("✅ Pièces préchargées")
+        #print("✅ Pièces préchargées")

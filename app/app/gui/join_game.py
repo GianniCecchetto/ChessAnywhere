@@ -12,13 +12,13 @@ def join_online_game(board_container, game_id):
     """
     token = load_token()
     if not token:
-        print("No token found")
+        #print("No token found")
         return
         
     user_id = verify_token(token)
-    print(user_id)
+    #print(user_id)
     if not user_id:
-        print("Invalid token")
+        #print("Invalid token")
         return
 
     session = berserk.TokenSession(token)
@@ -28,14 +28,14 @@ def join_online_game(board_container, game_id):
     if game_id:
         try:
             client.challenges.accept(game_id)
-            print(f"Accepted private challenge {game_id}")
+            #print(f"Accepted private challenge {game_id}")
         except berserk.exceptions.ResponseError:
             print("Challenge cannot be accepted (maybe already started)")
     
     join_game(game_id, user_id)
 
     # Listen for gameStart events
-    print("Waiting for the game to start...")
+    #print("Waiting for the game to start...")
 
     game_info = fetch_game(client, game_id)
 
@@ -43,7 +43,7 @@ def join_online_game(board_container, game_id):
         board_container.after(1000, lambda: join_online_game(board_container, game_id))
         return
 
-    print("Game started")
+    #print("Game started")
 
     # Determine player color
     player_id = client.account.get()['id']
@@ -53,19 +53,19 @@ def join_online_game(board_container, game_id):
 
     if white_id == player_id:
         player_color = chess.WHITE
-        print("You are playing as White")
+        #print("You are playing as White")
     elif black_id == player_id:
         player_color = chess.BLACK
-        print("You are playing as Black")
+        #print("You are playing as Black")
     else:
-        print("You are not part of this game")
+        #print("You are not part of this game")
         return
     
     messagebox.showinfo(
         "Rejoindre une partie en ligne",
         f"Vous avez rejoint la partie : {game_id}\n"
     )
-    print("Rejoint la partie:", game_info['id'])
+    #print("Rejoint la partie:", game_info['id'])
     
     board = chess.Board()
     start_online_game(board_container,board, player_color, client, game_id)

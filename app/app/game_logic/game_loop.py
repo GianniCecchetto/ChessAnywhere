@@ -20,7 +20,7 @@ game_state = {
 }
 
 def start_online_game(board_container, board: chess.Board, player_color, client, game_id):
-    print("===== starting online game =====")
+    #print("===== starting online game =====")
 
     game_state['board'] = board
     game_state['container'] = board_container
@@ -44,7 +44,7 @@ def start_online_game(board_container, board: chess.Board, player_color, client,
     process_online_game_events(game_state)
 
 def start_local_game(board_container, board, player_color):
-    print("===== starting local game =====")
+    #print("===== starting local game =====")
     
     game_state['board'] = board
     game_state['container'] = board_container
