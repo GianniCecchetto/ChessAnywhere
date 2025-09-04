@@ -21,11 +21,10 @@ def process_online_game_events(game_state):
     game_state['local_move'] = "start"
 
     # Vérification de la fin de partie
-    if board.is_checkmate() or board.is_stalemate():
-        print("Partie terminée.")
-        print(board, "\n")
-        if board.is_checkmate():
-            print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
+    if board.is_checkmate():
+        #print("Partie terminée.")
+        #print(board, "\n")
+        #print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
         
         if board.turn == chess.WHITE:
             send_command(":WIN 0")# les noirs ont gagné
@@ -40,12 +39,12 @@ def process_online_game_events(game_state):
         return
 
     if board.turn == player_color:
-        print("C'est à votre tour. Attente d'un coup via l'UART.")
+        #print("C'est à votre tour. Attente d'un coup via l'UART.")
         handle_local_move_event(game_state)
         if game_state['end_square']:
             try:
                 client.board.make_move(game_id, game_state['end_square'])
-                print("Lichess accepted the move")
+                #print("Lichess accepted the move")
             except berserk.exceptions.ResponseError as e:
                 print("Move rejected by Lichess:", e)
 
@@ -76,7 +75,7 @@ def wait_for_uart_confirmation(game_state):
 
         # After handling event, check if full move confirmed
         if game_state['end_square'] == game_state["online_move"]:
-            print("Coup confirmé par l'échiquier.")
+            #print("Coup confirmé par l'échiquier.")
             
             game_state['online_move'] = None
             game_state['end_square'] = None
@@ -92,29 +91,29 @@ def handle_online_event(game_state, event):
     event_type = event.get('type')
     square = event.get('idx')
 
-    print(event_type)
+    #print(event_type)
     if event_type == cb.CB_EVT_LIFT:
-        print("LEVER")
+        #print("LEVER")
         handle_online_lift_event(game_state, square)
     elif event_type == cb.CB_EVT_PLACE:
-        print("POSER")
+        #print("POSER")
         handle_online_place_event(game_state, square)
 
 def handle_online_lift_event(game_state, square):
     board = game_state['board']
     
     piece = board.piece_at(square)
-    print(piece)
-    print(board.turn)
+    #print(piece)
+    #print(board.turn)
     if not piece or piece.color != board.turn:
-        print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
+        #print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
         send_command("LED_ERROR")
         return
         
     game_state['start_square'] = square
     game_state['end_square'] = None
 
-    print("Pièce soulevée, en attente de la destination.")
+    #print("Pièce soulevée, en attente de la destination.")
 
 def handle_online_place_event(game_state, square):
     board: chess.Board = game_state['board']
@@ -133,7 +132,7 @@ def handle_online_place_event(game_state, square):
     online_move = chess.Move.from_uci(game_state['online_move'])
 
     if start_square == dest_square:
-        print("Coup annulé. Pièce reposée à la même place.")
+        #print("Coup annulé. Pièce reposée à la même place.")
         squares = [online_move.from_square, online_move.to_square]
     
         move_matrix = get_matrix_from_squares(board, board.piece_at(start_square), squares)
@@ -147,14 +146,15 @@ def handle_online_place_event(game_state, square):
         except:
             move = chess.Move(start_square, dest_square)
 
-        print(move)
+        #print(move)
         
-        if move.to_square == online_move.to_square and board.is_legal(move):
+        if start_square == online_move.from_square and move.to_square == online_move.to_square and board.is_legal(move):
             board.push(online_move)
             game_state['last_online_move_confirmed'] = game_state['online_move']
             game_state['online_move'] = None
+            online_move = None
             
-            print(f"Coup légal joué : {move.uci()}")
+            #print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)        
         else:
             illegale_board = board.copy()
@@ -167,14 +167,14 @@ def handle_online_place_event(game_state, square):
             y, x = divmod(square, 8)
             move_matrix[7-y][x] = "W"
             
-            print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
+            #print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
             draw_chessboard(board_container, board=illegale_board, playable_square=move_matrix, player_color=player_color)
             
     except ValueError:
-        print("Entrée invalide.")
+        #print("Entrée invalide.")
         send_command("LED_ERROR")
     except Exception as e:
-        print(f"Une erreur s'est produite : {e}")
+        #print(f"Une erreur s'est produite : {e}")
         send_command("LED_ERROR")
 
 
@@ -209,12 +209,12 @@ def start_polling(game_state):
                             # Only consider opponent moves
                             if newest_move != game_state['last_move'] and newest_move != game_state['local_move']:
                                 game_state['online_move'] = newest_move
-                                print(f"New move from opponent: {newest_move}")
+                                #print(f"New move from opponent: {newest_move}")
                                 container.after(0, lambda: show_online_move(game_state))
 
             except Exception as e:
-                print(f"Stream interrompu: {e}, reconnexion dans 3s...")
+                #print(f"Stream interrompu: {e}, reconnexion dans 3s...")
                 time.sleep(3)
 
     threading.Thread(target=poll_stream, daemon=True).start()
-    print("Started polling")
+    #print("Started polling")

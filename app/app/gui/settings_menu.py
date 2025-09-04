@@ -15,7 +15,7 @@ def set_brightness(value):
     brightness_value = int(value)
     command = cb.fmt_led_bright(brightness_value)
     send_command(command)
-    print(f"Commande de luminosité envoyée : {command}")
+    #print(f"Commande de luminosité envoyée : {command}")
 
 def update_game_list_button_colors(app, selected_colors):
     """

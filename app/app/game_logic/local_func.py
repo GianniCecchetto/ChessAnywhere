@@ -9,11 +9,10 @@ def process_game_events(game_state):
     board = game_state['board']
     board_container = game_state['container']
     
-    if board.is_checkmate() or board.is_stalemate():
-        print("Partie terminée.")
-        print(board, "\n")
-        if board.is_checkmate():
-            print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
+    if board.is_checkmate():
+        #print("Partie terminée.")
+        #print(board, "\n")
+        #print("Échec et mat ! Le joueur", "Blanc" if board.turn == chess.WHITE else "Noir", "a gagné.")
         
         if board.turn == chess.WHITE:
             send_command(":WIN 0")# les noirs ont gagné
@@ -59,12 +58,12 @@ def handle_lift_event(game_state, square):
     
     if game_state['illegal_move_pending']:
         if square != game_state['start_square']:
-            print("Erreur : veuillez replacer la pièce mal jouée avant de soulever une nouvelle pièce.")
+            #print("Erreur : veuillez replacer la pièce mal jouée avant de soulever une nouvelle pièce.")
             return
     else:
         piece = board.piece_at(square)
         if not piece or piece.color != board.turn:
-            print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
+            #print("Erreur : La pièce choisie n'est pas de votre couleur ou la case est vide.")
             return
 
     game_state['start_square'] = square
@@ -73,7 +72,7 @@ def handle_lift_event(game_state, square):
     playable_matrix = get_matrix_of_legal_move(board, square)
     game_state['legal_moves_matrix'] = playable_matrix # Stocker la matrice pour une utilisation ultérieure
     draw_chessboard(board_container, board=board, playable_square=playable_matrix, player_color=player_color)
-    print("Pièce soulevée, en attente de la destination.")
+    #print("Pièce soulevée, en attente de la destination.")
 
 def handle_place_event(game_state, square):
     board = game_state['board']
@@ -84,11 +83,11 @@ def handle_place_event(game_state, square):
     dest_square = square
     
     if start_square is None:
-        print("Erreur : Pièce posée sans en avoir soulevé une au préalable.")
+        #print("Erreur : Pièce posée sans en avoir soulevé une au préalable.")
         return
 
     if start_square == dest_square:
-        print("Coup annulé. Pièce reposée à la même place.")
+        #print("Coup annulé. Pièce reposée à la même place.")
         draw_chessboard(board_container, board=board, player_color=player_color)
         game_state['start_square'] = None
         game_state['illegal_move_pending'] = False
@@ -105,7 +104,7 @@ def handle_place_event(game_state, square):
 
         if move in board.legal_moves:
             board.push(move)
-            print(f"Coup légal joué : {move.uci()}")
+            #print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)
             game_state['end_square'] = move.uci()
             game_state['local_move'] = move.uci()
@@ -123,14 +122,14 @@ def handle_place_event(game_state, square):
             y, x = divmod(square, 8)
             playable_matrix[7-y][x] = "W"
             
-            print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
+            #print("Coup illégal. Veuillez remettre la pièce à sa case de départ ou jouer un coup valide.")
             draw_chessboard(board_container, board=illegale_board, playable_square=playable_matrix, player_color=player_color)
             
             game_state['illegal_move_pending'] = True
             
     except ValueError:
-        print("Entrée invalide.")
+        #print("Entrée invalide.")
         game_state['start_square'] = None
     except Exception as e:
-        print(f"Une erreur s'est produite : {e}")
+        #print(f"Une erreur s'est produite : {e}")
         game_state['start_square'] = None
