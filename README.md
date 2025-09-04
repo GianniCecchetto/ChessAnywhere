@@ -69,7 +69,7 @@ Une documentation détaillant les choix d’implémentation et expliquant le sch
 4. L’alimentation de la carte peut se faire via deux connecteurs :  
    - un bornier à vis,  
    - ou un connecteur jack 2,1 mm.  
-   La carte s’alimente en **5 V** : cette tension alimente directement les LEDs, puis est régulée via un LDO pour fournir le **3,3 V** nécessaire aux autres circuits.
+   La carte s’alimente en **5 V / 4 A** : cette tension alimente directement les LEDs, puis est régulée via un LDO pour fournir le **3,3 V** nécessaire aux autres circuits.
 
 5. Les jumpers **W5** et **W8** permettent de connecter/déconnecter l’alimentation VCC/GND du microcontrôleur STM32.  
    Cela permet, si nécessaire, de déporter le contrôle des périphériques vers un contrôleur externe via les connecteurs **P2, P3, P4, P5 et P7**.  
