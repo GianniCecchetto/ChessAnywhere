@@ -186,11 +186,12 @@ def create_widgets(app):
                 continue
 
             if game.get('type') == 'challenge':
+                game_id = game.get('id', 'Unknown')
                 challenger_name = game.get('challenger', 'Unknown')
                 dest_name = game.get('dest', 'Unknown')
                 btn = ctk.CTkButton(
                     app.games_list_frame,
-                    text=f"▶️ Challenge: {game['id']}, {challenger_name} vs {dest_name}",
+                    text=f"▶️ Challenge: {game_id}, {challenger_name} vs {dest_name}",
                     corner_radius=15,
                     height=40,
                     fg_color="#628092",
@@ -202,12 +203,13 @@ def create_widgets(app):
                 btn.pack(fill="x", pady=5)
                 app.online_game_buttons.append(btn)
             elif game.get('type') == 'game':
+                game_id = game.get('id', 'Unknown')
                 white = game.get('white', 'Unknown')
                 black = game.get('black', 'Unknown')
                 status = game.get('status', 'Unknown')
                 btn = ctk.CTkButton(
                     app.games_list_frame,
-                    text=f"▶️ Game: {game['id']}, White: {white}, Black: {black}",
+                    text=f"▶️ Game: {game_id}, White: {white}, Black: {black}",
                     corner_radius=15,
                     height=40,
                     fg_color="#628092",

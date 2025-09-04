@@ -47,105 +47,67 @@ public class LichessClient {
      * @param ctx Contexte HTTP Javalin
      */
     public void updateGames(Context ctx) {
-        // Récupère les challenges depuis Lichess
-        HttpRequest challengeReq = HttpRequest.newBuilder()
-                .uri(URI.create(lichessUrl + "/api/challenge"))
-                .header("Authorization", "Bearer " + lichessToken)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
+        ctx.future(() -> {
+            List<Map<String, Object>> result = new ArrayList<>();
 
-        ctx.future(() -> client.sendAsync(challengeReq, HttpResponse.BodyHandlers.ofString())
-                .thenCompose(challengesResp -> {
-                    List<Map<String, Object>> result = new ArrayList<>();
+            // statuses that mean the game is already finished
+            Set<String> finishedStatuses = Set.of(
+                    "mate", "resign", "stalemate", "timeout", "draw", "outoftime", "aborted", "terminated"
+            );
 
-                    try {
-                        // --- parse challenges ---
-                        JsonNode challengesNode = mapper.readTree(challengesResp.body());
+            List<CompletableFuture<Void>> gameFutures = new ArrayList<>();
 
-                        ArrayNode in = (ArrayNode) challengesNode.path("in");
-                        ArrayNode out = (ArrayNode) challengesNode.path("out");
+            for (Game g : gameController.getGames()) {
+                HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(lichessUrl + "/game/export/" + g.id + "?asJson=true"))
+                        .header("Authorization", "Bearer " + lichessToken)
+                        .header("Accept", "application/json")
+                        .GET()
+                        .build();
 
-                        if (in != null) {
-                            for (JsonNode c : in) {
-                                Map<String, Object> info = new HashMap<>();
-                                info.put("id", c.path("id").asText());
-                                info.put("type", "challenge");
-                                info.put("challenger", c.path("challenger").path("name").asText("Unknown"));
-                                info.put("dest", c.path("destUser").path("name").asText("Unknown"));
-                                result.add(info);
-                            }
-                        }
-                        if (out != null) {
-                            for (JsonNode c : out) {
-                                Map<String, Object> info = new HashMap<>();
-                                info.put("id", c.path("id").asText());
-                                info.put("type", "challenge");
-                                info.put("challenger", c.path("challenger").path("name").asText("Unknown"));
-                                info.put("dest", c.path("destUser").path("name").asText("Unknown"));
-                                result.add(info);
-                            }
-                        }
-                    } catch (Exception e) {
-                        ctx.status(500).result("Failed to parse challenges: " + e.getMessage());
-                        return CompletableFuture.completedFuture(result);
-                    }
+                CompletableFuture<Void> future = client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
+                        .orTimeout(10, TimeUnit.SECONDS)
+                        .thenApply(HttpResponse::body)
+                        .thenAccept(json -> {
+                            try {
+                                JsonNode gameNode = mapper.readTree(json);
 
-                    // --- fetch each game from Lichess using its gameId ---
-                    List<CompletableFuture<Void>> gameFutures = new ArrayList<>();
+                                String status = gameNode.path("status").asText("unknown");
 
-                    Set<String> finishedStatuses = Set.of(
-                            "mate", "resign", "stalemate", "timeout", "draw", "outoftime", "aborted", "terminated"
-                    );
+                                // only include ongoing games
+                                if (!finishedStatuses.contains(status)) {
+                                    Map<String, Object> info = new HashMap<>();
+                                    info.put("id", gameNode.path("id").asText(g.id));
+                                    info.put("type", "game");
 
-                    for (Game g : gameController.getGames()) {
-                        HttpRequest req = HttpRequest.newBuilder()
-                                .uri(URI.create(lichessUrl + "/game/export/" + g.id + "?asJson=true"))
-                                .header("Authorization", "Bearer " + lichessToken)
-                                .header("Accept", "application/json")
-                                .GET()
-                                .build();
+                                    String white = gameNode.path("players").path("white").path("user").path("name").asText("Unknown");
+                                    String black = gameNode.path("players").path("black").path("user").path("name").asText("Unknown");
 
-                        CompletableFuture<Void> future = client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
-                                .orTimeout(10, TimeUnit.SECONDS)
-                                .thenApply(HttpResponse::body)
-                                .thenAccept(json -> {
-                                    try {
-                                        JsonNode gameNode = mapper.readTree(json);
+                                    info.put("white", white);
+                                    info.put("black", black);
+                                    info.put("status", status);
 
-                                        String status = gameNode.path("status").asText("unknown");
-
-                                        if (!finishedStatuses.contains(status)) {
-                                            Map<String, Object> info = new HashMap<>();
-                                            info.put("id", gameNode.path("id").asText());
-                                            info.put("type", "game");
-
-                                            // Players
-                                            String white = gameNode.path("players").path("white").path("user").path("name").asText("Unknown");
-                                            String black = gameNode.path("players").path("black").path("user").path("name").asText("Unknown");
-
-                                            info.put("white", white);
-                                            info.put("black", black);
-                                            info.put("status", status);
-
-                                            result.add(info);
-                                        }
-                                    } catch (Exception e) {
-                                        System.err.println("Failed to parse game " + g.id + ": " + e.getMessage());
+                                    synchronized (result) {
+                                        result.add(info);
                                     }
-                                });
+                                }
+                            } catch (Exception e) {
+                                System.err.println("Failed to parse game " + g.id + ": " + e.getMessage());
+                            }
+                        });
 
-                        gameFutures.add(future);
-                    }
+                gameFutures.add(future);
+            }
 
-                    // Wait for all game fetches to complete
-                    return CompletableFuture.allOf(gameFutures.toArray(new CompletableFuture[0]))
-                            .thenApply(v -> {
-                                ctx.status(200).json(result);
-                                return result;
-                            });
-                }));
+            // Wait for all game fetches to complete
+            return CompletableFuture.allOf(gameFutures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> {
+                        ctx.status(200).json(result);
+                        return result;
+                    });
+        });
     }
+
 
     /**
      * Récupère une partie spécifique depuis Lichess et l'ajoute au GameController.
