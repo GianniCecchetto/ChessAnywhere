@@ -125,9 +125,10 @@ Matériel nécessaire :
 
 - 8x Colonettes M3 15mm
 - 4x Vis M3
-- 1x Plexiglace (4 trous de perçage à effectuer), si possible 4mm d'épaisseur maximum afin de garantir une bonne détéction des reeds
+- 1x Plexiglace, de même dimension que le board ou légèrement supérieur, ave 4 trous de perçage M3 à effectuer et si possible, un plexiglace de 4mm d'épaisseur maximum afin de garantir une bonne détéction des reeds
 - 1x Grille 3D (modèle disponible [/docs/board_design/ChessAnywhereBoard.stl](/docs/board_design/ChessAnywhereBoard.stl) )
 - 1x Papier filtre avec les mêmes dimensions que la grille 3D
+- 2x Pièces d'échecs à imprimer avec des trous en-dessous, afin de pouvoir y insérer des aimants.
 
 
 
