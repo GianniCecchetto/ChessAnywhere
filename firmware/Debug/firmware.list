@@ -31,23 +31,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  13 .debug_abbrev 00003271  00000000  00000000  0001e1c7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_loclists 0000aa09  00000000  00000000  00021438  2**0
+ 14 .debug_loclists 0000aa00  00000000  00000000  00021438  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_aranges 00000ee0  00000000  00000000  0002be48  2**3
+ 15 .debug_aranges 00000ee0  00000000  00000000  0002be38  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_rnglists 0000111e  00000000  00000000  0002cd28  2**0
+ 16 .debug_rnglists 00001116  00000000  00000000  0002cd18  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  000163e9  00000000  00000000  0002de46  2**0
+ 17 .debug_macro  000163e9  00000000  00000000  0002de2e  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   000183f0  00000000  00000000  0004422f  2**0
+ 18 .debug_line   000183f5  00000000  00000000  00044217  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    0008bff8  00000000  00000000  0005c61f  2**0
+ 19 .debug_str    0008bff8  00000000  00000000  0005c60c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000043  00000000  00000000  000e8617  2**0
+ 20 .comment      00000043  00000000  00000000  000e8604  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00002f04  00000000  00000000  000e865c  2**2
+ 21 .debug_frame  00002f04  00000000  00000000  000e8648  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 22 .debug_line_str 00000064  00000000  00000000  000eb560  2**0
+ 22 .debug_line_str 00000064  00000000  00000000  000eb54c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2680,68 +2680,67 @@ void led_show_draw(Color colors[]) {
  80010ae:	f7ff fd33 	bl	8000b18 <is_board_at_init_setup>
 				if(status == BOARD_IS_READY) {
  80010b2:	2801      	cmp	r0, #1
- 80010b4:	d109      	bne.n	80010ca <main+0x226>
+ 80010b4:	d10a      	bne.n	80010cc <main+0x228>
 					led_show_grid(colors);
  80010b6:	a85d      	add	r0, sp, #372	@ 0x174
  80010b8:	f7ff fe78 	bl	8000dac <led_show_grid>
 					led_update_buffer(pwm_data, colors);
- 80010bc:	a88d      	add	r0, sp, #564	@ 0x234
- 80010be:	a95d      	add	r1, sp, #372	@ 0x174
+ 80010bc:	a95d      	add	r1, sp, #372	@ 0x174
+ 80010be:	a88d      	add	r0, sp, #564	@ 0x234
  80010c0:	f000 f960 	bl	8001384 <led_update_buffer>
 					HAL_TIM_PWM_Send_To_DMA(pwm_data);
  80010c4:	a88d      	add	r0, sp, #564	@ 0x234
  80010c6:	f7ff fceb 	bl	8000aa0 <HAL_TIM_PWM_Send_To_DMA>
-{
- 80010ca:	2400      	movs	r4, #0
+					game_state = STARTING_ANIMATION;
+ 80010ca:	2402      	movs	r4, #2
+ 80010cc:	2500      	movs	r5, #0
 						Color new_color = {255, 0, 0};
- 80010cc:	26ff      	movs	r6, #255	@ 0xff
+ 80010ce:	27ff      	movs	r7, #255	@ 0xff
 					uint8_t led_index = convert_reed_index_to_led_index(i);
- 80010ce:	b2e0      	uxtb	r0, r4
- 80010d0:	f7ff fa37 	bl	8000542 <convert_reed_index_to_led_index>
+ 80010d0:	b2e8      	uxtb	r0, r5
+ 80010d2:	f7ff fa36 	bl	8000542 <convert_reed_index_to_led_index>
 					if(bitmap_get_bit(board_bitmap, i)) {
- 80010d4:	0022      	movs	r2, r4
+ 80010d6:	002a      	movs	r2, r5
 					uint8_t led_index = convert_reed_index_to_led_index(i);
- 80010d6:	0005      	movs	r5, r0
+ 80010d8:	0006      	movs	r6, r0
 					if(bitmap_get_bit(board_bitmap, i)) {
- 80010d8:	9808      	ldr	r0, [sp, #32]
- 80010da:	9909      	ldr	r1, [sp, #36]	@ 0x24
- 80010dc:	f7ff f9ec 	bl	80004b8 <bitmap_get_bit>
- 80010e0:	ab0a      	add	r3, sp, #40	@ 0x28
- 80010e2:	2800      	cmp	r0, #0
- 80010e4:	d016      	beq.n	8001114 <main+0x270>
+ 80010da:	9808      	ldr	r0, [sp, #32]
+ 80010dc:	9909      	ldr	r1, [sp, #36]	@ 0x24
+ 80010de:	f7ff f9eb 	bl	80004b8 <bitmap_get_bit>
+ 80010e2:	ab0a      	add	r3, sp, #40	@ 0x28
+ 80010e4:	2800      	cmp	r0, #0
+ 80010e6:	d015      	beq.n	8001114 <main+0x270>
 						Color new_color = {0, 255, 0};
- 80010e6:	4a38      	ldr	r2, [pc, #224]	@ (80011c8 <main+0x324>)
- 80010e8:	801a      	strh	r2, [r3, #0]
- 80010ea:	2200      	movs	r2, #0
- 80010ec:	709a      	strb	r2, [r3, #2]
+ 80010e8:	4a37      	ldr	r2, [pc, #220]	@ (80011c8 <main+0x324>)
+ 80010ea:	801a      	strh	r2, [r3, #0]
+ 80010ec:	2200      	movs	r2, #0
+ 80010ee:	709a      	strb	r2, [r3, #2]
 						led_set(led_index, new_color, colors, settings.grid_brightness);
- 80010ee:	4b37      	ldr	r3, [pc, #220]	@ (80011cc <main+0x328>)
- 80010f0:	0028      	movs	r0, r5
- 80010f2:	781b      	ldrb	r3, [r3, #0]
- 80010f4:	990a      	ldr	r1, [sp, #40]	@ 0x28
- 80010f6:	aa5d      	add	r2, sp, #372	@ 0x174
+ 80010f0:	4b36      	ldr	r3, [pc, #216]	@ (80011cc <main+0x328>)
+ 80010f2:	0030      	movs	r0, r6
+ 80010f4:	781b      	ldrb	r3, [r3, #0]
+ 80010f6:	990a      	ldr	r1, [sp, #40]	@ 0x28
+ 80010f8:	aa5d      	add	r2, sp, #372	@ 0x174
 				for(uint8_t i = 0; i < LED_NUMBER; ++i){
- 80010f8:	3401      	adds	r4, #1
+ 80010fa:	3501      	adds	r5, #1
 						led_set(led_index, new_color, colors, settings.grid_brightness);
- 80010fa:	f000 f973 	bl	80013e4 <led_set>
+ 80010fc:	f000 f972 	bl	80013e4 <led_set>
 				for(uint8_t i = 0; i < LED_NUMBER; ++i){
- 80010fe:	2c40      	cmp	r4, #64	@ 0x40
- 8001100:	d1e5      	bne.n	80010ce <main+0x22a>
-				game_state = STARTING_ANIMATION;
- 8001102:	3c3e      	subs	r4, #62	@ 0x3e
+ 8001100:	2d40      	cmp	r5, #64	@ 0x40
+ 8001102:	d1e5      	bne.n	80010d0 <main+0x22c>
   	led_update_buffer(pwm_data, colors);
  8001104:	a88d      	add	r0, sp, #564	@ 0x234
  8001106:	a95d      	add	r1, sp, #372	@ 0x174
  8001108:	f000 f93c 	bl	8001384 <led_update_buffer>
-		HAL_TIM_PWM_Send_To_DMA(pwm_data);
+  	HAL_TIM_PWM_Send_To_DMA(pwm_data);
  800110c:	a88d      	add	r0, sp, #564	@ 0x234
  800110e:	f7ff fcc7 	bl	8000aa0 <HAL_TIM_PWM_Send_To_DMA>
   	switch(game_state) {
  8001112:	e7a4      	b.n	800105e <main+0x1ba>
 						Color new_color = {255, 0, 0};
- 8001114:	801e      	strh	r6, [r3, #0]
+ 8001114:	801f      	strh	r7, [r3, #0]
  8001116:	7098      	strb	r0, [r3, #2]
- 8001118:	e7e9      	b.n	80010ee <main+0x24a>
+ 8001118:	e7ea      	b.n	80010f0 <main+0x24c>
   			Color white = {255, 255, 255};
  800111a:	2301      	movs	r3, #1
  800111c:	aa02      	add	r2, sp, #8
@@ -2756,7 +2755,7 @@ void led_show_draw(Color colors[]) {
  800112c:	4f28      	ldr	r7, [pc, #160]	@ (80011d0 <main+0x32c>)
  800112e:	1852      	adds	r2, r2, r1
  8001130:	7013      	strb	r3, [r2, #0]
-{
+					game_state = STARTING_ANIMATION;
  8001132:	2400      	movs	r4, #0
   			        if(bitmap_get_bit(displayed_numbers[index_number - 1], i)) {
  8001134:	6938      	ldr	r0, [r7, #16]
@@ -3012,7 +3011,6 @@ __NO_RETURN __STATIC_INLINE void __NVIC_SystemReset(void)
 					  	led_show_grid(colors);
  800130a:	a85d      	add	r0, sp, #372	@ 0x174
  800130c:	f7ff fd4e 	bl	8000dac <led_show_grid>
-					  	uart_write("OK\r\n");
  8001310:	e7e9      	b.n	80012e6 <main+0x442>
 					  	settings.board_theme.r = decoded_command.u.color_set.r;
  8001312:	22d3      	movs	r2, #211	@ 0xd3
@@ -3030,7 +3028,7 @@ __NO_RETURN __STATIC_INLINE void __NVIC_SystemReset(void)
  8001326:	1852      	adds	r2, r2, r1
  8001328:	7fd2      	ldrb	r2, [r2, #31]
  800132a:	711a      	strb	r2, [r3, #4]
- 800132c:	e7db      	b.n	80012e6 <main+0x442>
+ 800132c:	e7ed      	b.n	800130a <main+0x466>
 							uart_write("ERR CMD\r\n");
  800132e:	4812      	ldr	r0, [pc, #72]	@ (8001378 <main+0x4d4>)
  8001330:	e7ac      	b.n	800128c <main+0x3e8>
