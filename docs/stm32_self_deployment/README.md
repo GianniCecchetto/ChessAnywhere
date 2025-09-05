@@ -370,7 +370,9 @@ tar xzf ./actions-runner-linux-arm64-2.328.0.tar.gz
 Exemple :
 ```bash
 ./config.sh --url https://github.com/GianniCecchetto/ChessAnywhere --token AAAADDDDDCCCCCCCEEEEEE1111111
-```
+```  
+Le token vous est donné sur GitHub lors de la création d'un nouveau self-hosted runner.
+
 6. Lancement du Runner
 ```bash
 ./run.sh
