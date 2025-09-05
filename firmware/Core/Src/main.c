@@ -54,11 +54,13 @@ typedef struct {
 	uint16_t pin;         // Pin number
 } GPIO_pin;
 
+// A Matrix Square
 typedef struct {
 	uint8_t column;
 	uint8_t line;
 } Square;
 
+// Store all the settings
 typedef struct {
 	uint8_t grid_brightness;
 	uint8_t possible_move_brightness;
@@ -113,6 +115,7 @@ static const GPIO_pin gpio_pins[] = {
 // To generate the animation
 Color color_pannel[COLOR_PANNEL_SIZE];
 
+// Bitmap to display on the 64 leds
 uint64_t displayed_numbers[3] = {
 		0x1838181818187E00ULL, 	// Number : 1
 		0x3C66060C30607E00ULL, 	// Number : 2
@@ -214,7 +217,7 @@ int main(void)
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   // UART_Flush(&huart2);
-  // Lancer la réception du premier octet en interruption
+  // Start the interruption on the UART RX bus
   HAL_UART_Receive_IT(&huart2, &rx_data, 1);
   uart_fifo_init(&uart_fifo);
   game_state = INIT_ANIMATION;
@@ -224,9 +227,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  	// States machines
   	switch(game_state) {
   	  case INIT_ANIMATION:
+  	  	// Init the color pannel to display
   	  	init_palette();
+  	  	// Generate 255 differents to display on the 8x8 matrix
   	  	for(uint8_t frame = 0; frame < 255; ++frame) {
   	  		generate_frame(frame, colors);
   	  		led_update_buffer(pwm_data, colors);
@@ -269,12 +275,12 @@ int main(void)
 				}
 
 				// TODO DEBUG PURPOSE
-				// game_state = STARTING_ANIMATION;
+			  // game_state = STARTING_ANIMATION;
   			break;
   		case STARTING_ANIMATION:
   			Color white = {255, 255, 255};
   			Color black = {0, 0, 0};
-
+  			// Displaying the countdown on the 8x8 LED matrix : 3, 2, 1
   			for(int8_t index_number = 3; index_number >= 1; --index_number) {
   			    for(uint8_t i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i) {
   			        if(bitmap_get_bit(displayed_numbers[index_number - 1], i)) {
@@ -287,23 +293,27 @@ int main(void)
   			    HAL_TIM_PWM_Send_To_DMA(pwm_data);
   			    HAL_Delay(1000);
   			}
+  			// Game start because init section is done
 				led_show_grid(colors);
   			game_state = IN_GAME;
 				break;
   		case IN_GAME:
-
+  			// Saving the old state of the bitmap
   			old_board_bitmap = board_bitmap;
 				// Reading the state of every reed sensors
 				read_full_board(&board_bitmap);
+				// Detect if a piece was lifted
 				lift_or_place_index = is_a_piece_lift(board_bitmap, old_board_bitmap);
 				if(lift_or_place_index != NO_INDEX_FOUND) {
+					// Send a UART cmd to trigger the application
 					cb_fmt_evt_lift(uart_tx_buffer, 64, lift_or_place_index, HAL_GetTick());
 					HAL_UART_Transmit(&huart2, (uint8_t*)uart_tx_buffer, strlen(uart_tx_buffer), HAL_MAX_DELAY);
 				}
-				// Detect if a piece was lifted
+				// Detect if a piece was placed
 				lift_or_place_index = is_a_piece_placed(board_bitmap, old_board_bitmap);
 				if(lift_or_place_index != NO_INDEX_FOUND) {
 					led_show_grid(colors);
+					// Send a UART cmd to trigger the application
 					cb_fmt_evt_place(uart_tx_buffer, 64, lift_or_place_index, HAL_GetTick());
 					HAL_UART_Transmit(&huart2, (uint8_t*)uart_tx_buffer, strlen(uart_tx_buffer), HAL_MAX_DELAY);
 				}
@@ -316,48 +326,57 @@ int main(void)
 					// After parse, execute the command
 					switch(decoded_command.type) {
 					  // General command
+						// Ping command (unused)
 						case CB_CMD_PING:
 							uart_write("OK PING\r\n");
 							break;
+						// Check the firmware version (unused)
 						case CB_CMD_VER_Q:
 							uart_write("OK FW=FW1.0.0 HW=PCBv1\r\n");
 							break;
+						// Get the actual time (unused)
 						case CB_CMD_TIME_Q:
 							char o[48];
 							int n=snprintf(o,sizeof o,"OK TIME %lu\r\n",(unsigned long)t_ms());
 							uart_write_n(o,(size_t)n);
 							break;
+						// Soft Reset (unused)
 						case CB_CMD_RST:
 							NVIC_SystemReset();
 							break;
+						// Saving the board state (unused and not implemented)
 						case CB_CMD_SAVE:
 							uart_write("OK SAVE\r\n");
 							break;
 						// LED
+						// Set the color of a RGB LED
 						case CB_CMD_LED_SET:
 							Color new_color = {decoded_command.u.led_set.r, decoded_command.u.led_set.g, decoded_command.u.led_set.b};
 							led_set(decoded_command.u.led_set.idx, new_color, colors, settings.possible_move_brightness);
 							uart_write("OK\r\n");
 							break;
+						// Set all LED with RGB value = 0 0 0
 					  case CB_CMD_LED_OFF_ALL:
 					  	led_show_grid(colors);
 					  	uart_write("OK\r\n");
 					  	break;
-
 					  // WIN
 					  case CB_CMD_WIN:
+					  	// Show the winning animation
 					  	led_show_win(colors, decoded_command.u.led_set.idx);
 					  	uart_write("OK\r\n");
 					  	game_state = GAME_END;
 					  	break;
 					  // DRAW
 					  case CB_CMD_DRAW:
+					  	// Show the draw animation
 					  	led_show_draw(colors);
 					  	uart_write("OK\r\n");
 					  	game_state = GAME_END;
 					  	break;
 					  // BRIGHTNESS
 					  case CB_CMD_LED_BRIGHT:
+					  	// Set the global brightness
 					  	settings.grid_brightness = decoded_command.u.led_bright.bright;
 					  	led_show_grid(colors);
 
@@ -365,14 +384,14 @@ int main(void)
 					  	break;
 					  // Color theme
 					  case CB_CMD_COLOR_SET:
+					  	// Set the color of the outer grid
 					  	settings.board_theme.r = decoded_command.u.color_set.r;
 					  	settings.board_theme.g = decoded_command.u.color_set.g;
 					  	settings.board_theme.b = decoded_command.u.color_set.b;
-						led_show_grid(colors);
-					  	
-						uart_write("OK\r\n");
+					  	led_show_grid(colors);
+					  	uart_write("OK\r\n");
 					  	break;
-					  // Unknown command
+					  // In case of unknown command
 						default:
 							uart_write("ERR CMD\r\n");
 							break;
@@ -393,7 +412,7 @@ int main(void)
 
   	// Updating LED throw DMA
   	led_update_buffer(pwm_data, colors);
-	HAL_TIM_PWM_Send_To_DMA(pwm_data);
+  	HAL_TIM_PWM_Send_To_DMA(pwm_data);
 
     /* USER CODE END WHILE */
 
@@ -707,7 +726,7 @@ uint8_t is_a_piece_lift(uint64_t current, uint64_t old) {
 
 	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
 
-		// Old state was activ and new state is open
+		// Old state was active and new state is off
 		if(bitmap_get_bit(old, index) == 1 && bitmap_get_bit(current, index) == 0) {
 				return index;
 		}
@@ -723,6 +742,7 @@ uint8_t is_a_piece_placed(uint64_t current, uint64_t old) {
 
 	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; ++index) {
 
+		// Old state was off and new state is active
 		if(bitmap_get_bit(old, index) == 0 && bitmap_get_bit(current, index) == 1) {
 				return index;
 		}
@@ -732,8 +752,8 @@ uint8_t is_a_piece_placed(uint64_t current, uint64_t old) {
 	return NO_INDEX_FOUND;
 }
 
-/* Set the GPIO column for the decoder
- * Return : void
+/*
+ * Set the GPIO column for the decoder
  */
 void set_gpio_column(uint8_t column) {
 
@@ -751,8 +771,8 @@ void set_gpio_column(uint8_t column) {
 	}
 }
 
-/* Set the GPIO line for the decoder
- * Return void
+/*
+ * Set the GPIO line for the decoder
  */
 void set_gpio_line(uint8_t line) {
 
@@ -770,25 +790,30 @@ void set_gpio_line(uint8_t line) {
 	}
 }
 
-
-
+/*
+ * Small delay to wait for propagation time
+ */
 static inline void tiny_delay_us(uint32_t us)
 {
     // boucle NOP très courte (~ à ajuster). Ou utilise un timer si tu en as un.
     while (us--) { for (volatile int i = 0; i < 16; ++i) __NOP(); }
 }
 
+/*
+ * Get the state of one reed on the led matrix
+ */
 uint8_t read_reed_value(Square square)
 {
+		// Select the correct line and column to read
     set_gpio_column(square.column);
     set_gpio_line(square.line);
-    tiny_delay_us(5);  // 2–10 µs suffisent en général
+    tiny_delay_us(5);  // Tiny delay to wait for propagation time
+    // Get the value on the READ pin (see schematics)
     return HAL_GPIO_ReadPin(gpio_pins[READ].port, gpio_pins[READ].pin);
 }
 
-
-/* This method will fill the bitmap depending on the reeds sensors states
- * Return : void
+/*
+ * Fill the bitmap board depending on the reeds sensors states
  */
 void read_full_board(uint64_t *board_bitmap) {
 
@@ -856,10 +881,12 @@ void led_show_grid(Color colors[]) {
 
 	Color white  = {255, 255, 255};
 
+	// Set the white part of the grid (half of the board)
 	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; index+=2) {
 		led_set(index, white, colors, settings.grid_brightness);
 	}
 
+	// Set all the others squares
 	for(uint8_t index = 1; index < BOARD_WIDTH * BOARD_HEIGHT; index+=2) {
 		led_set(index, settings.board_theme, colors, settings.grid_brightness);
 	}
@@ -874,6 +901,7 @@ void led_show_win(Color colors[], uint8_t side) {
 	Color white_side_color = {side ? 0 : 255, side ? 255 : 0, 0};
 	Color black_side_color = {side == 0 ? 0 : 255, side == 0? 255 : 0, 0};
 
+	// Fill the LED matrix
 	for(uint8_t index = 0; index < BOARD_WIDTH * BOARD_HEIGHT / 2; ++index) {
 		led_set(index, white_side_color, colors, settings.grid_brightness);
 	}

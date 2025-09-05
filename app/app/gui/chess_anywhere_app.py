@@ -4,8 +4,10 @@ from PIL import Image, ImageTk
 from . import app_color as c
 from  .widgets_app import create_widgets
 from  .settings_menu import create_settings_menu
+import os
 
-PIECES_PATH = "assets/pieces/" 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PIECES_PATH = os.path.join(BASE_DIR, "assets", "pieces", "")
 
 PIECES_MAP = {
     'p': 'bP', 'n': 'bN', 'b': 'bB', 'r': 'bR', 'q': 'bQ', 'k': 'bK',
@@ -57,4 +59,4 @@ class chess_anywhere_app(ctk.CTk):
                 self.PRELOADED_PIECES[symbol] = ImageTk.PhotoImage(img, master=self)
             except FileNotFoundError:
                 print(f"Erreur : {PIECES_PATH}{name}.png non trouvé")
-        print("✅ Pièces préchargées")
+        #print("✅ Pièces préchargées")

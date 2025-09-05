@@ -1,4 +1,3 @@
-// uart_fifo.h
 #ifndef UART_FIFO_H
 #define UART_FIFO_H
 

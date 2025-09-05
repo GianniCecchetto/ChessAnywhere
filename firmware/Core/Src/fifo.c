@@ -1,4 +1,3 @@
-// uart_fifo.c
 #include "fifo.h"
 #include <string.h>
 #include "stm32g0xx_hal.h"

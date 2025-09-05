@@ -23,7 +23,7 @@ env:
   AZURE_WEBAPP_NAME: chess-anywhere-server    # set this to the name of your Azure Web App
   JAVA_VERSION: '21'                  # set this to the Java version to use
   DISTRIBUTION: temurin                  # set this to the Java distribution
-  IMAGE_NAME: ghcr.io/giannicecchetto/chess-anywhere-server:latest
+  IMAGE_NAME: ghcr.io/giannicecchetto/chess-anywhere-server
 
 on:
   push:
@@ -57,10 +57,14 @@ jobs:
 
       - name: Build Docker image
         working-directory: server
-        run: docker build -t ${{ env.IMAGE_NAME }} .
+        run: |
+            docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
+            docker tag ${{ env.IMAGE_NAME }}:${{ github.ref_name }} ${{ env.IMAGE_NAME }}:latest
 
       - name: Push Docker image to GHCR
-        run: docker push ${{ env.IMAGE_NAME }}
+        run: |
+            docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            docker push ${{ env.IMAGE_NAME }}:latest
 
   deploy:
     permissions:
@@ -78,4 +82,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE_NAME }}:${{ github.ref_name }}

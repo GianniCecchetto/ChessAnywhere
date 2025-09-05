@@ -3,7 +3,7 @@ import berserk
 import customtkinter as ctk
 import json
 
-from .chess_anywhere_api import fetch_games, create_game
+from .chess_anywhere_api import fetch_data
 
 from platformdirs import user_config_dir
 
@@ -17,20 +17,38 @@ def save_token(token_data: str):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         json.dump(token_data, f)
-        print("Saved token at {CONFIG_DIR}")
+        print(f"Saved token at {CONFIG_DIR}")
 
-def load_token() -> str | None:
+def delete_token():
+    if os.path.exists(TOKEN_FILE):
+        try:
+            os.remove(TOKEN_FILE)
+            print(f"Token deleted from {TOKEN_FILE}")
+        except Exception as e:
+            print(f"Failed to delete token: {e}")
+    else:
+        print("No token found to delete.")
+
+def load_token() -> str:
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "r", encoding="utf-8") as f:
             print("Load token from {CONFIG_DIR}")
             return json.load(f)
-    return None
+    return ""
 
-def fetch_game(board_container, client: berserk.Client, game_id):
+def verify_token(token: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    token_info = fetch_data("https://lichess.org", "/api/account", headers=headers)
+    
+    id = token_info.get('id', {})
+    return id
+
+def fetch_game(client: berserk.Client, game_id):
     try:
         game_info = client.games.export(game_id)
-        if game_info.get('status') == 'created':
-             raise RuntimeError("Game not started yet")
-        return game_info
+        if game_info:
+            return game_info
     except berserk.exceptions.ResponseError as e:
-        board_container.after(1000, lambda: fetch_game(board_container, client, game_id))
+        return None
