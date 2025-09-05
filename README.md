@@ -195,9 +195,9 @@ python3 -m app.app.main
 
 ### Package
 
-Pour réalisé le serveur, nous avons utilisé les packages suivants:
+Pour réaliser le serveur, nous avons utilisé les packages suivants:
 - Maven shade plugin (v3.5.0)  
-Permet de réalisé un .jar qui contient la solution de l'application.
+Permet de réaliser un *.jar* qui contient la solution de l'application.
 - Javalin (v6.7.0)  
 Permet de mettre en place l'API du serveur.
 - rest-assured (v6.7.0)  
