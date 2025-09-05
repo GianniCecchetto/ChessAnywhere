@@ -218,6 +218,21 @@ Pour lancer ensuite le docker, utilisé la commande suivante :
 
 Les units tests sont effectués à chaque push lorsque ceux-ci affectent les fichiers dans le dossier server/. Ils ont été réalisé pour les premières versions du serveur. Ensuite, il y a eu des appelles à l'API Lichess, il était donc plus simple de les enlever ne sachant pas s'il fallait réaliser des tests dans ce cas.
 
+## 4 - Test de bon fonctionnement
+
+Afin de s'assurer que toute la mise en place à bien été faite correctement, on peut essayer de lancer une partie local sur le board. Pour cela il faut s'assurer que :
+
+1. Le board est alimenté en 5V.
+2. Lors de la mise en tension, une animation RGB apparait sur le board.
+3. A la fin de l'animation, le plateau devient tous rouge, sauf quand une pièce est détectée, la case devient verte.
+4. Lorsque toutes les pièces sont placées correctement, un décompte se lance (3, 2, 1).
+5. Un PC est bien connecté en USB-C au board.
+6. On télécharge la dernière version de l'application via la dernière release github.
+7. On lance l'application et on se connecte au port COM (USB-C).
+8. On appuie sur "Local Game" pour créer une partie en local.
+9. On soulève une pièce blanche aléatoire et les mouvements possibles de la pièce doivent s'afficher sur l'application et le board.
+10. On peut effectuer le même test en lançant une partie en ligne.
+
 ### Déploiement
 
 Le serveur est déployer automatiquement lorsqu'un tag de version (v*.*.*) est créé sur le git. Ceci nous évite de devoir le déployer à chaque nouvelle mise à jour.
