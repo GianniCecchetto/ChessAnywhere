@@ -5,6 +5,7 @@ Pillow
 customtkinter
 python-chess
 berserk
+platformdirs
 
 # Testing
 pytest>=7.4.0       # testing framework

@@ -1,24 +1,35 @@
 # Application ChessAnywhere
 
-Ajouter tous les packages
+## Ajouter tous les packages
 
-Ligne de commande a faire pour installer les packages
+Pour installer les packages nécessaires, il suffit de lancer la commande suivante depuis la racine.
 
-- python-chess
-- tkinter et customtkinter
-- pip install Pillow
-- pip install pyserial
+```bash
+pip install -r app/requirements.txt
+```
 
-# Compilation
-- Packages
+## Lancer le projet
 
-# Lancer le projet
+Pour lancer l'application Python il vous faudra ouvrir le chemin du répértoire WSL dans une ligne de commande PowerShell.
 
-- Commande
+Il faudra ensuite utilisez la commande suivante à la racine du répértoire:
 
-# Strcture des fichiers
+```bash
+python3 -m app.app.main
+```
 
-- Explication des dossiers
-- Ou mettre quoi si on modifie
+## Structure des fichiers
 
+- **assets**  
+Le chemin ou les images (logo, pièces) sont stockées.
+- **game_logic**  
+Dans ce dossier, nous trouvons les fichiers Python qui gère la logique du jeu d'échec.
+- **gui**  
+Dans ce dossier, nous avons tous les fichiers qui ont un lien avec la GUI.
+- **lib**  
+Dans lib, nous retrouvons les scripts qui nous permettent d'utiliser la librairie uart écrit en `C`.
+- **networks**  
+Dans ce dossier, nous avons les scripts qui s'occupent de faire des requêtes en ligne.
+- **uart***  
+Nous avons ici les fichiers qui gèrent les communications en uart.
 

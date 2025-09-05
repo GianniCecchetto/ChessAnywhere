@@ -37,8 +37,8 @@ Le système valide les mouvements (localement et/ou via Lichess), affiche l’é
 Afin de ne pas surcharger ce `README.md`, nous avons séparer la documentation du pipeline de déploiement en différentes sections :
 
 - [/docs/stm32_self_deployment](/docs/stm32_self_deployment) : Pipeline Firmware
-- [/docs/app_self_deployement](/docs/app_self_deployment) : Pipeline Application *(TODO)*
-- [/docs/server_self_deployement](/docs/server_self_deployment) : Pipeline Serveur *(TODO)*
+- [/docs/app_self_deployement](/docs/app_self_deployment) : Pipeline Application
+- [/docs/server_self_deployement](/docs/server_self_deployment) : Pipeline Serveur
 
 # Mise en place du projet 
 
@@ -101,13 +101,13 @@ Pour programmer le microcontrôleur *STM32G030F6P6*, il est nécessaire d’util
 
 Le programmateur doit être connecté au connecteur **P8** avec le pinout suivant :
 
-| Broche | Signal | Description                  |
-|--------|---------|------------------------------|
-| 1      | SWCLK   | Horloge du débogueur SWD     |
-| 2      | SWIO    | Données du débogueur SWD     |
-| 3      | 3V3     | Alimentation 3,3 V           |
-| 4      | NRST    | Reset du microcontrôleur     |
-| 5      | GND     | Masse                        |
+| Broche | Signal | Description              |
+| ------ | ------ | ------------------------ |
+| 1      | SWCLK  | Horloge du débogueur SWD |
+| 2      | SWIO   | Données du débogueur SWD |
+| 3      | 3V3    | Alimentation 3,3 V       |
+| 4      | NRST   | Reset du microcontrôleur |
+| 5      | GND    | Masse                    |
 
 ![Schéma de connexion du programmateur](docs/img/pinning_programmer.jpg)
 
@@ -134,26 +134,93 @@ Matériel nécessaire :
 
 ## 2 - Application python
 
-Gianni Nathan
+### Packages requis
 
-- Packages
-- Commandes Pythons
-- Fonctionnement
-- Fonctionnalités
-- Lancement de l'appli
+Cette application utilise les bibliothèques suivantes :  
+
+- `requests` → Requêtes HTTP.  
+- `pyserial` → Communication série (ex. Arduino, ports COM).  
+- `Pillow` → Manipulation et affichage d’images.  
+- `customtkinter` → Interface graphique moderne basée sur Tkinter.  
+- `python-chess` → Gestion et logique du jeu d’échecs.  
+- `berserk` → Client Python pour l’API [Lichess](https://lichess.org).  
+- `platformdirs` → Gestion des répertoires spécifiques au système (config, cache, data).
+
+Installation :  
+
+```bash
+pip install -r requirements.txt
+```
+
+ou directement :
+
+```bash
+pip install requests pyserial Pillow customtkinter python-chess berserk platformdirs
+```
+
+### Fonctionnement
+
+- L’application est écrite en Python 3.10.13.
+- Elle combine plusieurs briques logicielles :
+  - Interface graphique → via customtkinter et Pillow.
+  - Jeu d’échecs → via python-chess.
+  - Connexion à Lichess → via berserk.
+  - Communication externe → via requests et pyserial.
+- Les données de configuration et de cache sont gérées proprement grâce à platformdirs.
+
+### Fonctionnalités
+
+- [x] Interface graphique utilisateur
+- [x] Création et gestion de parties d’échecs locales ou en ligne.
+- [x] Communication avec l’API Lichess (via berserk).
+- [x] Connexion à du matériel externe via port série (pyserial).
+
+### Lancement de l’application
+
+1. Cloner le projet
+```bash 
+git clone git@github.com:GianniCecchetto/ChessAnywhere.git
+cd ChessAnywhere
+```
+2. Installer les dépendances sur Windows
+```bash 
+pip install -r app/requirements.txt
+```
+3. Démarrer l'application depuis la racine
+```bash
+python3 -m app.app.main
+```
 
 ## 3 - Serveur
 
-Gianni
+### Package
 
-- Packages
-- Commandes
-- Fonctionnement
-- Fonctionnalités
+Pour réalisé le serveur, nous avons utilisé les packages suivants:
+- Maven shade plugin (v3.5.0)  
+Permet de réalisé un .jar qui contient la solution de l'application.
+- Javalin (v6.7.0)  
+Permet de mettre en place l'API du serveur.
+- rest-assured (v6.7.0)  
+Permet de faire des requêtes HTTP.
+- JUnit  
+Permet de réaliser les tests unitaires du serveur.
 
-## 4 - Tests de bon fonctionnements
+### Docker
 
+Pour build le docker du serveur, lancer la commande suivant à la racine du projet :  
+```docker build -t chess-anywhere-server ./server```
 
+Pour lancer ensuite le docker, utilisé la commande suivante :  
+```docker run -p 7000:7000 -e LICHESS_TOKEN={lichess_token} chess-anywhere-server```  
+**lichess_token:** Mettre un token d'un compte qui servira à créer les parties.
+
+### Unit test
+
+Les units tests sont effectués à chaque push lorsque ceux-ci affectent les fichiers dans le dossier server/. Ils ont été réalisé pour les premières versions du serveur. Ensuite, il y a eu des appelles à l'API Lichess, il était donc plus simple de les enlever ne sachant pas s'il fallait réaliser des tests dans ce cas.
+
+### Déploiement
+
+Le serveur est déployer automatiquement lorsqu'un tag de version (v*.*.*) est créé sur le git. Ceci nous évite de devoir le déployer à chaque nouvelle mise à jour.
 
 # Authors
 
