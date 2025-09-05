@@ -1,21 +1,11 @@
-import customtkinter as ctk
 import tkinter as tk
-from PIL import Image, ImageTk 
 import chess
 from . import app_color as c 
-from uart.uart_com  import send_command
-import os
-import sys
+from ..uart.uart_com  import send_command
+import time
+import threading
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
-UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
-sys.path.append(UART_PATH)
-
-import board_com_ctypes as cb
-
-
+from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 OUTLINE_WIDTH = 0
 
@@ -43,8 +33,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
     canvas.grid(row=0, column=0)
     
     colors = [c.WHITE_SQUARE, c.BLACK_SQUARE]
-    
-    piece_images = {}
+
+    cmds = []
 
     for row in range(size):
         for col in range(size):
@@ -66,7 +56,7 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
 
                     # === UART : envoyer commande LED ===
                     cmd = cb.fmt_led_set(63-idx, r, g, b)
-                    send_command(cmd)
+                    cmds.append(cmd)
 
                     # === Graphique : colorier la case ===
                     if symbol == "X":
@@ -91,6 +81,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
                 canvas.create_rectangle(x1 + 6, y1 + 6, x2 - 6, y2 - 6, 
                                         fill=fill_color, width=OUTLINE_WIDTH, outline="gray")
 
+    threading.Thread(target=send_command_with_delay, args=(cmds, 0.007), daemon=True).start()
+
     # ----- dessiner les pièces -----
     if board:
         for square in chess.SQUARES:
@@ -112,3 +104,8 @@ def draw_chessboard(parent, size=8, square_size=70, board=None, playable_square=
 
     canvas.create_rectangle(0, 0, size * square_size, size * square_size, 
                             outline=c.DARK_BTN_BG, width=3)
+
+def send_command_with_delay(cmds, delay):
+    for cmd in cmds:
+        send_command(cmd)
+        time.sleep(delay)

@@ -6,7 +6,6 @@ import lichess.LichessClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GameController {
@@ -22,6 +21,10 @@ public class GameController {
         return new ArrayList<>(activeGames.values());
     }
 
+    public Game getGame(String gameId) {
+        return activeGames.get(gameId);
+    }
+
     public void addGame(Game game) {
         activeGames.put(game.id, game);
     }
@@ -31,7 +34,7 @@ public class GameController {
     }
 
     public void getAll(Context ctx) {
-        lichessClient.updateGames(ctx, activeGames.keySet());
+        lichessClient.updateGames(ctx);
     }
 
     public void getOne(Context ctx) {
@@ -50,7 +53,14 @@ public class GameController {
 
     public void join(Context ctx) {
         String gameId = ctx.pathParamAsClass("gameId", String.class).get();
+        String userId = ctx.pathParamAsClass("userId", String.class).get();
 
-        lichessClient.joinGame(ctx, gameId);
+        if (activeGames.containsKey(gameId)) {
+            Game game = activeGames.get(gameId);
+            if (game.challenger == null) {
+                game.challenger = new Player();
+                game.challenger.id = userId;
+            }
+        }
     }
 }

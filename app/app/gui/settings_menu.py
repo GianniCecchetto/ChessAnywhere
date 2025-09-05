@@ -1,18 +1,11 @@
 import customtkinter as ctk
 import tkinter as tk
-from . import app_color as c 
-from .toggle_backlight import toggle_backlight
-from uart.uart_com  import send_command
+from . import app_color as c
+from ..uart.uart_com  import send_command
 import os
 import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-print(BASE_DIR)
-UART_PATH = os.path.join(BASE_DIR, "lib", "uart_fmt", "python_doc")
-print(UART_PATH)
-sys.path.append(UART_PATH)
-
-import board_com_ctypes as cb
+from lib.uart_fmt.python_doc import board_com_ctypes as cb
 
 def set_brightness(value):
     """
@@ -22,7 +15,7 @@ def set_brightness(value):
     brightness_value = int(value)
     command = cb.fmt_led_bright(brightness_value)
     send_command(command)
-    print(f"Commande de luminosité envoyée : {command}")
+    #print(f"Commande de luminosité envoyée : {command}")
 
 def update_game_list_button_colors(app, selected_colors):
     """
@@ -138,6 +131,28 @@ def change_app_theme(app, new_theme):
 
     print(f"Thème de l'application changé en : {new_theme}")
 
+def change_board_theme(new_theme):
+    """
+    Modifie le thème de l'application et les couleurs de l'UI.
+    """
+       
+    if new_theme == "Black":
+        send_command(":COLOR SET BLACK 0 0 0")
+    elif new_theme == "Blue":
+        send_command(":COLOR SET BLUE 0 0 100")
+    elif new_theme == "Gray":
+        send_command(":COLOR SET GRAY 10 10 10")
+    elif new_theme == "Green":
+        send_command(":COLOR SET GREEN 0 255 0")
+    elif new_theme == "Yellow":
+        send_command(":COLOR SET YELLOW 255 255 0")
+    elif new_theme == "Red":
+        send_command(":COLOR SET RED 255 0 0")
+    elif new_theme == "Purple":
+        send_command(":COLOR SET PURPLE 150 0 255")
+
+    print(f"Thème de l'application changé en : {new_theme}")
+
 def create_settings_menu(app):
     """
     Crée le menu des paramètres qui glisse depuis la droite.
@@ -177,24 +192,12 @@ def create_settings_menu(app):
     board_theme_frame.columnconfigure(0, weight=1)
     board_theme_frame.columnconfigure(1, weight=1)
         
-    board_theme_option = ctk.CTkOptionMenu(board_theme_frame, values=["Blue", "Gray", "Green"],
-                                               fg_color=c.LEFT_PANEL_BG, text_color="black")
+    board_theme_option = ctk.CTkOptionMenu(board_theme_frame, values=["Black", "Blue", "Gray", "Green", "Yellow", "Red", "Purple"],
+                                               fg_color=c.LEFT_PANEL_BG, text_color="black",
+                                               command=lambda board_theme: change_board_theme(board_theme))
     board_theme_option.grid(row=0, column=0, sticky="ew", padx=(0, 5))
     board_theme_label = ctk.CTkLabel(board_theme_frame, text="Board Theme", text_color="white")
     board_theme_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
-
-    # Bouton Rétroéclairage
-    backlight_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
-    backlight_frame.pack(fill="x", pady=10)
-    backlight_frame.columnconfigure(0, weight=1)
-    backlight_frame.columnconfigure(1, weight=1)
-
-    backlight_btn = ctk.CTkButton(backlight_frame, text="🔆 ON", fg_color=c.LEFT_PANEL_BG,
-                                  text_color="black", hover_color=c.DARK_BTN_HOVER,
-                                  command=lambda: toggle_backlight(backlight_btn))
-    backlight_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
-    backlight_label = ctk.CTkLabel(backlight_frame, text="Backlight", text_color="white")
-    backlight_label.grid(row=0, column=1, sticky="w", padx=(5, 0))
 
     # Slider de luminosité
     brightness_frame = ctk.CTkFrame(menu_content_frame, fg_color="transparent")
