@@ -152,7 +152,6 @@ def handle_online_place_event(game_state, square):
             board.push(online_move)
             game_state['last_online_move_confirmed'] = game_state['online_move']
             game_state['online_move'] = None
-            online_move = None
             
             #print(f"Coup légal joué : {move.uci()}")
             draw_chessboard(board_container, board=board, player_color=player_color)        
