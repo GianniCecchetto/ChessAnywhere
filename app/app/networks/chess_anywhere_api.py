@@ -10,7 +10,7 @@ SERVER_URL = "http://localhost:7000"  # for local testing
 APP_NAME = "ChessAnywhere"
 APP_AUTHOR = None  # optional, can be left None
 CONFIG_DIR = user_config_dir(APP_NAME, APP_AUTHOR)
-SERVER_URL_FILE = os.path.join(CONFIG_DIR, "token.json")
+SERVER_URL_FILE = os.path.join(CONFIG_DIR, "server_url.json")
 
 def fetch_data(server_url: str, resource: str, headers: dict | None= None) -> dict:
     response = requests.get(f"{server_url}/{resource}", headers=headers, timeout=5)
